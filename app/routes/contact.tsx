@@ -54,7 +54,7 @@ export default function Contact() {
                 w-[2vw] h-[2vw]
                 md:w-[5vw] md:h-[5vw]
                 lg:w-[3vw] lg:h-[3vw]
-                
+
                 min-w-9.5
                 min-h-9.75
                 mr-[0.1vw]
@@ -96,7 +96,7 @@ export default function Contact() {
             />
           </div>
           <div className="mt-[4vh] text-center lg:text-left animate-fade">
-            
+
             <p className="
               uppercase
               tracking-[0.7vw]

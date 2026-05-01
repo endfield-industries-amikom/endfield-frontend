@@ -12,7 +12,6 @@
 
 html,
 body {
-
   @media (prefers-color-scheme: dark) {
     color-scheme: light;
   }
@@ -27,7 +26,6 @@ body {
     opacity: 1;
     transform: translateY(0);
   }
-  
 }
 
 .animate-fade {
@@ -115,49 +113,49 @@ body {
 }
 
 .text-stripe-effect {
-    font-family: 'Helvetica Neue 55', sans-serif;
-    font-size: clamp(3rem, 12vw, 12rem);
-    line-height: .9;
-    letter-spacing: clamp(-0.1rem, -0.5vw, -0.6rem);
-    background-image: repeating-linear-gradient(
-        -45deg,
-        black 0px,
-        black 2px,
-        transparent 2px,
-        transparent 4px
-    );
+  font-family: "Helvetica Neue 55", sans-serif;
+  font-size: clamp(3rem, 12vw, 12rem);
+  line-height: 0.9;
+  letter-spacing: clamp(-0.1rem, -0.5vw, -0.6rem);
+  background-image: repeating-linear-gradient(
+    -45deg,
+    black 0px,
+    black 2px,
+    transparent 2px,
+    transparent 4px
+  );
 
-    -webkit-background-clip: text;
-    background-clip: text;
-    color: transparent;
-    width: fit-content;
-    opacity: 1;
-    white-space: nowrap;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  width: fit-content;
+  opacity: 1;
+  white-space: nowrap;
 }
 
 .text-effect {
-    font-family: 'Helvetica Neue 55', sans-serif;
+  font-family: "Helvetica Neue 55", sans-serif;
 
-    font-size: clamp(3rem, 12vw, 12rem);
-    line-height: .9;
+  font-size: clamp(3rem, 12vw, 12rem);
+  line-height: 0.9;
 
-    letter-spacing: 0.01em;
+  letter-spacing: 0.01em;
 
-    transform-origin: left bottom;
+  transform-origin: left bottom;
 
-    background-clip: text;
-    color: transparent;
+  background-clip: text;
+  color: transparent;
 }
 
 @media (max-width: 768px) {
-    .text-stripe-effect,
-    .text-effect {
-        letter-spacing: -0.05em;
-    }
+  .text-stripe-effect,
+  .text-effect {
+    letter-spacing: -0.05em;
+  }
 }
 
 .helvetica {
-      font-family: 'Helvetica Neue 55', sans-serif;
+  font-family: "Helvetica Neue 55", sans-serif;
 }
 
 .infinite-swiper .swiper-wrapper {

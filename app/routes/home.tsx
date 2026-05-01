@@ -23,7 +23,7 @@ return <div className="scroll-smooth">
             <div className="absolute text-stripe-effect text-effect font-black text-[13vh] left-60 top-80 flicker-appearY">
                     <h2>//ENDFIELD</h2>
             </div>
-            
+
         </div>
 
 
@@ -133,7 +133,7 @@ return <div className="scroll-smooth">
       </div>
     </div>
 
-            
+
             <div className="pt-[3vw]">
                 <button className="px-[8vw] py-[1.5vh] bg-[#202020] text-white text-[3vw] md:text-[1.5vw] lg:text-[1vw] rounded-xl hover:bg-[#F8F546] hover:text-[#202020] hover:font-bold transition cursor-pointer">
                 More Information
@@ -143,9 +143,9 @@ return <div className="scroll-smooth">
 
     {/* Sekat */}
 <div className="relative bg-[#F0F000] mt-[5vh] w-full h-[8vh] md:h-[10vh] overflow-visible">
-    <img 
-        src="/baut-idk.png" 
-        alt="Baut" 
+    <img
+        src="/baut-idk.png"
+        alt="Baut"
         className="absolute left-2 md:left-6 top-8 sm:top-10 -translate-y-[60%] h-[160%] w-auto object-contain z-10 sm:h-[120%] md:h-[140%] lg:h-[150%] xl:h-[160%] xl:top-8.5 lg:top-9"
     />
 </div>
@@ -161,7 +161,7 @@ return <div className="scroll-smooth">
             <div className="w-full overflow-x-scroll h-[50vh] xl:h-[50vh] md:h-[30vh] flex items-center">
                 <div className="flex gap-[1.2vw] min-w-max px-[3vw] overflow-show">
                     <NavLink to="/products" className="w-[12vw] border-[0.1vw] border-[#C2C2C2] bg-[#CFCFCF] w-[12vw] h-[18vw] rounded flex flex-col gap-[0.5vw] justify-start overflow-hidden hover:scale-[1.1] transition delay-75 duration-300 ease-in-out border-spin">
-                        <div className="flex justify-center items-center h-[3vw] w-[5vw] rounded-br-md  overflow-hidden bg-[#C2C2C2] text-center"> 
+                        <div className="flex justify-center items-center h-[3vw] w-[5vw] rounded-br-md  overflow-hidden bg-[#C2C2C2] text-center">
                             <p className="text-[0.8vw] lg:text-[0.5vw] font-medium text-[#202020]">Best Seller</p>
                         </div>
                         <div className="flex justify-center items-center h-[20vw]">
@@ -184,7 +184,7 @@ return <div className="scroll-smooth">
                     </div>
                     </NavLink>
 
-                  
+
                 </div>
                 </div>
             <div className="flex justify-center items-center w-full pt-[3vw]">
