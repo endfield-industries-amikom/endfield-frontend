@@ -44,24 +44,18 @@ export default function About() {
 
               <ol className="list-decimal pl-[5vw] lg:pl-[1.2vw] space-y-[1vh] leading-relaxed">
                 <li>
-                  <span className="font-medium">
-                    Territorial Expansion:
-                  </span>{" "}
+                  <span className="font-medium">Territorial Expansion:</span>{" "}
                   Explore new regions.
                 </li>
 
                 <li>
-                  <span className="font-medium">
-                    Infrastructure:
-                  </span>{" "}
-                  Build automated systems.
+                  <span className="font-medium">Infrastructure:</span> Build
+                  automated systems.
                 </li>
 
                 <li>
-                  <span className="font-medium">
-                    Anomaly Control:
-                  </span>{" "}
-                  Ensure safety.
+                  <span className="font-medium">Anomaly Control:</span> Ensure
+                  safety.
                 </li>
               </ol>
             </div>

@@ -96,8 +96,8 @@ export default function Contact() {
             />
           </div>
           <div className="mt-[4vh] text-center lg:text-left animate-fade">
-
-            <p className="
+            <p
+              className="
               uppercase
               tracking-[0.7vw]
               text-[1vw]
@@ -105,11 +105,13 @@ export default function Contact() {
               lg:text-[0.9vw]
               text-gray-400
               font-semibold
-            ">
+            "
+            >
               {activeProfile.role}
             </p>
 
-            <h1 className="
+            <h1
+              className="
               text-[10vw]
               md:text-[7vw]
               lg:text-[5vw]
@@ -117,17 +119,20 @@ export default function Contact() {
               font-black
               text-gray-900
               mt-[1vh]
-            ">
+            "
+            >
               {activeProfile.name}
             </h1>
 
-            <h2 className="
+            <h2
+              className="
               text-[4vw]
               md:text-[2vw]
               lg:text-[1.5vw]
               text-gray-500
               mt-[1vh]
-            ">
+            "
+            >
               {activeProfile.NIM}
             </h2>
           </div>
