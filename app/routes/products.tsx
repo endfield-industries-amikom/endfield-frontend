@@ -1,3 +1,3 @@
-export default function galery() {
- return <div>Hell0</div>
+export default function products() {
+ return <div>Hello</div>
 }
