@@ -7,7 +7,7 @@ export default function Nav() {
 
   return (
     <div className="w-full bg-[#FAFAFA] text-[#202020] shadow sticky top-0 z-50">
-      <div className="h-16 px-6 flex items-center">
+      <div className="h-[7vh] px-2 flex items-center">
         <div className="container mx-auto flex items-center justify-between w-full">
           <NavLink to="/" className="flex items-center gap-6">
             <img
@@ -34,7 +34,7 @@ export default function Nav() {
               Contact
             </NavLink>
             <div>
-              <input type="text" placeholder="Search..." className="w-full h-[1.5vw] bg-[#FAFAFA] text-[#202020] placeholder:text-[#808080] border border-[#CCCCCC] focus:outline-none focus:ring-2 focus:ring-[#F8F546]"  />
+              <input type="text" placeholder="Search..." className="w-full h-auto bg-[#FAFAFA] text-[#202020] placeholder:text-[#808080] border border-[#CCCCCC] focus:outline-none"  />
             </div>
           </nav>
 
@@ -54,7 +54,7 @@ export default function Nav() {
       {/* Mobile Navigation Menu */}
       {isOpen && (
         <div className="md:hidden bg-[#FAFAFA] border-t border-gray-200">
-          <nav className="flex flex-col gap-4 px-6 py-4 text-sm">
+          <nav className="flex flex-col gap-4 px-2 py-4 text-sm">
             <NavLink to="/" className="hover:text-[#F8F546] transition" onClick={() => setIsOpen(false)}>
               Home
             </NavLink>
