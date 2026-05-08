@@ -69,7 +69,7 @@ export default function About() {
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-[4vw] mt-[6vh]">
-          <div className="h-[30vh] md:h-[38vh] lg:h-[32vh] w-full rounded-xl overflow-hidden shadow-xl transition duration-300 hover:-translate-y-[1vh] hover:shadow-2xl">
+          <div className="h-[30vh] md:h-[38vh] lg:h-[32vh] w-full rounded-xl overflow-hidden shadow-xl transition duration-300 hover:translate-y-[-1vh] hover:shadow-2xl">
             <img
               src="https://assets.promediateknologi.id/crop/0x0:0x0/1200x0/webp/photo/p3/75/2026/01/23/AA1UF7R1-405964048.png"
               alt="Image 1"
@@ -77,7 +77,7 @@ export default function About() {
             />
           </div>
 
-          <div className="h-[30vh] md:h-[38vh] lg:h-[32vh] w-full rounded-xl overflow-hidden shadow-xl transition duration-300 hover:-translate-y-[1vh] hover:shadow-2xl">
+          <div className="h-[30vh] md:h-[38vh] lg:h-[32vh] w-full rounded-xl overflow-hidden shadow-xl transition duration-300 hover:translate-y-[-1vh] hover:shadow-2xl">
             <img
               src="https://cms.disway.id/uploads/60e9c019764479ece9276ef323c90323.png"
               alt="Image 2"
@@ -100,7 +100,7 @@ export default function About() {
           </p>
 
           <div className="flex justify-center gap-[3vw] flex-wrap">
-            <div className="bg-white p-[2vw] w-full md:w-[70vw] lg:w-[25vw] flex items-center gap-[1vw] rounded-xl shadow-xl transition duration-300 hover:-translate-y-[1vh] hover:shadow-2xl">
+            <div className="bg-white p-[2vw] w-full md:w-[70vw] lg:w-[25vw] flex items-center gap-[1vw] rounded-xl shadow-xl transition duration-300 hover:translate-y-[-1vh] hover:shadow-2xl">
               <div className="w-[30vw] md:w-[20vw] lg:w-[12vw] h-[10vh] md:h-[12vh] lg:h-[11vh] bg-gray-300 rounded-lg overflow-hidden">
                 <img
                   src="https://static0.thegamerimages.com/wordpress/wp-content/uploads/wm/2026/01/arknights-endfield-placing-the-pac-structure.jpg?w=1600&h=900&fit=crop"
@@ -119,7 +119,7 @@ export default function About() {
               </div>
             </div>
 
-            <div className="bg-white p-[2vw] w-full md:w-[70vw] lg:w-[25vw] flex items-center gap-[1vw] rounded-xl shadow-xl transition duration-300 hover:-translate-y-[1vh] hover:shadow-2xl">
+            <div className="bg-white p-[2vw] w-full md:w-[70vw] lg:w-[25vw] flex items-center gap-[1vw] rounded-xl shadow-xl transition duration-300 hover:translate-y-[-1vh] hover:shadow-2xl">
               <div className="w-[30vw] md:w-[20vw] lg:w-[12vw] h-[10vh] md:h-[12vh] lg:h-[11vh] bg-gray-300 rounded-lg overflow-hidden">
                 <img
                   src="https://blog-uploads.eneba.games/uploads/2026/01/ARKNIGHT-HUB-768x430.jpg"

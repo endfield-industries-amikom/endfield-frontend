@@ -2,6 +2,7 @@ import { NavLink } from "react-router"
 import { useState } from "react"
 import "tailwindcss";
 
+
 export default function Nav() {
   const [isOpen, setIsOpen] = useState(false)
 
@@ -16,7 +17,7 @@ export default function Nav() {
               className="h-10 w-auto"
               style={{ filter: "brightness(0) saturate(100%) invert(13%) sepia(8%) hue-rotate(208deg) contrast(95%)" }}
             />
-            <a className="font-bold font-family:sansserif hover:text-[#F8F546] transition">EndField</a>
+            <a className="font-bold text-[1vw] font-sans hover:text-[#F8F546] transition tracking-wider">EndField Industries</a>
           </NavLink>
 
           {/* Desktop Navigation */}

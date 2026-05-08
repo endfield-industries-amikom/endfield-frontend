@@ -55,8 +55,8 @@ export default function Contact() {
                 md:w-[8vw] md:h-[8vw]
                 lg:w-[4vw] lg:h-[4vw]
                 
-                min-w-[50px]
-                min-h-[55px]
+                min-w-12.5
+                min-h-13.75
                 
                 rounded-full
                 object-cover
