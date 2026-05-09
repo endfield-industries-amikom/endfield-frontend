@@ -1,3 +1,4 @@
+import { NavLink } from "react-router";
 import "tailwindcss";
 
 export default function Home() {
@@ -16,9 +17,11 @@ return <div className="outline-red">
                     <p className="text-[3vw] md:text-[1.5vw] lg:text-[1vw] text-[#202020]">
                         We are a leading company in the industry, providing top-notch solutions and services to our clients.
                     </p>
-                        <button className="px-[6vw] py-[1.5vh] bg-[#202020] text-white text-[3vw] md:text-[1.5vw] lg:text-[1vw] rounded-xl hover:bg-[#F8F546] transition">
+                    <NavLink to="/about">
+                        <button className="px-[6vw] py-[1.5vh] bg-[#202020] text-white text-[3vw] md:text-[1.5vw] lg:text-[1vw] rounded-xl hover:bg-[#F8F546] hover:text-[#202020] hover:font-bold cursor-pointer transition">
                         Learn More
                         </button>
+                    </NavLink>
                 </div>
 
                 <div className="gap-[3vw] flex flex-col">
@@ -67,22 +70,43 @@ return <div className="outline-red">
                 <div className="">
                     <img src="https://images3.alphacoders.com/140/thumb-1920-1405039.jpg" alt="" className="h-[20vw] w-full object-cover"/>
                 </div>
-                <div className="flex grid-cols-3 gap-[2vw] mt-[3vh] justify-start">
+                <div className="flex grid-cols-3 gap-[2vw] mt-[3vh] justify-center">
                     <div>
-                        <img src="https://images3.alphacoders.com/140/thumb-1920-1405039.jpg" alt="" className="h-[17vw] w-full object-contain rounded-4xl"/>
+                        <img src="https://i0.wp.com/news.qoo-app.com/en/wp-content/uploads/sites/3/2022/03/03_HD.554121.jpg?resize=900%2C506&ssl=1" alt="" className="h-[17vw] w-full object-contain rounded-3xl"/>
                     </div>
                     <div>
-                        <img src="https://images3.alphacoders.com/140/thumb-1920-1405039.jpg" alt="" className="h-[17vw] w-full object-contain rounded-4xl"/>
+                        <img src="https://pbs.twimg.com/media/GmIh4WvbcAQeRiM.jpg" alt="" className="h-[17vw] w-full object-contain rounded-3xl"/>
                     </div>
                     <div>
-                        <img src="https://images3.alphacoders.com/140/thumb-1920-1405039.jpg" alt="" className="h-[17vw] w-full object-contain rounded-4xl"/>
+                        <img src="https://s1.zerochan.net/Arknights%3A.Endfield.600.4273863.jpg" alt="" className="h-[17vw] w-full object-contain rounded-3xl"/>
                     </div>
                 </div>
             </div>
             <div className="pt-[3vw]">
-                <button className="px-[10vw] py-[2vh] bg-[#202020] text-white text-[3vw] md:text-[1.5vw] lg:text-[1vw] rounded-xl hover:bg-[#F8F546] hover:text-[#202020] transition">
+                <button className="px-[10vw] py-[2vh] bg-[#202020] text-white text-[3vw] md:text-[1.5vw] lg:text-[1vw] rounded-xl hover:bg-[#F8F546] hover:text-[#202020] hover:font-bold transition cursor-pointer">
                 More Information
                 </button>
+            </div>
+        </div>
+
+        <div className="bg-[#202020] p-[2.5vw] mt-[5vh] text-center"></div>
+        <div>
+            <div className="flex justify-start">
+                <h3>Our Product</h3>
+                <p>Lorem ipsum dolor sit amet consectetur adipisicing elit. Voluptas, voluptate.</p>
+            </div>
+
+            <div>
+                <div></div>
+                <div></div>
+                <div></div>
+                <div></div>
+                <div></div>
+                <div></div>
+                <div></div>
+            </div>
+            <div>
+                <button></button>
             </div>
         </div>
 </div>

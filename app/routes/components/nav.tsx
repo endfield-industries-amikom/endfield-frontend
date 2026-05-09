@@ -14,24 +14,25 @@ export default function Nav() {
             <img
               src="https://endfield.wiki.gg/images/thumb/Endfield_Industries.png/300px-Endfield_Industries.png?800fd6"
               alt="logo"
-              className="h-10 w-auto"
-              style={{ filter: "brightness(0) saturate(100%) invert(13%) sepia(8%) hue-rotate(208deg) contrast(95%)" }}
+              className="h-10 w-auto [filter:brightness(0)_saturate(100%)_invert(13%)_sepia(8%)_hue-rotate(208deg)_contrast(95%)]
+              hover:[filter:brightness(0)_saturate(100%)_invert(79%)_sepia(86%)_saturate(749%)_hue-rotate(10deg)_brightness(103%)_contrast(101%)]
+              transition-all duration-300"              
             />
-            <a className="font-bold text-[1vw] font-sans hover:text-[#F8F546] transition tracking-wider">EndField Industries</a>
+            <a className="font-bold text-[1vw] font-sans hover:text-[#e0d31a] hover:font-bold transition tracking-wider">EndField Industries</a>
           </NavLink>
 
           {/* Desktop Navigation */}
           <nav className="hidden md:flex items-center gap-6 text-sm">
-            <NavLink to="/" className="hover:text-[#F8F546] transition">
+            <NavLink to="/" className="hover:text-[#e0d31a] hover:font-bold transition">
               Home
             </NavLink>
-            <NavLink to="/about" className="hover:text-[#F8F546] transition">
+            <NavLink to="/about" className="hover:text-[#e0d31a] hover:font-bold transition">
               About
             </NavLink>
-            <NavLink to="/products" className="hover:text-[#F8F546] transition">
+            <NavLink to="/products" className="hover:text-[#e0d31a] hover:font-bold transition">
               Products
             </NavLink>
-            <NavLink to="/contact" className="hover:text-[#F8F546] transition">
+            <NavLink to="/contact" className="hover:text-[#e0d31a] hover:font-bold transition">
               Contact
             </NavLink>
             <div>
@@ -56,16 +57,16 @@ export default function Nav() {
       {isOpen && (
         <div className="md:hidden bg-[#FAFAFA] border-t border-gray-200">
           <nav className="flex flex-col gap-4 px-2 py-4 text-sm">
-            <NavLink to="/" className="hover:text-[#F8F546] transition" onClick={() => setIsOpen(false)}>
+            <NavLink to="/" className="hover:text-[#e0d31a] hover:font-bold transition" onClick={() => setIsOpen(false)}>
               Home
             </NavLink>
-            <NavLink to="/about" className="hover:text-[#F8F546] transition" onClick={() => setIsOpen(false)}>
+            <NavLink to="/about" className="hover:text-[#e0d31a] hover:font-bold transition" onClick={() => setIsOpen(false)}>
               About
             </NavLink>
-            <NavLink to="/products" className="hover:text-[#F8F546] transition" onClick={() => setIsOpen(false)}>
+            <NavLink to="/products" className="hover:text-[#e0d31a] hover:font-bold transition" onClick={() => setIsOpen(false)}>
               Products
             </NavLink>
-            <NavLink to="/contact" className="hover:text-[#F8F546] transition" onClick={() => setIsOpen(false)}>
+            <NavLink to="/contact" className="hover:text-[#e0d31a] hover:font-bold transition" onClick={() => setIsOpen(false)}>
               Contact
             </NavLink>
             <input type="text" placeholder="Search..." className="w-full h-10 bg-white text-[#202020] placeholder:text-[#808080] border border-[#CCCCCC] focus:outline-none focus:ring-2 focus:ring-[#F8F546] px-2 rounded" />
