@@ -91,20 +91,32 @@ return <div className="outline-red">
 
         <div className="bg-[#202020] p-[2.5vw] mt-[5vh] text-center"></div>
         <div>
-            <div className="flex justify-start">
-                <h3>Our Product</h3>
-                <p>Lorem ipsum dolor sit amet consectetur adipisicing elit. Voluptas, voluptate.</p>
+            <div className="p-[4vw] flex flex-col items-start">
+                <h3 className="text-[5vw] md:text-[2.5vw] lg:text-[1vw] font-bold text-[#202020]">Our Product</h3>
+                <p className="text-[1.5vw] md:text-[1.50vw] lg:text-[1vw] text-[#202020]">
+                   Discover our range of innovative products.
+                </p>
             </div>
 
-            <div>
-                <div></div>
-                <div></div>
-                <div></div>
-                <div></div>
-                <div></div>
-                <div></div>
-                <div></div>
+            <div className="w-full h-[20vw] gap-[2vw] mb-[5vh] flex flex-row justify-center">
+                <div className="border-[0.3vw] border-[#C2C2C2] bg-[#CFCFCF] w-[20vw] h-[25vw] rounded-xl flex flex-col gap-[2vw] justify-start overflow-hidden">
+                   <div className="flex justify-center items-center h-[2vw] w-[8vw] rounded-br-md  overflow-hidden bg-[#C2C2C2]"> 
+                        <p className="text-[0.8vw] font-medium text-[#202020]">Best Seller</p>
+                   </div>
+                   <div className="flex justify-center items-center h-[15vw]">
+                        <h2 className="text-[1.2vw] md:text-[0.8vw] lg:text-[1.5vw]  text-[#202020]">
+                            Product 1
+                        </h2>
+                   </div>
+                   <div>
+
+                   </div>
+                   <div className="text-center"></div>
+                   <div className="text-center"></div>
+                   <div className="text-center"></div>
+                </div>
             </div>
+
             <div>
                 <button></button>
             </div>
