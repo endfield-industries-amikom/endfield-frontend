@@ -18,7 +18,7 @@ export default function Nav() {
               hover:[filter:brightness(0)_saturate(100%)_invert(79%)_sepia(86%)_saturate(749%)_hue-rotate(10deg)_brightness(103%)_contrast(101%)]
               transition-all duration-300"              
             />
-            <a className="font-bold text-[1vw] font-sans hover:text-[#e0d31a] hover:font-bold transition tracking-wider">EndField Industries</a>
+            <a className="font-bold text-[2.5vw] font-sans hover:text-[#e0d31a] hover:font-bold transition tracking-wider lg:text-[1.2vw] md:text-[1.5vw] sm:text-[1vw]">EndField Industries</a>
           </NavLink>
 
           {/* Desktop Navigation */}
@@ -36,7 +36,7 @@ export default function Nav() {
               Contact
             </NavLink>
             <div>
-              <input type="text" placeholder="Search..." className="w-full h-auto bg-[#FAFAFA] text-[#202020] placeholder:text-[#808080] border border-[#CCCCCC] focus:outline-none"  />
+              <input type="text" placeholder="  Search..." className="w-full h-auto bg-[#FAFAFA] text-[#202020] placeholder:text-[#808080] border border-[#CCCCCC] focus:outline-none rounded"  />
             </div>
           </nav>
 

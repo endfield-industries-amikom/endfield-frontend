@@ -1,6 +1,15 @@
 @import url(https://fonts.cdnfonts.com/css/helvetica-neue-55);
 @import "tailwindcss";
 
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
+
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
 html,
 body {
 

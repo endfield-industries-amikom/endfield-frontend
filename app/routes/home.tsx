@@ -50,11 +50,11 @@ return <div className="outline-red">
                 </div>
             </div>
 
-            <div className="w-full h-auto p-[2vw_0vw_0vw_0vw] gap-[2vw] mb-[5vh] flex flex-col bg-white">
+            <div className="w-full h-auto p-[3vh_0vw_0vw_0vw] gap-[0vw] mb-[5vh] flex flex-col bg-white">
                 <div className="-translate-x-[7vw]">
                     <img src="https://static0.thegamerimages.com/wordpress/wp-content/uploads/wm/2026/01/arknights-endfield-placing-the-pac-structure.jpg?w=1600&h=900&fit=crop" alt="" className="rounded-xl w-full"/>
                 </div>
-                <div className="-translate-x-[7vw]">
+                <div className="-translate-x-[7vw] translate-y-[3vh]">
                     <img src="https://blog-uploads.eneba.games/uploads/2026/01/ARKNIGHT-HUB-768x430.jpg" alt="" className="rounded-xl w-full"/>
                 </div>
             </div>
@@ -89,7 +89,7 @@ return <div className="outline-red">
             </div>
         </div>
 
-        <div className="bg-[#202020] p-[2.5vw] mt-[5vh] text-center"></div>
+        <div className="bg-[#313739] p-[2.5vw] mt-[5vh] text-center"></div>
         <div>
             <div className="p-[4vw] flex flex-col items-start">
                 <h3 className="text-[5vw] md:text-[2.5vw] lg:text-[1vw] font-bold text-[#202020]">Our Product</h3>
@@ -98,28 +98,234 @@ return <div className="outline-red">
                 </p>
             </div>
 
-            <div className="w-full h-[20vw] gap-[2vw] mb-[5vh] flex flex-row justify-center">
-                <div className="border-[0.3vw] border-[#C2C2C2] bg-[#CFCFCF] w-[20vw] h-[25vw] rounded-xl flex flex-col gap-[2vw] justify-start overflow-hidden">
-                   <div className="flex justify-center items-center h-[2vw] w-[8vw] rounded-br-md  overflow-hidden bg-[#C2C2C2]"> 
-                        <p className="text-[0.8vw] font-medium text-[#202020]">Best Seller</p>
-                   </div>
-                   <div className="flex justify-center items-center h-[15vw]">
-                        <h2 className="text-[1.2vw] md:text-[0.8vw] lg:text-[1.5vw]  text-[#202020]">
+            <div className="w-full overflow-x-auto scrollbar-hide">
+                <div className="flex gap-[1vw] min-w-max px-[3vw]">
+                    <div className=" shrink-0 w-[12vw] border-[0.1vw] border-[#C2C2C2] bg-[#CFCFCF] w-[12vw] h-[18vw] rounded flex flex-col gap-[0.5vw] justify-start overflow-hidden">
+                        <div className="flex justify-center items-center h-[3vw] w-[5vw] rounded-br-md  overflow-hidden bg-[#C2C2C2] text-center"> 
+                            <p className="text-[0.8vw] lg:text-[0.5vw] font-medium text-[#202020]">Best Seller</p>
+                        </div>
+                        <div className="flex justify-center items-center h-[20vw]">
+                            <h2 className="text-[1.2vw] md:text-[0.8vw] lg:text-[0.8vw]  text-[#202020]">
                             Product 1
-                        </h2>
-                   </div>
-                   <div>
+                            </h2>
+                        </div>
+                        <div className="bg-white w-full h-[10vw] flex flex-col items-start justify-start gap-[0.5vw] p-[1vw]">
+                            <p className="text-[1.2vw] md:text-[1vw] lg:text-[0.8vw] text-[#202020]">
+                                Musang Plenger
+                            </p>
+                            <h3 className="text-[1.5vw] md:text-[1vw] lg:text-[1vw] font-bold text-[#202020]">
+                            $99.99
+                            </h3>
+                        <div className="flex justify-center items-center w-full">
+                            <p className ="text-[1vw] md:text-[0.8vw] lg:text-[1vw] text-[#202020]">
+                                ...
+                            </p>
+                        </div>
+                    </div>
+                    </div>
 
-                   </div>
-                   <div className="text-center"></div>
-                   <div className="text-center"></div>
-                   <div className="text-center"></div>
+                        <div className="border-[0.1vw] border-[#C2C2C2] bg-[#CFCFCF] w-[12vw] h-[18vw] rounded flex flex-col gap-[0.5vw] justify-start overflow-hidden">
+                        <div className="flex justify-center items-center h-[3vw] w-[5vw] rounded-br-md  overflow-hidden bg-[#C2C2C2] text-center"> 
+                            <p className="text-[0.8vw] lg:text-[0.5vw] font-medium text-[#202020]">Best Seller</p>
+                        </div>
+                        <div className="flex justify-center items-center h-[20vw]">
+                            <h2 className="text-[1.2vw] md:text-[0.8vw] lg:text-[0.8vw]  text-[#202020]">
+                            Product 1
+                            </h2>
+                        </div>
+                        <div className="bg-white w-full h-[10vw] flex flex-col items-start justify-start gap-[0.5vw] p-[1vw]">
+                            <p className="text-[1.2vw] md:text-[1vw] lg:text-[0.8vw] text-[#202020]">
+                                Musang Plenger
+                            </p>
+                            <h3 className="text-[1.5vw] md:text-[1vw] lg:text-[1vw] font-bold text-[#202020]">
+                            $99.99
+                            </h3>
+                        <div className="flex justify-center items-center w-full">
+                            <p className ="text-[1vw] md:text-[0.8vw] lg:text-[1vw] text-[#202020]">
+                                ...
+                            </p>
+                        </div>
+                    </div>
+                    </div>
+
+                        <div className="border-[0.1vw] border-[#C2C2C2] bg-[#CFCFCF] w-[12vw] h-[18vw] rounded flex flex-col gap-[0.5vw] justify-start overflow-hidden">
+                        <div className="flex justify-center items-center h-[3vw] w-[5vw] rounded-br-md  overflow-hidden bg-[#C2C2C2] text-center"> 
+                            <p className="text-[0.8vw] lg:text-[0.5vw] font-medium text-[#202020]">Best Seller</p>
+                        </div>
+                        <div className="flex justify-center items-center h-[20vw]">
+                            <h2 className="text-[1.2vw] md:text-[0.8vw] lg:text-[0.8vw]  text-[#202020]">
+                            Product 1
+                            </h2>
+                        </div>
+                        <div className="bg-white w-full h-[10vw] flex flex-col items-start justify-start gap-[0.5vw] p-[1vw]">
+                            <p className="text-[1.2vw] md:text-[1vw] lg:text-[0.8vw] text-[#202020]">
+                                Musang Plenger
+                            </p>
+                            <h3 className="text-[1.5vw] md:text-[1vw] lg:text-[1vw] font-bold text-[#202020]">
+                            $99.99
+                            </h3>
+                        <div className="flex justify-center items-center w-full">
+                            <p className ="text-[1vw] md:text-[0.8vw] lg:text-[1vw] text-[#202020]">
+                                ...
+                            </p>
+                        </div>
+                    </div>
+                    </div>
+
+                        <div className="border-[0.1vw] border-[#C2C2C2] bg-[#CFCFCF] w-[12vw] h-[18vw] rounded flex flex-col gap-[0.5vw] justify-start overflow-hidden">
+                        <div className="flex justify-center items-center h-[3vw] w-[5vw] rounded-br-md  overflow-hidden bg-[#C2C2C2] text-center"> 
+                            <p className="text-[0.8vw] lg:text-[0.5vw] font-medium text-[#202020]">Best Seller</p>
+                        </div>
+                        <div className="flex justify-center items-center h-[20vw]">
+                            <h2 className="text-[1.2vw] md:text-[0.8vw] lg:text-[0.8vw]  text-[#202020]">
+                            Product 1
+                            </h2>
+                        </div>
+                        <div className="bg-white w-full h-[10vw] flex flex-col items-start justify-start gap-[0.5vw] p-[1vw]">
+                            <p className="text-[1.2vw] md:text-[1vw] lg:text-[0.8vw] text-[#202020]">
+                                Musang Plenger
+                            </p>
+                            <h3 className="text-[1.5vw] md:text-[1vw] lg:text-[1vw] font-bold text-[#202020]">
+                            $99.99
+                            </h3>
+                        <div className="flex justify-center items-center w-full">
+                            <p className ="text-[1vw] md:text-[0.8vw] lg:text-[1vw] text-[#202020]">
+                                ...
+                            </p>
+                        </div>
+                    </div>
+                    </div>
+
+                        <div className="border-[0.1vw] border-[#C2C2C2] bg-[#CFCFCF] w-[12vw] h-[18vw] rounded flex flex-col gap-[0.5vw] justify-start overflow-hidden">
+                        <div className="flex justify-center items-center h-[3vw] w-[5vw] rounded-br-md  overflow-hidden bg-[#C2C2C2] text-center"> 
+                            <p className="text-[0.8vw] lg:text-[0.5vw] font-medium text-[#202020]">Best Seller</p>
+                        </div>
+                        <div className="flex justify-center items-center h-[20vw]">
+                            <h2 className="text-[1.2vw] md:text-[0.8vw] lg:text-[0.8vw]  text-[#202020]">
+                            Product 1
+                            </h2>
+                        </div>
+                        <div className="bg-white w-full h-[10vw] flex flex-col items-start justify-start gap-[0.5vw] p-[1vw]">
+                            <p className="text-[1.2vw] md:text-[1vw] lg:text-[0.8vw] text-[#202020]">
+                                Musang Plenger
+                            </p>
+                            <h3 className="text-[1.5vw] md:text-[1vw] lg:text-[1vw] font-bold text-[#202020]">
+                            $99.99
+                            </h3>
+                        <div className="flex justify-center items-center w-full">
+                            <p className ="text-[1vw] md:text-[0.8vw] lg:text-[1vw] text-[#202020]">
+                                ...
+                            </p>
+                        </div>
+                    </div>
+                    </div>
+
+                        <div className="border-[0.1vw] border-[#C2C2C2] bg-[#CFCFCF] w-[12vw] h-[18vw] rounded flex flex-col gap-[0.5vw] justify-start overflow-hidden">
+                        <div className="flex justify-center items-center h-[3vw] w-[5vw] rounded-br-md  overflow-hidden bg-[#C2C2C2] text-center"> 
+                            <p className="text-[0.8vw] lg:text-[0.5vw] font-medium text-[#202020]">Best Seller</p>
+                        </div>
+                        <div className="flex justify-center items-center h-[20vw]">
+                            <h2 className="text-[1.2vw] md:text-[0.8vw] lg:text-[0.8vw]  text-[#202020]">
+                            Product 1
+                            </h2>
+                        </div>
+                        <div className="bg-white w-full h-[10vw] flex flex-col items-start justify-start gap-[0.5vw] p-[1vw]">
+                            <p className="text-[1.2vw] md:text-[1vw] lg:text-[0.8vw] text-[#202020]">
+                                Musang Plenger
+                            </p>
+                            <h3 className="text-[1.5vw] md:text-[1vw] lg:text-[1vw] font-bold text-[#202020]">
+                            $99.99
+                            </h3>
+                        <div className="flex justify-center items-center w-full">
+                            <p className ="text-[1vw] md:text-[0.8vw] lg:text-[1vw] text-[#202020]">
+                                ...
+                            </p>
+                        </div>
+                    </div>
+                    </div>
+
+                        <div className="border-[0.1vw] border-[#C2C2C2] bg-[#CFCFCF] w-[12vw] h-[18vw] rounded flex flex-col gap-[0.5vw] justify-start overflow-hidden">
+                        <div className="flex justify-center items-center h-[3vw] w-[5vw] rounded-br-md  overflow-hidden bg-[#C2C2C2] text-center"> 
+                            <p className="text-[0.8vw] lg:text-[0.5vw] font-medium text-[#202020]">Best Seller</p>
+                        </div>
+                        <div className="flex justify-center items-center h-[20vw]">
+                            <h2 className="text-[1.2vw] md:text-[0.8vw] lg:text-[0.8vw]  text-[#202020]">
+                            Product 1
+                            </h2>
+                        </div>
+                        <div className="bg-white w-full h-[10vw] flex flex-col items-start justify-start gap-[0.5vw] p-[1vw]">
+                            <p className="text-[1.2vw] md:text-[1vw] lg:text-[0.8vw] text-[#202020]">
+                                Musang Plenger
+                            </p>
+                            <h3 className="text-[1.5vw] md:text-[1vw] lg:text-[1vw] font-bold text-[#202020]">
+                            $99.99
+                            </h3>
+                        <div className="flex justify-center items-center w-full">
+                            <p className ="text-[1vw] md:text-[0.8vw] lg:text-[1vw] text-[#202020]">
+                                ...
+                            </p>
+                        </div>
+                    </div>
+                    </div>
+
+                        <div className="border-[0.1vw] border-[#C2C2C2] bg-[#CFCFCF] w-[12vw] h-[18vw] rounded flex flex-col gap-[0.5vw] justify-start overflow-hidden">
+                        <div className="flex justify-center items-center h-[3vw] w-[5vw] rounded-br-md  overflow-hidden bg-[#C2C2C2] text-center"> 
+                            <p className="text-[0.8vw] lg:text-[0.5vw] font-medium text-[#202020]">Best Seller</p>
+                        </div>
+                        <div className="flex justify-center items-center h-[20vw]">
+                            <h2 className="text-[1.2vw] md:text-[0.8vw] lg:text-[0.8vw]  text-[#202020]">
+                            Product 1
+                            </h2>
+                        </div>
+                        <div className="bg-white w-full h-[10vw] flex flex-col items-start justify-start gap-[0.5vw] p-[1vw]">
+                            <p className="text-[1.2vw] md:text-[1vw] lg:text-[0.8vw] text-[#202020]">
+                                Musang Plenger
+                            </p>
+                            <h3 className="text-[1.5vw] md:text-[1vw] lg:text-[1vw] font-bold text-[#202020]">
+                            $99.99
+                            </h3>
+                        <div className="flex justify-center items-center w-full">
+                            <p className ="text-[1vw] md:text-[0.8vw] lg:text-[1vw] text-[#202020]">
+                                ...
+                            </p>
+                        </div>
+                    </div>
+                    </div>
+
+                        <div className="border-[0.1vw] border-[#C2C2C2] bg-[#CFCFCF] w-[12vw] h-[18vw] rounded flex flex-col gap-[0.5vw] justify-start overflow-hidden">
+                        <div className="flex justify-center items-center h-[3vw] w-[5vw] rounded-br-md  overflow-hidden bg-[#C2C2C2] text-center"> 
+                            <p className="text-[0.8vw] lg:text-[0.5vw] font-medium text-[#202020]">Best Seller</p>
+                        </div>
+                        <div className="flex justify-center items-center h-[20vw]">
+                            <h2 className="text-[1.2vw] md:text-[0.8vw] lg:text-[0.8vw]  text-[#202020]">
+                            Product 1
+                            </h2>
+                        </div>
+                        <div className="bg-white w-full h-[10vw] flex flex-col items-start justify-start gap-[0.5vw] p-[1vw]">
+                            <p className="text-[1.2vw] md:text-[1vw] lg:text-[0.8vw] text-[#202020]">
+                                Musang Plenger
+                            </p>
+                            <h3 className="text-[1.5vw] md:text-[1vw] lg:text-[1vw] font-bold text-[#202020]">
+                            $99.99
+                            </h3>
+                        <div className="flex justify-center items-center w-full">
+                            <p className ="text-[1vw] md:text-[0.8vw] lg:text-[1vw] text-[#202020]">
+                                ...
+                            </p>
+                        </div>
+                    </div>
+                    </div>
+
+                </div>
                 </div>
             </div>
-
-            <div>
-                <button></button>
+            <div className="flex justify-center items-center w-full pt-[3vw]">
+                <NavLink to="/products">
+                    <button className="border-[0.1vw] px-[2vw] py-[0.5vh] border-[#C2C2C2] text-[#202020] text-[3vw] md:text-[1vw] lg:text-[1vw] rounded hover:font-bold transition cursor-pointer flex flex-row items-center justify-center">
+                        <img src="https://cdn-icons-png.flaticon.com/512/2641/2641264.png " alt="Arrow" className="w-[1vw] h-[1vw] mr-[0.5vw]" />
+                        See More Products
+                    </button>
+                </NavLink>
             </div>
         </div>
-</div>
 }
