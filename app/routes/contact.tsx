@@ -41,9 +41,9 @@ export default function Contact() {
   const [activeProfile, setActiveProfile] = useState(profiles[0]);
 
   return (
-    <section className="min-h-screen bg-[#f5f5f5] px-[5vw] py-[5vh] overflow-hidden">
-      <div className="flex flex-col lg:flex-row gap-[3vw] items-center lg:items-start">
-        <div className="bg-white shadow-2xl rounded-full px-[1vw] py-[2vh] flex lg:flex-col gap-[2vh] items-center">
+    <section className="min-h-screen bg-[#f5f5f5] px-[2vw] py-[5vh] overflow-hidden">
+      <div className="flex flex-col lg:flex-row gap-[2vw] items-center lg:items-start ">
+        <div className="bg-white shadow-xl rounded-full px-[1vw] py-[vh] flex lg:flex-col gap-[0.6vh] items-center h-[8vh] w-auto  lg:h-auto animate-fade ">
           {profiles.map((profile) => (
             <img
               key={profile.id}
@@ -51,23 +51,26 @@ export default function Contact() {
               alt={profile.name}
               onClick={() => setActiveProfile(profile)}
               className={`
-                w-[14vw] h-[14vw]
-                md:w-[8vw] md:h-[8vw]
-                lg:w-[4vw] lg:h-[4vw]
+                w-[2vw] h-[2vw]
+                md:w-[5vw] md:h-[5vw]
+                lg:w-[3vw] lg:h-[3vw]
                 
-                min-w-12.5
-                min-h-13.75
-                
+                min-w-9.5
+                min-h-9.75
+                mr-[0.1vw]
+                ml-[0.1vw]
+                mt-[1vh]
+                mb-[1vh]
                 rounded-full
                 object-cover
                 cursor-pointer
                 transition-all
                 duration-500
-                border-[0.25vw]
+                border-[0.15vw]
 
                 ${
                   activeProfile.id === profile.id
-                    ? "scale-110 border-[#004996] shadow-2xl"
+                    ? "scale-65 border-[#004996] shadow-2xl"
                     : "border-white opacity-70 hover:opacity-100 hover:scale-105"
                 }
               `}
@@ -88,6 +91,7 @@ export default function Contact() {
                 transition-all
                 duration-700
                 hover:scale-105
+                animate-fade
               "
             />
           </div>
@@ -96,7 +100,7 @@ export default function Contact() {
             <p className="
               uppercase
               tracking-[0.7vw]
-              text-[3vw]
+              text-[1vw]
               md:text-[1.5vw]
               lg:text-[0.9vw]
               text-gray-400
