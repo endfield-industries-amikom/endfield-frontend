@@ -2,13 +2,17 @@ import { NavLink } from "react-router";
 import "tailwindcss";
 
 export default function Home() {
-return <div className="outline-red">
-        <div>
-            <img src="https://static0.dualshockersimages.com/wordpress/wp-content/uploads/2025/11/arknights-endfield-dualshockers-preview-screenshots.jpg" alt="" className="w-full"/>
+return <div className="scroll-smooth">
+        <div className="flex justify-center">
+            <h1 className= "text-stripe-effect text-effect font-black">
+                ENDFIELD
+            </h1>
+            <img src="../public/wave-pattern.png" alt="" className="absolute"/>
         </div>
 
+
     {/* What We Do */}
-        <div className="z-10 bg-[#F8F546] gap-[13vw] flex grid-cols-2 ">
+        <div className="z-10 bg-[#F8F546] gap-[13vw] flex grid-cols-2 p-[0vh_0vh_5vh_0vw]">
             <div className="bg-white p-[3vw] text-left text-[5vw] mb-[7vw] gap-[4vh] flex flex-col">
                 <div>
                     <h2 className="text-[3vw] sm:text-[2.5vw] md:text-[3vw] lg:text-[3vw] font-bold mb-[1vh] text-[#202020]">
@@ -18,7 +22,7 @@ return <div className="outline-red">
                         We are a leading company in the industry, providing top-notch solutions and services to our clients.
                     </p>
                     <NavLink to="/about">
-                        <button className="px-[6vw] py-[1.5vh] bg-[#202020] text-white text-[3vw] md:text-[1.5vw] lg:text-[1vw] rounded-xl hover:bg-[#F8F546] hover:text-[#202020] hover:font-bold cursor-pointer transition">
+                        <button className="px-[6vw] py-[1.5vh]  bg-[#202020] text-white text-[3vw] md:text-[1.5vw] lg:text-[1vw] rounded-xl hover:bg-[#F8F546] hover:text-[#202020] hover:font-bold cursor-pointer transition">
                         Learn More
                         </button>
                     </NavLink>
@@ -83,14 +87,14 @@ return <div className="outline-red">
                 </div>
             </div>
             <div className="pt-[3vw]">
-                <button className="px-[10vw] py-[2vh] bg-[#202020] text-white text-[3vw] md:text-[1.5vw] lg:text-[1vw] rounded-xl hover:bg-[#F8F546] hover:text-[#202020] hover:font-bold transition cursor-pointer">
+                <button className="px-[8vw] py-[1.5vh] bg-[#202020] text-white text-[3vw] md:text-[1.5vw] lg:text-[1vw] rounded-xl hover:bg-[#F8F546] hover:text-[#202020] hover:font-bold transition cursor-pointer">
                 More Information
                 </button>
             </div>
         </div>
 
         <div className="bg-[#313739] p-[2.5vw] mt-[5vh] text-center"></div>
-        <div>
+        <div className="mb-[20vh]">
             <div className="p-[4vw] flex flex-col items-start">
                 <h3 className="text-[5vw] md:text-[2.5vw] lg:text-[1vw] font-bold text-[#202020]">Our Product</h3>
                 <p className="text-[1.5vw] md:text-[1.50vw] lg:text-[1vw] text-[#202020]">
@@ -100,7 +104,7 @@ return <div className="outline-red">
 
             <div className="w-full overflow-x-auto scrollbar-hide">
                 <div className="flex gap-[1vw] min-w-max px-[3vw]">
-                    <div className=" shrink-0 w-[12vw] border-[0.1vw] border-[#C2C2C2] bg-[#CFCFCF] w-[12vw] h-[18vw] rounded flex flex-col gap-[0.5vw] justify-start overflow-hidden">
+                    <div className="w-[12vw] border-[0.1vw] border-[#C2C2C2] bg-[#CFCFCF] w-[12vw] h-[18vw] rounded flex flex-col gap-[0.5vw] justify-start overflow-hidden">
                         <div className="flex justify-center items-center h-[3vw] w-[5vw] rounded-br-md  overflow-hidden bg-[#C2C2C2] text-center"> 
                             <p className="text-[0.8vw] lg:text-[0.5vw] font-medium text-[#202020]">Best Seller</p>
                         </div>
@@ -318,7 +322,6 @@ return <div className="outline-red">
 
                 </div>
                 </div>
-            </div>
             <div className="flex justify-center items-center w-full pt-[3vw]">
                 <NavLink to="/products">
                     <button className="border-[0.1vw] px-[2vw] py-[0.5vh] border-[#C2C2C2] text-[#202020] text-[3vw] md:text-[1vw] lg:text-[1vw] rounded hover:font-bold transition cursor-pointer flex flex-row items-center justify-center">
@@ -327,5 +330,7 @@ return <div className="outline-red">
                     </button>
                 </NavLink>
             </div>
+            </div>
+
         </div>
 }

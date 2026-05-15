@@ -32,3 +32,34 @@ body {
 .animate-fade {
   animation: fade 0.5s ease;
 }
+
+.text-stripe-effect {
+    padding-right: 1rem;
+    font-family: Novecentosanswide-Bold;
+    background-image: linear-gradient(-45deg, transparent, transparent 20.5805011712%, black 0, black 29.4194988288%, transparent 0, transparent 70.5805011712%, black 0, black 79.4194988288%, transparent 0, transparent);
+    background-size: .5rem .5rem;
+    background-repeat: repeat;
+    background-position: 0 0;
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: rgba(0, 0, 0, 0);
+    height: 15.625rem;
+    font-size: 15.625rem;
+    line-height: 1;
+    letter-spacing: -.625rem;
+    width: -moz-fit-content;
+    width: fit-content;
+    opacity: .6;
+}
+
+.text-effect {
+    display : absolute;
+    background-clip: text;
+    color: rgba(0, 0, 0, 0);
+    font-size:10rem;
+    line-height: 10rem;
+    letter-spacing: -0.08em;
+    transform-origin: left bottom;
+    font-family: 'Helvetica Neue 55', sans-serif;
+}
+
