@@ -27,6 +27,7 @@ body {
     opacity: 1;
     transform: translateY(0);
   }
+  
 }
 
 .animate-fade {
@@ -43,8 +44,6 @@ body {
     -webkit-background-clip: text;
     background-clip: text;
     color: rgba(0, 0, 0, 0);
-    height: 15.625rem;
-    font-size: 15.625rem;
     line-height: 1;
     letter-spacing: -.625rem;
     width: -moz-fit-content;
@@ -56,10 +55,55 @@ body {
     display : absolute;
     background-clip: text;
     color: rgba(0, 0, 0, 0);
-    font-size:10rem;
     line-height: 10rem;
     letter-spacing: -0.08em;
     transform-origin: left bottom;
     font-family: 'Helvetica Neue 55', sans-serif;
 }
 
+.helvetica-font {
+      font-family: 'Helvetica Neue 55', sans-serif;
+}
+
+div {
+  border-color: red;
+  border-width: 1px;
+}
+
+.border-spin {
+    position: relative;
+    border-radius: 0.25rem;
+    overflow: hidden;
+}
+
+.border-spin::before {
+    content: "";
+    position: absolute;
+    inset: -100%;
+    background: conic-gradient(
+        transparent,
+        #F8F546,
+        transparent
+    );
+    animation: spin 2s linear infinite;
+}
+
+.border-spin::after {
+    content: "";
+    position: absolute;
+    inset: 2px;
+    background: #CFCFCF;
+    border-radius: inherit;
+    z-index: 1;
+}
+
+.border-spin > * {
+    position: relative;
+    z-index: 2;
+}
+
+@keyframes spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
