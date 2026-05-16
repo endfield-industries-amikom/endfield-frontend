@@ -1,3 +1,10 @@
+<<<<<<< HEAD
+=======
+.DS_Store
+.env
+/node_modules/
+
+>>>>>>> test-push
 # Logs
 logs
 *.log
@@ -137,3 +144,13 @@ dist
 # Vite logs files
 vite.config.js.timestamp-*
 vite.config.ts.timestamp-*
+<<<<<<< HEAD
+=======
+.DS_Store
+.env
+/node_modules/
+
+# React Router
+/.react-router/
+/build/
+>>>>>>> test-push

@@ -1,0 +1,163 @@
+@import url(https://fonts.cdnfonts.com/css/helvetica-neue-55);
+@import "tailwindcss";
+
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
+
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+html,
+body {
+  @media (prefers-color-scheme: dark) {
+    color-scheme: light;
+  }
+}
+@keyframes fade {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fade {
+  animation: fade 0.5s ease;
+}
+
+@keyframes flickerAppearY {
+  0% {
+    opacity: 0;
+    transform: translateY(100px);
+  }
+  5% {
+    opacity: 1;
+  }
+  10% {
+    opacity: 0;
+  }
+  15% {
+    opacity: 1;
+  }
+  20% {
+    opacity: 0;
+  }
+  25% {
+    opacity: 1;
+  }
+  30% {
+    opacity: 0;
+  }
+  50% {
+    opacity: 1;
+  }
+  75% {
+    opacity: 1;
+  }
+
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.flicker-appearY {
+  animation: flickerAppearY 1s ease-out forwards;
+}
+
+@keyframes flickerAppearX {
+  0% {
+    opacity: 0;
+    transform: translateX(100px);
+  }
+  5% {
+    opacity: 1;
+  }
+  10% {
+    opacity: 0;
+  }
+  15% {
+    opacity: 1;
+  }
+  20% {
+    opacity: 0;
+  }
+  25% {
+    opacity: 1;
+  }
+  30% {
+    opacity: 0;
+  }
+  50% {
+    opacity: 1;
+  }
+  75% {
+    opacity: 1;
+  }
+
+  100% {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+.flicker-appearX {
+  animation: flickerAppearX 1s ease-out forwards;
+}
+
+.text-stripe-effect {
+  font-family: "Helvetica Neue 55", sans-serif;
+  font-size: clamp(3rem, 12vw, 12rem);
+  line-height: 0.9;
+  letter-spacing: clamp(-0.1rem, -0.5vw, -0.6rem);
+  background-image: repeating-linear-gradient(
+    -45deg,
+    black 0px,
+    black 2px,
+    transparent 2px,
+    transparent 4px
+  );
+
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  width: fit-content;
+  opacity: 1;
+  white-space: nowrap;
+}
+
+.text-effect {
+  font-family: "Helvetica Neue 55", sans-serif;
+
+  font-size: clamp(3rem, 12vw, 12rem);
+  line-height: 0.9;
+
+  letter-spacing: 0.01em;
+
+  transform-origin: left bottom;
+
+  background-clip: text;
+  color: transparent;
+}
+
+@media (max-width: 768px) {
+  .text-stripe-effect,
+  .text-effect {
+    letter-spacing: -0.05em;
+  }
+}
+
+.helvetica {
+  font-family: "Helvetica Neue 55", sans-serif;
+}
+
+.infinite-swiper .swiper-wrapper {
+  transition-timing-function: linear !important;
+}
