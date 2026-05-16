@@ -17,14 +17,14 @@ const images = [
 export default function Home() {
   return (
     <div className="scroll-smooth">
-      <div className="bg-linear-to-b from-[#F8F546] via-[#F8F546] to-white w-full h-[80vh] flex justify-center flex-col items-center cursor-default">
+      <section className="bg-linear-to-b from-[#F8F546] via-[#F8F546] to-white w-full h-[80vh] flex justify-center flex-col items-center cursor-default">
         <div className="helvetica font-extrabold text-[10vw] transition flicker-appearY">
           //ENDFIELD
         </div>
         <div className="absolute text-stripe-effect text-effect font-black text-[13vh] left-60 top-80 flicker-appearY">
           <h2>//ENDFIELD</h2>
         </div>
-      </div>
+      </section>
 
       {/* What We Do */}
       <div className="z-10 bg-[#F8F546] gap-[13vw] flex grid-cols-2 p-[0vh_0vh_5vh_0vw]">
