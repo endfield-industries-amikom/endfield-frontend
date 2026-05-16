@@ -17,7 +17,7 @@ const images = [
 export default function Home() {
   return (
     <div className="scroll-smooth">
-      <div className="bg-gradient-to-b from-[#F8F546] via-[#F8F546] to-white w-full h-[80vh] flex justify-center flex-col items-center">
+      <div className="bg-linear-to-b from-[#F8F546] via-[#F8F546] to-white w-full h-[80vh] flex justify-center flex-col items-center">
         <div className="helvetica font-extrabold text-[10vw] transition flicker-appearY">
           //ENDFIELD
         </div>
@@ -71,15 +71,15 @@ export default function Home() {
           </div>
         </div>
 
-        <div className="w-full h-auto p-[3vh_0vw_0vw_0vw] gap-[0vw] mb-[5vh] flex flex-col bg-white">
-          <div className="-translate-x-[7vw]">
+        <div className="w-full h-auto p-[3vh_0vw_0vw_0vw] gap-0 mb-[5vh] flex flex-col bg-white">
+          <div className="translate-x-[7vw]">
             <img
               src="https://static0.thegamerimages.com/wordpress/wp-content/uploads/wm/2026/01/arknights-endfield-placing-the-pac-structure.jpg?w=1600&h=900&fit=crop"
               alt=""
               className="rounded-xl w-full flicker-appearX"
             />
           </div>
-          <div className="-translate-x-[7vw] translate-y-[3vh]">
+          <div className="translate-x-[7vw] translate-y-[3vh]">
             <img
               src="https://blog-uploads.eneba.games/uploads/2026/01/ARKNIGHT-HUB-768x430.jpg"
               alt=""
@@ -92,7 +92,7 @@ export default function Home() {
         </div>
       </div>
 
-      <div className="gap-[0vw] flex flex-col items-center">
+      <div className="gap-0 flex flex-col items-center">
         <div className="text-center p-[0.5vw]">
           <h1 className="text-[5vw] md:text-[3vw] lg:text-[2vw] font-bold text-[#202020] tracking-wider">
             New Information
@@ -154,7 +154,7 @@ export default function Home() {
         <img
           src="/baut-idk.png"
           alt="Baut"
-          className="absolute left-2 md:left-6 top-8 sm:top-10 -translate-y-[60%] h-[160%] w-auto object-contain z-10 sm:h-[120%] md:h-[140%] lg:h-[150%] xl:h-[160%] xl:top-8.5 lg:top-9"
+          className="absolute left-2 md:left-6 top-8 sm:top-10 translate-y-[60%] h-[160%] w-auto object-contain z-10 sm:h-[120%] md:h-[140%] lg:h-[150%] xl:h-[160%] xl:top-8.5 lg:top-9"
         />
       </div>
 
@@ -172,7 +172,7 @@ export default function Home() {
           <div className="flex gap-[1.2vw] min-w-max px-[3vw] overflow-show">
             <NavLink
               to="/products"
-              className="w-[12vw] border-[0.1vw] border-[#C2C2C2] bg-[#CFCFCF] w-[12vw] h-[18vw] rounded flex flex-col gap-[0.5vw] justify-start overflow-hidden hover:scale-[1.1] transition delay-75 duration-300 ease-in-out border-spin"
+              className="w-[12vw] border-[0.1vw] border-[#C2C2C2] bg-[#CFCFCF] h-[18vw] rounded flex flex-col gap-[0.5vw] justify-start overflow-hidden hover:scale-[1.1] transition delay-75 duration-300 ease-in-out border-spin"
             >
               <div className="flex justify-center items-center h-[3vw] w-[5vw] rounded-br-md  overflow-hidden bg-[#C2C2C2] text-center">
                 <p className="text-[0.8vw] lg:text-[0.5vw] font-medium text-[#202020]">
