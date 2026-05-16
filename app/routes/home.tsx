@@ -17,7 +17,7 @@ const images = [
 export default function Home() {
   return (
     <div className="scroll-smooth">
-      <div className="bg-linear-to-b from-[#F8F546] via-[#F8F546] to-white w-full h-[80vh] flex justify-center flex-col items-center">
+      <div className="bg-linear-to-b from-[#F8F546] via-[#F8F546] to-white w-full h-[80vh] flex justify-center flex-col items-center cursor-default">
         <div className="helvetica font-extrabold text-[10vw] transition flicker-appearY">
           //ENDFIELD
         </div>
