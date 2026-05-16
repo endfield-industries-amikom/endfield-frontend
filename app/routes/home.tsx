@@ -1,9 +1,30 @@
 import { NavLink } from "react-router";
+import { Swiper, SwiperSlide } from "swiper/react";
+import { Navigation, Autoplay } from "swiper/modules";
+
 import "tailwindcss";
+import "swiper/css";
+import "swiper/css/navigation";
+
+const images = [
+  "https://i0.wp.com/news.qoo-app.com/en/wp-content/uploads/sites/3/2022/03/03_HD.554121.jpg?resize=900%2C506&ssl=1",
+  "https://pbs.twimg.com/media/GmIh4WvbcAQeRiM.jpg",
+  "https://s1.zerochan.net/Arknights%3A.Endfield.600.4273863.jpg",
+  "https://images.wallpapersden.com/image/download/arknights-endfield-gaming_bWdpZ22UmZqaraWkpJRmbmdlrWZlbWU.jpg",
+ "https://images8.alphacoders.com/140/thumb-1920-1405303.jpg",
+];
 
 export default function Home() {
 return <div className="scroll-smooth">
-        <div className="bg-[url('https://cdn.wccftech.com/wp-content/uploads/2026/01/arknightsendfield-jprjo-1920x1080.png')] bg-cover sm:bg-cover md:bg-cover lg:bg-cover xl:bg-cover bg-center sm:bg-center md:bg-center lg:bg-center xl:bg-center bg-fixed bg-no-repeat w-full h-[40vh] sm:h-[50vh] md:h-[70vh] lg:h-[90vh] xl:h-screen flex items-center justify-center"></div>
+        <div className="bg-gradient-to-b from-[#F8F546] via-[#F8F546] to-white w-full h-[80vh] flex justify-center flex-col items-center">
+            <div className="helvetica font-extrabold text-[10vw] transition flicker-appearY">
+                //ENDFIELD
+            </div>
+            <div className="absolute text-stripe-effect text-effect font-black text-[13vh] left-60 top-80 flicker-appearY">
+                    <h2>//ENDFIELD</h2>
+            </div>
+            
+        </div>
 
 
     {/* What We Do */}
@@ -51,10 +72,12 @@ return <div className="scroll-smooth">
 
             <div className="w-full h-auto p-[3vh_0vw_0vw_0vw] gap-[0vw] mb-[5vh] flex flex-col bg-white">
                 <div className="-translate-x-[7vw]">
-                    <img src="https://static0.thegamerimages.com/wordpress/wp-content/uploads/wm/2026/01/arknights-endfield-placing-the-pac-structure.jpg?w=1600&h=900&fit=crop" alt="" className="rounded-xl w-full"/>
+                    <img src="https://static0.thegamerimages.com/wordpress/wp-content/uploads/wm/2026/01/arknights-endfield-placing-the-pac-structure.jpg?w=1600&h=900&fit=crop" alt="" className="rounded-xl w-full flicker-appearX"/>
                 </div>
                 <div className="-translate-x-[7vw] translate-y-[3vh]">
-                    <img src="https://blog-uploads.eneba.games/uploads/2026/01/ARKNIGHT-HUB-768x430.jpg" alt="" className="rounded-xl w-full"/>
+                    <img src="https://blog-uploads.eneba.games/uploads/2026/01/ARKNIGHT-HUB-768x430.jpg" alt="" className="rounded-xl w-full transform flicker-appearX" style={{
+                        animationDelay: ".19s"
+                    }}/>
                 </div>
             </div>
         </div>
@@ -65,22 +88,52 @@ return <div className="scroll-smooth">
                     New Information
                 </h1>
             </div>
-            <div className="w-full h-auto flex flex-col">
-                <div className="">
-                    <img src="https://images3.alphacoders.com/140/thumb-1920-1405039.jpg" alt="" className="h-[20vw] w-full object-cover"/>
+             <div className="w-full">
+      <div className="w-full mt-[3vh]">
+<Swiper
+  modules={[Navigation, Autoplay]}
+  navigation
+  loop={true}
+  centeredSlides={true}
+  slidesPerView={3}
+  spaceBetween={20}
+  slidesPerGroup={1}
+  speed={600}
+  watchOverflow={false}
+  autoplay={{
+    delay: 3000,
+    disableOnInteraction: false,
+  }}
+  breakpoints={{
+    640: { slidesPerView: 2 },
+    768: { slidesPerView: 3 },
+    1024: { slidesPerView: 3 },
+
+  }}
+>
+          {images.map((img, index) => (
+            <SwiperSlide key={index}>
+              {({ isActive }) => (
+                <div
+                  className={`
+                    transition-all duration-500 overflow-hidden rounded-3xl
+                    ${isActive ? "scale-100 opacity-100" : "scale-90 opacity-50"}
+                  `}
+                >
+                  <img
+                    src={img}
+                    alt=""
+                    className="h-[30vh] md:h-[35vh] w-full object-cover"
+                  />
                 </div>
-                <div className="flex grid-cols-3 gap-[2vw] mt-[3vh] justify-center">
-                    <div>
-                        <img src="https://i0.wp.com/news.qoo-app.com/en/wp-content/uploads/sites/3/2022/03/03_HD.554121.jpg?resize=900%2C506&ssl=1" alt="" className="h-[17vw] w-full object-contain rounded-3xl"/>
-                    </div>
-                    <div>
-                        <img src="https://pbs.twimg.com/media/GmIh4WvbcAQeRiM.jpg" alt="" className="h-[17vw] w-full object-contain rounded-3xl"/>
-                    </div>
-                    <div>
-                        <img src="https://s1.zerochan.net/Arknights%3A.Endfield.600.4273863.jpg" alt="" className="h-[17vw] w-full object-contain rounded-3xl"/>
-                    </div>
-                </div>
-            </div>
+              )}
+            </SwiperSlide>
+          ))}
+        </Swiper>
+      </div>
+    </div>
+
+            
             <div className="pt-[3vw]">
                 <button className="px-[8vw] py-[1.5vh] bg-[#202020] text-white text-[3vw] md:text-[1.5vw] lg:text-[1vw] rounded-xl hover:bg-[#F8F546] hover:text-[#202020] hover:font-bold transition cursor-pointer">
                 More Information
