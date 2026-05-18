@@ -37,7 +37,7 @@ export default function ProductCard({ ...data }: IProduct) {
           display: "flex",
           flexDirection: "column",
         }}
-        onClick={() => navigate(`/products`)}
+        onClick={() => navigate(`/products/${data.id}`)}
       >
         {data.isBest && (
           <Box

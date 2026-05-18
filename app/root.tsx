@@ -25,6 +25,10 @@ export const links: Route.LinksFunction = () => [
   },
 ];
 
+export function meta() {
+  return [{ title: "Endfield Industries" }];
+}
+
 export function Layout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en">
