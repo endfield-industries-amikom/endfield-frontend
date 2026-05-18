@@ -7,7 +7,6 @@ import "tailwindcss";
 import "swiper/css";
 import "swiper/css/navigation";
 import ProductCard from "~/components/Product-Card";
-import LegacyCard from "~/components/LegacyCard";
 
 const images = [
   "https://i0.wp.com/news.qoo-app.com/en/wp-content/uploads/sites/3/2022/03/03_HD.554121.jpg?resize=900%2C506&ssl=1",
