@@ -1,10 +1,13 @@
 import { NavLink } from "react-router";
 import { Swiper, SwiperSlide } from "swiper/react";
 import { Navigation, Autoplay } from "swiper/modules";
+import { products } from "~/data/Products";
 
 import "tailwindcss";
 import "swiper/css";
 import "swiper/css/navigation";
+import ProductCard from "~/components/Product-Card";
+import LegacyCard from "~/components/LegacyCard";
 
 const images = [
   "https://i0.wp.com/news.qoo-app.com/en/wp-content/uploads/sites/3/2022/03/03_HD.554121.jpg?resize=900%2C506&ssl=1",
@@ -167,38 +170,10 @@ export default function Home() {
             Discover our range of innovative products.
           </p>
         </div>
-
-        <div className="w-full overflow-x-scroll h-[50vh] xl:h-[50vh] md:h-[30vh] flex items-center">
-          <div className="flex gap-[1.2vw] min-w-max px-[3vw] overflow-show">
-            <NavLink
-              to="/products"
-              className="w-[12vw] border-[0.1vw] border-[#C2C2C2] bg-[#CFCFCF] h-[18vw] rounded flex flex-col gap-[0.5vw] justify-start overflow-hidden hover:scale-[1.1] transition delay-75 duration-300 ease-in-out border-spin"
-            >
-              <div className="flex justify-center items-center h-[3vw] w-[5vw] rounded-br-md  overflow-hidden bg-[#C2C2C2] text-center">
-                <p className="text-[0.8vw] lg:text-[0.5vw] font-medium text-[#202020]">
-                  Best Seller
-                </p>
-              </div>
-              <div className="flex justify-center items-center h-[20vw]">
-                <h2 className="text-[1.2vw] md:text-[0.8vw] lg:text-[0.8vw]  text-[#202020]">
-                  Product 1
-                </h2>
-              </div>
-              <div className="bg-white w-full h-[10vw] flex flex-col items-start justify-start gap-[0.5vw] p-[1vw]">
-                <p className="text-[1.2vw] md:text-[1vw] lg:text-[0.8vw] text-[#202020]">
-                  Musang Plenger
-                </p>
-                <h3 className="text-[1.5vw] md:text-[1vw] lg:text-[1vw] font-bold text-[#202020]">
-                  $99.99
-                </h3>
-                <div className="flex justify-center items-center w-full">
-                  <p className="text-[1vw] md:text-[0.8vw] lg:text-[1vw] text-[#202020] hover:font-bold transition">
-                    ...
-                  </p>
-                </div>
-              </div>
-            </NavLink>
-          </div>
+        <div className="w-full overflow-x-scroll h-fit flex items-center gap-4 ml-[3vw]">
+          {products.map((product, index) => (
+            <ProductCard key={index} {...product} />
+          ))}
         </div>
         <div className="flex justify-center items-center w-full pt-[3vw]">
           <NavLink to="/products">
