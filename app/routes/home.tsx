@@ -74,14 +74,14 @@ export default function Home() {
         </div>
 
         <div className="w-full h-auto p-[3vh_0vw_0vw_0vw] gap-0 mb-[5vh] flex flex-col bg-white">
-          <div className="translate-x-[7vw]">
+          <div className="translate-x-[-7vw]">
             <img
               src="https://static0.thegamerimages.com/wordpress/wp-content/uploads/wm/2026/01/arknights-endfield-placing-the-pac-structure.jpg?w=1600&h=900&fit=crop"
               alt=""
               className="rounded-xl w-full flicker-appearX"
             />
           </div>
-          <div className="translate-x-[7vw] translate-y-[3vh]">
+          <div className="translate-x-[-7vw] translate-y-[3vh]">
             <img
               src="https://blog-uploads.eneba.games/uploads/2026/01/ARKNIGHT-HUB-768x430.jpg"
               alt=""
