@@ -9,27 +9,41 @@ import {
 import type { IProduct } from "~/interfaces/IProduct";
 import { useNavigate } from "react-router";
 
-export default function ProductCard({ ...data }: IProduct) {
+type ProductCardLayout = "carousel" | "grid";
+
+interface ProductCardProps extends IProduct {
+  layout?: ProductCardLayout;
+}
+
+export default function ProductCard({
+  layout = "carousel",
+  ...data
+}: ProductCardProps) {
   const navigate = useNavigate();
+  const isGrid = layout === "grid";
+
+  const cardSx = {
+    width: isGrid ? "100%" : { xs: 220, sm: 240, md: 260 },
+    minWidth: isGrid ? "100%" : { xs: 220, sm: 240, md: 260 },
+    height: isGrid ? "100%" : { xs: 300, sm: 320, md: 340 },
+    border: "1px solid #C2C2C2",
+    bgcolor: "#CFCFCF",
+    borderRadius: 1,
+    overflow: "hidden",
+    boxShadow: 1,
+    transition: "transform 250ms ease, box-shadow 250ms ease",
+    "&:hover": {
+      transform: "translateY(-2px)",
+      boxShadow: 4,
+    },
+  };
+
+  const mediaHeight = isGrid
+    ? { xs: 170, sm: 190, md: 210 }
+    : { xs: 170, sm: 180, md: 190 };
 
   return (
-    <Card
-      sx={{
-        width: "12vw",
-        minWidth: "12vw",
-        height: "18vw",
-        border: "0.1vw solid #C2C2C2",
-        bgcolor: "#CFCFCF",
-        borderRadius: 1,
-        overflow: "hidden",
-        boxShadow: 1,
-        transition: "transform 250ms ease, box-shadow 250ms ease",
-        "&:hover": {
-          transform: "translateY(-2px)",
-          boxShadow: 4,
-        },
-      }}
-    >
+    <Card sx={cardSx}>
       <CardActionArea
         sx={{
           position: "relative",
@@ -37,7 +51,7 @@ export default function ProductCard({ ...data }: IProduct) {
           display: "flex",
           flexDirection: "column",
         }}
-        onClick={() => navigate(`/products/${data.id}`)}
+        //onClick={() => navigate(`/products/${data.id}`)}
       >
         {data.isBest && (
           <Box
@@ -49,15 +63,18 @@ export default function ProductCard({ ...data }: IProduct) {
               display: "flex",
               justifyContent: "center",
               alignItems: "center",
-              width: "5vw",
-              height: "2vw",
+              width: 96,
+              height: 32,
               borderBottomRightRadius: 1,
               bgcolor: "#C2C2C2",
               textAlign: "center",
             }}
           >
             <Typography
-              sx={{ fontSize: { xs: "0.8vw", lg: "0.5vw" }, fontWeight: 500 }}
+              sx={{
+                fontSize: isGrid ? "0.75rem" : "0.7rem",
+                fontWeight: 500,
+              }}
             >
               Best Seller
             </Typography>
@@ -69,11 +86,15 @@ export default function ProductCard({ ...data }: IProduct) {
               display: "flex",
               justifyContent: "center",
               alignItems: "center",
-              height: "20vw",
+              height: mediaHeight,
             }}
           >
             <Typography
-              sx={{ fontSize: { xs: "1.2vw", md: "0.8vw", lg: "0.8vw" } }}
+              sx={{
+                fontSize: isGrid ? "0.95rem" : "0.85rem",
+                px: 1,
+                textAlign: "center",
+              }}
             >
               {data.title}
             </Typography>
@@ -83,7 +104,7 @@ export default function ProductCard({ ...data }: IProduct) {
             component="img"
             image={data.image}
             alt={data.title}
-            sx={{ width: "100%", height: "20vw", objectFit: "cover" }}
+            sx={{ width: "100%", height: mediaHeight, objectFit: "cover" }}
           />
         )}
 
@@ -91,25 +112,21 @@ export default function ProductCard({ ...data }: IProduct) {
           sx={{
             mt: "auto",
             width: "100%",
-            height: "10vw",
             bgcolor: "#fff",
-            p: "1vw",
+            p: 2,
             display: "flex",
             flexDirection: "column",
-            gap: "0.5vw",
+            gap: 1,
             alignItems: "flex-start",
             justifyContent: "flex-start",
           }}
         >
-          <Typography
-            sx={{ fontSize: { xs: "1.2vw", md: "1vw", lg: "0.8vw" } }}
-            noWrap
-          >
+          <Typography sx={{ fontSize: isGrid ? "0.95rem" : "0.85rem" }} noWrap>
             {data.title}
           </Typography>
           <Typography
             sx={{
-              fontSize: { xs: "1.5vw", md: "1vw", lg: "1vw" },
+              fontSize: isGrid ? "1rem" : "0.95rem",
               fontWeight: 700,
             }}
           >
@@ -125,7 +142,7 @@ export default function ProductCard({ ...data }: IProduct) {
           >
             <Typography
               sx={{
-                fontSize: { xs: "1vw", md: "0.8vw", lg: "1vw" },
+                fontSize: isGrid ? "0.85rem" : "0.8rem",
                 transition: "font-weight 150ms ease",
                 "&:hover": { fontWeight: 700 },
               }}

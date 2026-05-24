@@ -1,143 +1,28 @@
-"use client";
-
 import { useState } from "react";
+import { Box, Container, Stack } from "@mui/material";
+import ProfileDetails from "~/components/contact/ProfileDetails";
+import ProfileSelector from "~/components/contact/ProfileSelector";
+import { contactProfiles } from "~/data/ContactProfiles";
 
 export default function Contact() {
-  const profiles = [
-    {
-      id: 1,
-      image:
-        "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTNS2jSzabh1icke_cALBwTS8NyesAYks4mLg&s",
-      avatar:
-        "https://i.pinimg.com/736x/ac/4a/71/ac4a71b64f03976b4f40265987718b03.jpg",
-      name: "Fauzan Akmal",
-      role: "Create Frontend and UI/UX",
-      NIM: "24.61.0271",
-    },
-
-    {
-      id: 2,
-      image:
-        "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSqiqDGppFgzOfrMzopkDNjdsclotRQXKfuDw&s",
-      avatar:
-        "https://images.ctfassets.net/h6goo9gw1hh6/4uZMPT7pEQxvowHt980pXI/093596e039b95eb45570ff991a98a044/Tell_Me_More__Meme_Example.jpg?w=1080&h=1080&fl=progressive&q=70&fm=jpg",
-      name: "Seno Aji",
-      NIM: "24.61.0268",
-      role: "Backend",
-    },
-
-    {
-      id: 3,
-      image:
-        "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQQFwz2zuPTXiO77uuOVBUTr9VFJLfjXLvBvA&s",
-      avatar:
-        "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQgYQzjbW9Sz1HtRHmXU_lwCqFmeWMCTmtkfg&s",
-      name: "Aditya Putra Widaswara",
-      NIM: "24.61.0269",
-      role: "Create Frontend and UI/UX",
-    },
-  ];
-
-  const [activeProfile, setActiveProfile] = useState(profiles[0]);
+  const [activeProfile, setActiveProfile] = useState(contactProfiles[0]);
 
   return (
-    <section className="min-h-screen bg-[#f5f5f5] px-[2vw] py-[5vh] overflow-hidden">
-      <div className="flex flex-col lg:flex-row gap-[2vw] items-center lg:items-start ">
-        <div className="bg-white shadow-xl rounded-full px-[1vw] py-[vh] flex lg:flex-col gap-[0.6vh] items-center h-[8vh] w-auto  lg:h-auto animate-fade ">
-          {profiles.map((profile) => (
-            <img
-              key={profile.id}
-              src={profile.avatar}
-              alt={profile.name}
-              onClick={() => setActiveProfile(profile)}
-              className={`
-                w-[2vw] h-[2vw]
-                md:w-[5vw] md:h-[5vw]
-                lg:w-[3vw] lg:h-[3vw]
-
-                min-w-9.5
-                min-h-9.75
-                mr-[0.1vw]
-                ml-[0.1vw]
-                mt-[1vh]
-                mb-[1vh]
-                rounded-full
-                object-cover
-                cursor-pointer
-                transition-all
-                duration-500
-                border-[0.15vw]
-
-                ${
-                  activeProfile.id === profile.id
-                    ? "scale-65 border-[#004996] shadow-2xl"
-                    : "border-white opacity-70 hover:opacity-100 hover:scale-105"
-                }
-              `}
-            />
-          ))}
-        </div>
-        <div className="flex-1 w-full">
-          <div className="overflow-hidden rounded-[2vw] shadow-2xl">
-            <img
-              src={activeProfile.image}
-              alt=""
-              className="
-                w-full
-                h-[35vh]
-                md:h-[45vh]
-                lg:h-[55vh]
-                object-cover
-                transition-all
-                duration-700
-                hover:scale-105
-                animate-fade
-              "
-            />
-          </div>
-          <div className="mt-[4vh] text-center lg:text-left animate-fade">
-            <p
-              className="
-              uppercase
-              tracking-[0.7vw]
-              text-[1vw]
-              md:text-[1.5vw]
-              lg:text-[0.9vw]
-              text-gray-400
-              font-semibold
-            "
-            >
-              {activeProfile.role}
-            </p>
-
-            <h1
-              className="
-              text-[10vw]
-              md:text-[7vw]
-              lg:text-[5vw]
-              leading-none
-              font-black
-              text-gray-900
-              mt-[1vh]
-            "
-            >
-              {activeProfile.name}
-            </h1>
-
-            <h2
-              className="
-              text-[4vw]
-              md:text-[2vw]
-              lg:text-[1.5vw]
-              text-gray-500
-              mt-[1vh]
-            "
-            >
-              {activeProfile.NIM}
-            </h2>
-          </div>
-        </div>
-      </div>
-    </section>
+    <Box sx={{ minHeight: "100vh", bgcolor: "#f5f5f5", py: 6 }}>
+      <Container maxWidth="lg">
+        <Stack
+          direction={{ xs: "column", lg: "row" }}
+          spacing={{ xs: 3, md: 4 }}
+          sx={{ alignItems: { xs: "stretch", lg: "flex-start" } }}
+        >
+          <ProfileSelector
+            profiles={contactProfiles}
+            activeId={activeProfile.id}
+            onSelect={setActiveProfile}
+          />
+          <ProfileDetails profile={activeProfile} />
+        </Stack>
+      </Container>
+    </Box>
   );
 }
