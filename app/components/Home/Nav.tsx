@@ -9,16 +9,19 @@ export default function Nav() {
     <div className="w-full bg-[#FAFAFA] text-[#202020] shadow sticky top-0 z-50">
       <div className="h-[7vh] px-2 flex items-center">
         <div className="container mx-auto flex items-center justify-between w-full">
-          <NavLink to="/" className="flex items-center gap-6">
+          <NavLink
+            to="/"
+            className="flex items-center gap-6 font-bold text-[2.5vw] font-sans hover:text-[#e0d31a] hover:font-bold transition tracking-wider lg:text-[1vw] md:text-[1.5vw] sm:text-[1vw]"
+          >
             <img
-              src="https://endfield.wiki.gg/images/thumb/Endfield_Industries.png/300px-Endfield_Industries.png?800fd6"
+              src="https://raw.githubusercontent.com/Yue-plus/endfield_icons/main/svg/endfield-industries.svg"
               alt="logo"
               className="h-10 w-auto `filter-[brightness(0)_saturate(100%)_invert(13%)_sepia(8%)_hue-rotate(208deg)_contrast(95%)]
               transition-all duration-300"
             />
-            <a className="font-bold text-[2.5vw] font-sans hover:text-[#e0d31a] hover:font-bold transition tracking-wider lg:text-[1vw] md:text-[1.5vw] sm:text-[1vw]">
+            <p className="font-bold text-[2.5vw] font-sans hover:text-[#e0d31a] hover:font-bold transition tracking-wider lg:text-[1vw] md:text-[1.5vw] sm:text-[1vw]">
               EndField Industries
-            </a>
+            </p>
           </NavLink>
 
           {/* Desktop Navigation */}
