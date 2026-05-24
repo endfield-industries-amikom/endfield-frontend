@@ -9,9 +9,6 @@ import {
 
 import type { Route } from "./+types/root";
 import "./app.css";
-import "swiper/css/navigation";
-import Nav from "./components/Home/Nav";
-import Footer from "./components/Home/Footer";
 
 export const links: Route.LinksFunction = () => [
   { rel: "preconnect", href: "https://fonts.googleapis.com" },
@@ -51,9 +48,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
 export default function App() {
   return (
     <div>
-      <Nav />
       <Outlet />
-      <Footer />
     </div>
   );
 }
