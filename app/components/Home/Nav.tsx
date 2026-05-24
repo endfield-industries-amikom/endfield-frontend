@@ -13,8 +13,7 @@ export default function Nav() {
             <img
               src="https://endfield.wiki.gg/images/thumb/Endfield_Industries.png/300px-Endfield_Industries.png?800fd6"
               alt="logo"
-              className="h-10 w-auto [filter:brightness(0)_saturate(100%)_invert(13%)_sepia(8%)_hue-rotate(208deg)_contrast(95%)]
-              hover:[filter:brightness(0)_saturate(100%)_invert(79%)_sepia(86%)_saturate(749%)_hue-rotate(10deg)_brightness(103%)_contrast(101%)]
+              className="h-10 w-auto `filter-[brightness(0)_saturate(100%)_invert(13%)_sepia(8%)_hue-rotate(208deg)_contrast(95%)]
               transition-all duration-300"
             />
             <a className="font-bold text-[2.5vw] font-sans hover:text-[#e0d31a] hover:font-bold transition tracking-wider lg:text-[1vw] md:text-[1.5vw] sm:text-[1vw]">
@@ -48,13 +47,6 @@ export default function Nav() {
             >
               Contact
             </NavLink>
-            <div>
-              <input
-                type="text"
-                placeholder="  Search..."
-                className="w-full h-auto bg-[#FAFAFA] text-[#202020] placeholder:text-[#808080] border border-[#CCCCCC] focus:outline-none rounded"
-              />
-            </div>
           </nav>
 
           {/* Hamburger Menu Button */}
