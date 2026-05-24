@@ -148,13 +148,16 @@ export default function HomeContent() {
       </div>
 
       {/* Sekat */}
-      <div className="relative bg-[#F0F000] mt-[5vh] w-full h-[8vh] md:h-[10vh] overflow-visible">
-        <img
-          src="/baut-idk.png"
-          alt="Baut"
-          className="absolute left-2 md:left-6 top-8 sm:top-10 translate-y-[60%] h-[160%] w-auto object-contain z-10 sm:h-[120%] md:h-[140%] lg:h-[150%] xl:h-[160%] xl:top-8.5 lg:top-9"
-        />
-      </div>
+      {/* Add to experimental for image
+        <div className="relative bg-[#F0F000] mt-[5vh] w-full h-[8vh] md:h-[10vh] overflow-visible">
+          <img
+            src="/baut-idk.png"
+            alt="Baut"
+            className="absolute left-2 md:left-6 top-8 sm:top-10 translate-y-[60%] h-[160%] w-auto object-contain z-10 sm:h-[120%] md:h-[140%] lg:h-[150%] xl:h-[160%] xl:top-8.5 lg:top-9"
+          />
+        </div>
+      */}
+      <div className="relative bg-[#F0F000] mt-[5vh] w-full h-[8vh] md:h-[10vh] overflow-visible"></div>
 
       <div className="mb-[20vh]">
         <div className="p-[4vw] flex flex-col items-start">

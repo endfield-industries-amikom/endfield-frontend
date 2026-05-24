@@ -146,7 +146,6 @@ body {
   transform-origin: left bottom;
 
   background-clip: text;
-  color: transparent;
 }
 
 @media (max-width: 768px) {
