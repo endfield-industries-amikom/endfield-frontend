@@ -1,11 +1,30 @@
-export default function products() {
-  return (
-    <div>
-      <title>Products</title>
-      <meta name="description" content="Endfield Industries products" />
-      <div className="background-image text-effect font-black">PRODUCTS</div>
+import type { Route } from "../../+types/root";
+import { Box, Container, Stack } from "@mui/material";
+import ProductsGrid from "~/components/products/ProductsGrid";
+import ProductsHero from "~/components/products/ProductsHero";
+import ProductsSectionHeader from "~/components/products/ProductsSectionHeader";
+import { products as productsItems } from "~/data/Products";
 
-      <div className="background-pattern bg-[#F8F546] w-full h-[10vw]"></div>
-    </div>
+export const meta: Route.MetaFunction = () => {
+  return [
+    { title: "Products" },
+    { name: "description", content: "Endfield Industries products" },
+  ];
+};
+
+export default function Products() {
+  return (
+    <Box sx={{ bgcolor: "#FAFAFA", minHeight: "100vh", pb: 10 }}>
+      <Container maxWidth="lg">
+        <ProductsHero />
+        <Stack spacing={3} sx={{ pb: 6 }}>
+          <ProductsSectionHeader
+            title="Our Product"
+            subtitle="Discover our range of innovative products."
+          />
+          <ProductsGrid products={productsItems} />
+        </Stack>
+      </Container>
+    </Box>
   );
 }

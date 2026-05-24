@@ -1,8 +1,18 @@
+import {
+  Box,
+  Button,
+  Container,
+  Paper,
+  Stack,
+  Typography,
+} from "@mui/material";
 import { NavLink } from "react-router";
 import { Swiper, SwiperSlide } from "swiper/react";
 import { Navigation, Autoplay } from "swiper/modules";
 import { products } from "~/data/Products";
 import ProductCard from "~/components/data/Product-Card";
+import ProductsSectionHeader from "~/components/products/ProductsSectionHeader";
+import ProductsGrid from "~/components/products/ProductsGrid";
 
 const images = [
   "https://i0.wp.com/news.qoo-app.com/en/wp-content/uploads/sites/3/2022/03/03_HD.554121.jpg?resize=900%2C506&ssl=1",
@@ -14,90 +24,220 @@ const images = [
 
 export default function HomeContent() {
   return (
-    <div className="scroll-smooth overflow-x-hidden">
-      <section className="bg-linear-to-b from-[#F8F546] via-[#F8F546] to-white w-full h-[80vh] flex justify-center flex-col items-center cursor-default">
-        <div className="helvetica font-extrabold text-[10vw] transition flicker-appearY">
-          //ENDFIELD
-        </div>
-        <div className="absolute text-stripe-effect text-effect font-black text-[13vh] left-60 top-80 flicker-appearY">
-          <h2>//ENDFIELD</h2>
-        </div>
+    <Box className="scroll-smooth overflow-x-hidden">
+      <section className="bg-linear-to-b from-[#F8F546] via-[#F8F546] to-white w-full md:h-[80vh] xs:h-[60vh] flex justify-center flex-col items-center cursor-default">
+        <Container
+          maxWidth="lg"
+          sx={{
+            position: "relative",
+            py: { xs: 6, md: 8 },
+            display: "flex",
+            flexDirection: "column",
+            alignItems: { xs: "center", md: "flex-start" },
+          }}
+        >
+          <div className="helvetica font-extrabold text-[10vw] transition flicker-appearY">
+            //ENDFIELD
+          </div>
+          <div className="text-transparent absolute text-stripe-effect text-effect font-black xs:text-[10vh] md:text-[13vh] xs:right-20 md:right-30 xs:bottom-50 md:bottom-40 flicker-appearY">
+            <h2>//ENDFIELD</h2>
+          </div>
+        </Container>
       </section>
 
       {/* What We Do */}
-      <div className="z-10 bg-[#F8F546] gap-[13vw] flex grid-cols-2 p-[0vh_0vh_5vh_0vw]">
-        <div className="bg-white p-[3vw] text-left text-[5vw] mb-[7vw] gap-[4vh] flex flex-col">
-          <div>
-            <h2 className="text-[3vw] sm:text-[2.5vw] md:text-[3vw] lg:text-[3vw] font-bold mb-[1vh] text-[#202020]">
-              What We Do
-            </h2>
-            <p className="text-[3vw] md:text-[1.5vw] lg:text-[1vw] text-[#202020]">
-              We are a leading company in the industry, providing top-notch
-              solutions and services to our clients.
-            </p>
-            <NavLink to="/about">
-              <button className="px-[6vw] py-[1.5vh]  bg-[#202020] text-white text-[3vw] md:text-[1.5vw] lg:text-[1vw] rounded-xl hover:bg-[#F8F546] hover:text-[#202020] hover:font-bold cursor-pointer transition">
-                Learn More
-              </button>
-            </NavLink>
-          </div>
-
-          <div className="gap-[3vw] flex flex-col">
-            <div className="border-2 p-[2vw] border-[#D9D9D9] flex justify-evenly items-top gap-[2vw]">
-              <div className="bg-[#D9D9D9] w-[10vw] aspect-square"></div>
-              <div>
-                <h3 className="text-[2vw] md:text-[1.5vw] lg:text-[1vw] font-bold text-[#202020]">
-                  Our Services
-                </h3>
-                <p className="text-[2vw] md:text-[1.5vw] lg:text-[1vw] text-[#202020]">
-                  Our services include cutting-edge technology solutions
-                  tailored for you.
-                </p>
-              </div>
-            </div>
-            <div className="border-2 p-[2vw] border-[#D9D9D9] flex justify-evenly items-top gap-[2vw]">
-              <div className="bg-[#D9D9D9] w-[10vw] aspect-square"></div>
-              <div>
-                <h3 className="text-[2vw] md:text-[1.5vw] lg:text-[1vw] font-bold text-[#202020]">
-                  Why Choose Us?
-                </h3>
-                <p className="text-[2vw] md:text-[1.5vw] lg:text-[1vw] text-[#202020]">
-                  We combine experience, professionalism, and reliability.
-                </p>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <div className="w-full h-auto p-[3vh_0vw_0vw_0vw] gap-0 mb-[5vh] flex flex-col bg-white">
-          <div className="translate-x-[-7vw]">
-            <img
-              src="https://static0.thegamerimages.com/wordpress/wp-content/uploads/wm/2026/01/arknights-endfield-placing-the-pac-structure.jpg?w=1600&h=900&fit=crop"
-              alt=""
-              className="rounded-xl w-full flicker-appearX"
-            />
-          </div>
-          <div className="translate-x-[-7vw] translate-y-[3vh]">
-            <img
-              src="https://blog-uploads.eneba.games/uploads/2026/01/ARKNIGHT-HUB-768x430.jpg"
-              alt=""
-              className="rounded-xl w-full transform flicker-appearX"
-              style={{
-                animationDelay: ".19s",
+      <Box sx={{ bgcolor: "#F8F546", py: { xs: 4, md: 6 } }}>
+        <Container maxWidth="lg">
+          <Box
+            sx={{
+              display: "grid",
+              gridTemplateColumns: { xs: "1fr", lg: "1fr 1fr" },
+              gap: { xs: 4, lg: 8 },
+              alignItems: "start",
+            }}
+          >
+            <Box
+              sx={{
+                bgcolor: "white",
+                p: { xs: 3, md: 4 },
+                display: "flex",
+                flexDirection: "column",
+                gap: { xs: 3, md: 4 },
               }}
-            />
-          </div>
-        </div>
-      </div>
+            >
+              <Box>
+                <Typography
+                  variant="h4"
+                  sx={{
+                    fontWeight: 700,
+                    color: "#202020",
+                    mb: 1,
+                    fontSize: { xs: "1.6rem", md: "2rem" },
+                  }}
+                >
+                  What We Do
+                </Typography>
+                <Typography
+                  variant="body1"
+                  sx={{
+                    color: "#202020",
+                    mb: 2.5,
+                    fontSize: { xs: "0.95rem", md: "1rem" },
+                  }}
+                >
+                  We are a leading company in the industry, providing top-notch
+                  solutions and services to our clients.
+                </Typography>
+                <NavLink to="/about">
+                  <Button
+                    variant="contained"
+                    sx={{
+                      bgcolor: "#202020",
+                      textTransform: "none",
+                      borderRadius: 2,
+                      px: { xs: 3, md: 4 },
+                      "&:hover": {
+                        bgcolor: "#F8F546",
+                        color: "#202020",
+                        fontWeight: 700,
+                      },
+                    }}
+                  >
+                    Learn More
+                  </Button>
+                </NavLink>
+              </Box>
 
-      <div className="gap-0 flex flex-col items-center">
-        <div className="text-center p-[0.5vw]">
-          <h1 className="text-[5vw] md:text-[3vw] lg:text-[2vw] font-bold text-[#202020] tracking-wider">
+              <Stack spacing={{ xs: 2, md: 3 }}>
+                <Paper
+                  variant="outlined"
+                  sx={{
+                    p: { xs: 2, md: 3 },
+                    borderColor: "#D9D9D9",
+                  }}
+                >
+                  <Stack
+                    direction="row"
+                    spacing={2}
+                    sx={{ alignItems: "start" }}
+                  >
+                    <Box
+                      sx={{
+                        width: 72,
+                        height: 72,
+                        bgcolor: "#D9D9D9",
+                        borderRadius: 1,
+                        flexShrink: 0,
+                      }}
+                    />
+                    <Box>
+                      <Typography
+                        variant="h6"
+                        sx={{
+                          fontWeight: 700,
+                          color: "#202020",
+                          fontSize: { xs: "1rem", md: "1.05rem" },
+                        }}
+                      >
+                        Our Services
+                      </Typography>
+                      <Typography
+                        variant="body2"
+                        sx={{ color: "#202020", mt: 0.5 }}
+                      >
+                        Our services include cutting-edge technology solutions
+                        tailored for you.
+                      </Typography>
+                    </Box>
+                  </Stack>
+                </Paper>
+                <Paper
+                  variant="outlined"
+                  sx={{
+                    p: { xs: 2, md: 3 },
+                    borderColor: "#D9D9D9",
+                  }}
+                >
+                  <Stack
+                    direction="row"
+                    spacing={2}
+                    sx={{ alignItems: "start" }}
+                  >
+                    <Box
+                      sx={{
+                        width: 72,
+                        height: 72,
+                        bgcolor: "#D9D9D9",
+                        borderRadius: 1,
+                        flexShrink: 0,
+                      }}
+                    />
+                    <Box>
+                      <Typography
+                        variant="h6"
+                        sx={{
+                          fontWeight: 700,
+                          color: "#202020",
+                          fontSize: { xs: "1rem", md: "1.05rem" },
+                        }}
+                      >
+                        Why Choose Us?
+                      </Typography>
+                      <Typography
+                        variant="body2"
+                        sx={{ color: "#202020", mt: 0.5 }}
+                      >
+                        We combine experience, professionalism, and reliability.
+                      </Typography>
+                    </Box>
+                  </Stack>
+                </Paper>
+              </Stack>
+            </Box>
+
+            <Stack
+              spacing={{ xs: 2, md: 3 }}
+              sx={{
+                bgcolor: "white",
+                p: { xs: 2, md: 3 },
+              }}
+            >
+              <Box sx={{ borderRadius: 2, overflow: "hidden" }}>
+                <img
+                  src="https://static0.thegamerimages.com/wordpress/wp-content/uploads/wm/2026/01/arknights-endfield-placing-the-pac-structure.jpg?w=1600&h=900&fit=crop"
+                  alt=""
+                  className="rounded-xl w-full flicker-appearX"
+                />
+              </Box>
+              <Box sx={{ borderRadius: 2, overflow: "hidden" }}>
+                <img
+                  src="https://blog-uploads.eneba.games/uploads/2026/01/ARKNIGHT-HUB-768x430.jpg"
+                  alt=""
+                  className="rounded-xl w-full transform flicker-appearX"
+                  style={{
+                    animationDelay: ".19s",
+                  }}
+                />
+              </Box>
+            </Stack>
+          </Box>
+        </Container>
+      </Box>
+
+      <Box sx={{ py: { xs: 5, md: 7 } }}>
+        <Container maxWidth="lg" sx={{ textAlign: "center" }}>
+          <Typography
+            variant="h4"
+            sx={{
+              fontWeight: 700,
+              color: "#202020",
+              letterSpacing: 1,
+              fontSize: { xs: "1.6rem", md: "2rem" },
+            }}
+          >
             New Information
-          </h1>
-        </div>
-        <div className="w-full">
-          <div className="w-full mt-[3vh]">
+          </Typography>
+          <Box sx={{ mt: { xs: 3, md: 4 } }}>
             <Swiper
               modules={[Navigation, Autoplay]}
               navigation
@@ -137,40 +277,50 @@ export default function HomeContent() {
                 </SwiperSlide>
               ))}
             </Swiper>
-          </div>
-        </div>
+          </Box>
 
-        <div className="pt-[3vw]">
-          <button className="px-[8vw] py-[1.5vh] bg-[#202020] text-white text-[3vw] md:text-[1.5vw] lg:text-[1vw] rounded-xl hover:bg-[#F8F546] hover:text-[#202020] hover:font-bold transition cursor-pointer">
-            More Information
-          </button>
-        </div>
-      </div>
+          <Box sx={{ mt: { xs: 3, md: 4 } }}>
+            <Button
+              variant="contained"
+              sx={{
+                bgcolor: "#202020",
+                textTransform: "none",
+                borderRadius: 2,
+                px: { xs: 4, md: 6 },
+                "&:hover": {
+                  bgcolor: "#F8F546",
+                  color: "#202020",
+                  fontWeight: 700,
+                },
+              }}
+            >
+              More Information
+            </Button>
+          </Box>
+        </Container>
+      </Box>
 
       {/* Sekat */}
-      <div className="relative bg-[#F0F000] mt-[5vh] w-full h-[8vh] md:h-[10vh] overflow-visible">
-        <img
-          src="/baut-idk.png"
-          alt="Baut"
-          className="absolute left-2 md:left-6 top-8 sm:top-10 translate-y-[60%] h-[160%] w-auto object-contain z-10 sm:h-[120%] md:h-[140%] lg:h-[150%] xl:h-[160%] xl:top-8.5 lg:top-9"
-        />
-      </div>
+      {/* Add to experimental for image
+        <div className="relative bg-[#F0F000] mt-[5vh] w-full h-[8vh] md:h-[10vh] overflow-visible">
+          <img
+            src="/baut-idk.png"
+            alt="Baut"
+            className="absolute left-2 md:left-6 top-8 sm:top-10 translate-y-[60%] h-[160%] w-auto object-contain z-10 sm:h-[120%] md:h-[140%] lg:h-[150%] xl:h-[160%] xl:top-8.5 lg:top-9"
+          />
+        </div>
+      */}
+      <div className="relative bg-[#F0F000] mt-[5vh] w-full h-[8vh] md:h-[10vh] overflow-visible"></div>
 
-      <div className="mb-[20vh]">
-        <div className="p-[4vw] flex flex-col items-start">
-          <h3 className="text-[5vw] md:text-[2.5vw] lg:text-[1vw] font-bold text-[#202020]">
-            Our Product
-          </h3>
-          <p className="text-[1.5vw] md:text-[1.50vw] lg:text-[1vw] text-[#202020]">
-            Discover our range of innovative products.
-          </p>
-        </div>
-        <div className="w-full overflow-x-scroll h-fit flex items-center gap-4 ml-[3vw]">
-          {products.map((product, index) => (
-            <ProductCard key={index} {...product} />
-          ))}
-        </div>
-        <div className="flex justify-center items-center w-full pt-[3vw]">
+      <Container maxWidth="lg" sx={{ py: { xs: 5, md: 8 }, mb: 6 }}>
+        <Stack spacing={3} sx={{ pb: 6 }}>
+          <ProductsSectionHeader
+            title="Our Product"
+            subtitle="Discover our range of innovative products."
+          />
+          <ProductsGrid products={products} />
+        </Stack>
+        <Box sx={{ display: "flex", justifyContent: "center", mt: 4 }}>
           <NavLink to="/products">
             <button className="border-[0.1vw] px-[2vw] py-[0.5vh] border-[#C2C2C2] text-[#202020] text-[3vw] md:text-[1vw] lg:text-[1vw] rounded hover:font-bold transition cursor-pointer flex flex-row items-center justify-center">
               <img
@@ -181,8 +331,8 @@ export default function HomeContent() {
               See More Products
             </button>
           </NavLink>
-        </div>
-      </div>
-    </div>
+        </Box>
+      </Container>
+    </Box>
   );
 }
