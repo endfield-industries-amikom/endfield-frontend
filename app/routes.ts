@@ -13,7 +13,8 @@ export default [
     route("products/:id", "routes/home/products/productId.tsx"),
     route("contact", "routes/home/contact.tsx"),
   ]),
-  layout("routes/dashboard/dashboard.tsx", [
-    index("routes/dashboard/login.tsx"),
+  route("dashboard", "routes/dashboard/auth-guard.tsx", [
+    index("routes/dashboard/dashboard.tsx"),
+    route("login", "routes/dashboard/login.tsx"),
   ]),
 ] satisfies RouteConfig;

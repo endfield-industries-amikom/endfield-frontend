@@ -1,4 +1,4 @@
-import type { Route } from "./+types/home/product:id";
+import type { Route } from "./+types/productId";
 import { products } from "~/data/Products";
 
 function getProductById(id: string) {
