@@ -7,8 +7,14 @@ export function loader({ request }: Route.LoaderArgs) {
   if (url.pathname === "/dashboard/login") {
     return null;
   }
+  const cookie = request.headers.get("Cookie") || "";
+  const isAuth = cookie.includes("auth=true");
 
-  return redirect("/dashboard/login");
+  if (!isAuth) {
+    return redirect("/dashboard/login");
+  }
+
+  return null;
 }
 
 export default function AuthGuard() {
