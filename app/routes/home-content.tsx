@@ -25,25 +25,86 @@ const images = [
 export default function HomeContent() {
   return (
     <Box className="scroll-smooth overflow-x-hidden">
-      <section className="bg-linear-to-b from-[#F8F546] via-[#F8F546] to-white w-full md:h-[80vh] xs:h-[60vh] flex justify-center flex-col items-center cursor-default">
-        <Container
-          maxWidth="lg"
+      <div className="relative bg-[url('https://cdn2.unrealengine.com/arknights-endfield-key-3840x2160-58c8d21aa303.jpg')] bg-cover bg-center flex items-center justify-center no-repeat lg:h-[100vh] xs:h-[50vh] md:h-[50vh]">
+        <Box       
           sx={{
-            position: "relative",
-            py: { xs: 6, md: 8 },
-            display: "flex",
-            flexDirection: "column",
-            alignItems: { xs: "center", md: "flex-start" },
+            display: "grid",
+            gridTemplateColumns: { xs: "0.5fr", lg: "1fr 1fr" },
+            alignItems: { xs: "start", md: "flex-start" },
+            justifyContent: "start",
+            outline: "2px solid red",
+            width: "100%",
+            height: "100%"
           }}
         >
-          <div className="helvetica font-extrabold text-[10vw] transition flicker-appearY">
-            //ENDFIELD
-          </div>
-          <div className="text-transparent absolute text-stripe-effect text-effect font-black xs:text-[10vh] md:text-[13vh] xs:right-20 md:right-30 xs:bottom-50 md:bottom-40 flicker-appearY">
-            <h2>//ENDFIELD</h2>
-          </div>
-        </Container>
-      </section>
+          <Box 
+          sx={{ 
+            maxWidth: "lg",
+            backgroundImage: "linear-gradient(90deg, #F8F546 50%, transparent 100%)",
+            height: { xs: 200, md: 480, lg: "100%" },
+            width: "100%",
+        }}
+        >
+          <Box sx={{
+            display: "flex",
+            flexDirection: "column", 
+            justifyContent: "center",
+            height: "100%",
+          }}>
+            <Typography
+              variant="h2"
+              sx={{
+                color: "#202020",
+                letterSpacing: 1,
+                fontSize: { xs: "1.5rem", md: "2.5rem", lg: "8rem" },
+                fontWeight: 700,
+                textAlign: "center",
+                fontFamily: 'Helvetica' ,
+                
+              }}
+            >
+              //ENDFIELD
+            </Typography>
+            <Typography
+              variant="h5"
+              sx={{
+                color: "#202020",
+                letterSpacing: 1,
+                fontSize: { xs: "1.25rem", md: "1.5rem", lg: "1.75rem" },
+                fontWeight: 500,
+                textAlign: "left",
+                mt: 2,
+              }}
+            >
+              
+            </Typography>
+          </Box>
+          
+
+          </Box>
+          <Box 
+          sx={{
+            Width: "100%",
+            Height: 200,
+            maxWidth: "lg",
+          }}
+          >
+
+          </Box>
+        </Box>
+      </div>
+
+      <Box
+        sx={{
+          bgcolor: "white",
+          display: "flex",
+          justifyContent: "center",
+          width: "100%",
+          height: 100,
+        }}
+        >
+
+      </Box>
 
       {/* What We Do */}
       <Box sx={{ bgcolor: "#F8F546", py: { xs: 4, md: 6 } }}>
