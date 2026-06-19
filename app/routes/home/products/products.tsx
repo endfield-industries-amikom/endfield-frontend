@@ -1,4 +1,4 @@
-import type { Route } from "../../+types/root";
+import type { Route } from "../../../+types/root";
 import { Box, Container, Stack } from "@mui/material";
 import ProductsGrid from "~/components/products/ProductsGrid";
 import ProductsHero from "~/components/products/ProductsHero";
