@@ -32,7 +32,6 @@ export default function HomeContent() {
             gridTemplateColumns: { xs: "0.5fr", lg: "1fr 1fr" },
             alignItems: { xs: "start", md: "flex-start" },
             justifyContent: "start",
-            outline: "2px solid red",
             width: "100%",
             height: "100%"
           }}
@@ -50,33 +49,68 @@ export default function HomeContent() {
             flexDirection: "column", 
             justifyContent: "center",
             height: "100%",
+            position: "relative",
+            px: { xs: 2, md: 0 },
           }}>
             <Typography
+              className="flicker-appearX"
               variant="h2"
               sx={{
+                position: "relative",
+                zIndex: 2,
                 color: "#202020",
                 letterSpacing: 1,
-                fontSize: { xs: "1.5rem", md: "2.5rem", lg: "8rem" },
+                fontSize: { xs: "3rem", md: "5rem", lg: "8rem" },
+                lineHeight: 1,
                 fontWeight: 700,
                 textAlign: "center",
-                fontFamily: 'Helvetica' ,
-                
+                fontFamily: 'Helvetica',
               }}
             >
               //ENDFIELD
             </Typography>
-            <Typography
-              variant="h5"
+            <Typography 
+              className="text-effect text-stripe-effect flicker-appearX"
+              variant="h2"
               sx={{
-                color: "#202020",
-                letterSpacing: 1,
-                fontSize: { xs: "1.25rem", md: "1.5rem", lg: "1.75rem" },
-                fontWeight: 500,
-                textAlign: "left",
-                mt: 2,
+                position: "absolute",
+                top: { xs: "50%", md: "50%" },
+                left: "50%",
+                transform: { xs: "translate(-55%, -100%)", md: "translate(-55%, -115%)", lg: "translate(-53%, -130%)" },
+                width: "100%",
+                textAlign: "center",
+                color: "rgba(32, 32, 32, 0.08)",
+                fontSize: { xs: "3.5rem", md: "5rem", lg: "8rem" },
+                lineHeight: 1,
+                fontWeight: 700,
+                zIndex: 1,
+                pointerEvents: "none",
+                userSelect: "none",
+                opacity: 0.7,
               }}
             >
-              
+            //ENDFIELD   
+            </Typography>
+
+            <Typography
+              className="flicker-appearX"
+              variant="h6"
+              sx={{
+                position: "relative",
+                zIndex: 2,
+                color: "#202020",
+                letterSpacing: 1,
+                fontSize: { xs: "1rem", md: "0.65rem", lg: "1.2rem" },
+                lineHeight: 1.4,
+                fontWeight: 100,
+                textAlign: "left",
+                fontFamily: 'Helvetica',
+                mt: { xs: 5, md: 5, lg: 10 },
+                ml: { xs: 0, md: 5, lg: 10 },
+                pr: { xs: 0, md: 5, lg: 10 },
+              }}
+            >
+              Endfield Industry delivers reliable supply chain solutions that optimize sourcing, logistics, and distribution with efficiency and excellence.
             </Typography>
           </Box>
           
