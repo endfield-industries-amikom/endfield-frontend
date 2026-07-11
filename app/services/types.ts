@@ -95,6 +95,17 @@ export interface Inventory {
   updatedAt: string;
 }
 
+export interface OrderItem {
+  id: string;
+  orderType: string;
+  orderId: string;
+  productId: string;
+  product?: Product;
+  quantity: number;
+  unitPrice: number;
+  lineTotal: number;
+}
+
 export interface PurchaseOrder {
   id: string;
   supplierId: string;

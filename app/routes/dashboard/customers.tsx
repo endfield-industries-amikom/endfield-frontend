@@ -1,7 +1,7 @@
 import { get, patch, post } from "~/services/api.server";
 import { getAccessToken } from "~/services/auth-helper.server";
 import { useState } from "react";
-import { Link, useFetcher, useRouteLoaderData } from "react-router";
+import { Link, useFetcher } from "react-router";
 import type { Route } from "./+types/customers";
 import type { Customer } from "~/services/types";
 import {
@@ -12,13 +12,6 @@ import {
 import AddIcon from "@mui/icons-material/Add";
 import EditIcon from "@mui/icons-material/Edit";
 import DeleteIcon from "@mui/icons-material/Delete";
-
-function useRole() {
-  const parent = useRouteLoaderData<{ accessToken: string }>("routes/dashboard/auth-guard");
-  if (!parent?.accessToken) return "Consumer";
-  try { return JSON.parse(atob(parent.accessToken.split(".")[1])).role; }
-  catch { return "Consumer"; }
-}
 
 export async function loader({ request }: Route.LoaderArgs) {
   const cookie = request.headers.get("Cookie") || "";
@@ -57,13 +50,12 @@ export async function action({ request }: Route.ActionArgs) {
 const emptyForm = { name: "", code: "", email: "", phone: "", address: "" };
 
 export default function CustomersSection({ loaderData, actionData }: Route.ComponentProps) {
-  const role = useRole();
   const customers = loaderData?.customers ?? [];
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editId, setEditId] = useState<string | null>(null);
   const [form, setForm] = useState(emptyForm);
   const fetcher = useFetcher();
-  const canMutate = role === "Admin";
+  const canMutate = false; // Customers auto-created on registration, read-only
 
   function openCreate() { setEditId(null); setForm(emptyForm); setDialogOpen(true); }
   function openEdit(c: Customer) {

@@ -17,7 +17,7 @@ export const meta: Route.MetaFunction = () => {
 export async function loader() {
   try {
     const response = await get<{ data: { data: Product[]; total: number } }>(
-      "/product?page=1&limit=50",
+      "/product/top-selling",
     );
     const products: IProduct[] = (response.data.data || []).map((p) => ({
       id: p.id,
