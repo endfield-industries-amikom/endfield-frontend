@@ -135,7 +135,7 @@ export default function MaterialsSection({ loaderData, actionData }: Route.Compo
             <TextField name="unitPrice" label="Unit Price" type="number" value={form.unitPrice} onChange={(e) => setForm({ ...form, unitPrice: e.target.value })} required fullWidth slotProps={{ htmlInput: { step: "0.01" } }} />
           </DialogContent>
           <DialogActions>
-            <Button onClick={() => setDialogOpen(false)}>Cancel</Button>
+            <Button variant="outlined" onClick={() => setDialogOpen(false)}>Cancel</Button>
             <Button type="submit" variant="contained">{editId ? "Update" : "Create"}</Button>
           </DialogActions>
         </form>

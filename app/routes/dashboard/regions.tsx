@@ -120,7 +120,7 @@ export default function RegionsSection({ loaderData, actionData }: Route.Compone
             <TextField name="description" label="Description" value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} fullWidth multiline rows={2} />
           </DialogContent>
           <DialogActions>
-            <Button onClick={() => setDialogOpen(false)}>Cancel</Button>
+            <Button variant="outlined" onClick={() => setDialogOpen(false)}>Cancel</Button>
             <Button type="submit" variant="contained">{editId ? "Update" : "Create"}</Button>
           </DialogActions>
         </form>

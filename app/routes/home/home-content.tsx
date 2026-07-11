@@ -54,7 +54,7 @@ export default function HomeContent({ loaderData }: Route.ComponentProps) {
 
   return (
     <Box className="scroll-smooth overflow-x-hidden">
-      <div className="relative bg-[url('https://cdn2.unrealengine.com/arknights-endfield-key-3840x2160-58c8d21aa303.jpg')] bg-cover bg-center flex items-center justify-center no-repeat lg:h-[100vh] xs:h-[50vh] md:h-[50vh]">
+      <div className="relative bg-[url('/HeroSection.png')] bg-cover bg-center flex items-center justify-center no-repeat lg:h-[100vh] xs:h-[50vh] md:h-[50vh]">
         <Box
           sx={{
             display: "grid",
@@ -213,23 +213,10 @@ export default function HomeContent({ loaderData }: Route.ComponentProps) {
                   solutions and services to our clients.
                 </Typography>
                 <NavLink to="/about">
-                  <Button
-                    variant="contained"
-                    sx={{
-                      bgcolor: "#202020",
-                      textTransform: "none",
-                      borderRadius: 2,
-                      px: { xs: 3, md: 4 },
-                      "&:hover": {
-                        bgcolor: "#F8F546",
-                        color: "#202020",
-                        fontWeight: 700,
-                      },
-                    }}
-                  >
-                    Learn More
-                  </Button>
-                </NavLink>
+                                  <Button variant="outlined">
+                                    Learn More
+                                  </Button>
+                                </NavLink>
               </Box>
 
               <Stack spacing={{ xs: 2, md: 3 }}>
@@ -404,22 +391,9 @@ export default function HomeContent({ loaderData }: Route.ComponentProps) {
           </Box>
 
           <Box sx={{ mt: { xs: 3, md: 4 } }}>
-            <Button
-              variant="contained"
-              sx={{
-                bgcolor: "#FAFAFA",
-                textTransform: "none",
-                borderRadius: 0,
-                px: { xs: 4, md: 6 },
-                "&:hover": {
-                  bgcolor: "#F8F546",
-                  color: "#202020",
-                  fontWeight: 700,
-                },
-              }}
-            >
-              More Information
-            </Button>
+            <Button variant="outlined">
+                          More Information
+                        </Button>
           </Box>
         </Container>
       </Box>
@@ -448,15 +422,28 @@ export default function HomeContent({ loaderData }: Route.ComponentProps) {
         </Stack>
         <Box sx={{ display: "flex", justifyContent: "center", mt: 4 }}>
           <NavLink to="/products">
-            <button className="border-[0.1vw] px-[2vw] py-[0.5vh] border-[#C2C2C2] text-[#202020] text-[3vw] md:text-[1vw] lg:text-[1vw] rounded hover:font-bold transition cursor-pointer flex flex-row items-center justify-center">
-              <img
-                src="https://cdn-icons-png.flaticon.com/512/2641/2641264.png "
-                alt="Arrow"
-                className="w-[1vw] h-[1vw] mr-[0.5vw]"
-              />
-              See More Products
-            </button>
-          </NavLink>
+                      <Button
+                        variant="outlined"
+                        sx={{
+                          borderColor: "#C2C2C2",
+                          color: "#202020",
+                          textTransform: "none",
+                          borderRadius: 1,
+                          boxShadow: 0,
+                          "&:hover": {
+                            borderColor: "#202020",
+                            bgcolor: "transparent",
+                          },
+                        }}
+                      >
+                        <img
+                          src="https://cdn-icons-png.flaticon.com/512/2641/2641264.png "
+                          alt="Arrow"
+                          className="w-[1vw] h-[1vw] mr-[0.5vw]"
+                        />
+                        See More Products
+                      </Button>
+                    </NavLink>
         </Box>
       </Container>
     </Box>

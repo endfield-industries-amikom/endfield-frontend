@@ -114,7 +114,7 @@ body {
 
 .text-stripe-effect {
   font-family: "Helvetica Neue 55", sans-serif;
-  font-size: clamp(3rem, 12vw, 12rem);
+  /*font-size: clamp(3rem, 12vw, 12rem);*/
   line-height: 0.9;
   letter-spacing: clamp(-0.1rem, -0.5vw, -0.6rem);
   background-image: repeating-linear-gradient(
@@ -136,7 +136,7 @@ body {
 .text-effect {
   font-family: "Helvetica Neue 55", sans-serif;
 
-  font-size: clamp(3rem, 12vw, 12rem);
+  /*font-size: clamp(3rem, 12vw, 12rem);*/
   line-height: 0.9;
 
   letter-spacing: 0.01em;

@@ -37,7 +37,7 @@ const theme = createTheme({
     },
     secondary: {
       main: "#202020",
-      contrastText: "#F8F546",
+      contrastText: "#FAFAFA",
     },
     background: {
       default: "#FAFAFA",
@@ -51,6 +51,29 @@ const theme = createTheme({
   },
   shape: { borderRadius: 10 },
   components: {
+    MuiButton: {
+      defaultProps: {
+        disableElevation: true,
+      },
+      styleOverrides: {
+        root: {
+          textTransform: "none",
+          borderRadius: 8,
+          fontWeight: 500,
+        },
+        contained: {
+          color: "#2A2A2A",
+        },
+        outlined: {
+          borderColor: "#C2C2C2",
+          color: "#2A2A2A",
+          "&:hover": {
+            borderColor: "#202020",
+            backgroundColor: "transparent",
+          },
+        },
+      },
+    },
     MuiTextField: {
       defaultProps: {
         variant: "outlined",

@@ -142,7 +142,7 @@ export default function InventorySection({ loaderData, actionData }: Route.Compo
             <TextField name="reorderLevel" label="Reorder Level" type="number" value={form.reorderLevel} onChange={(e) => setForm({ ...form, reorderLevel: e.target.value })} required fullWidth />
           </DialogContent>
           <DialogActions>
-            <Button onClick={() => setDialogOpen(false)}>Cancel</Button>
+            <Button variant="outlined" onClick={() => setDialogOpen(false)}>Cancel</Button>
             <Button type="submit" variant="contained">{editId ? "Update" : "Create"}</Button>
           </DialogActions>
         </form>

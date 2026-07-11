@@ -162,7 +162,7 @@ export default function SalesOrdersSection({ loaderData, actionData }: Route.Com
             <TextField name="notes" label="Notes" value={form.notes} onChange={(e) => setForm({ ...form, notes: e.target.value })} fullWidth multiline rows={2} />
           </DialogContent>
           <DialogActions>
-            <Button onClick={() => setDialogOpen(false)}>Cancel</Button>
+            <Button variant="outlined" onClick={() => setDialogOpen(false)}>Cancel</Button>
             <Button type="submit" variant="contained">{editId ? "Update" : "Create"}</Button>
           </DialogActions>
         </form>

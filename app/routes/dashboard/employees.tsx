@@ -135,7 +135,7 @@ export default function EmployeesSection({ loaderData, actionData }: Route.Compo
             </TextField>
           </DialogContent>
           <DialogActions>
-            <Button onClick={() => setDialogOpen(false)}>Cancel</Button>
+            <Button variant="outlined" onClick={() => setDialogOpen(false)}>Cancel</Button>
             <Button type="submit" variant="contained">Create User</Button>
           </DialogActions>
         </form>

@@ -134,7 +134,7 @@ export default function ShipmentsSection({ loaderData, actionData }: Route.Compo
             </TextField>
           </DialogContent>
           <DialogActions>
-            <Button onClick={() => setDialogOpen(false)}>Cancel</Button>
+            <Button variant="outlined" onClick={() => setDialogOpen(false)}>Cancel</Button>
             <Button type="submit" variant="contained">{editId ? "Update" : "Create"}</Button>
           </DialogActions>
         </form>
