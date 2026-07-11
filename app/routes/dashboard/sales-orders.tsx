@@ -44,7 +44,7 @@ export async function loader({ request }: Route.LoaderArgs) {
   let shipmentsBySalesOrderId: Record<string, Shipment[]> = {};
   try {
     const shipRes = await get<{ data: { data: Shipment[] } }>("/shipment?page=1&limit=500", token, cookie);
-    for (const s of shipRes.data.data) { if (s.salesOrderId) { if (!shipmentsBySalesOrderId[s.salesOrderId]) shipmentsBySalesOrderId[s.salesOrderId] = []; shipmentsBySalesOrderId[s.salesOrderId].push(s); } }
+    for (const s of shipRes.data.data) { if (s.orderType === "SALES" && s.orderId) { if (!shipmentsBySalesOrderId[s.orderId]) shipmentsBySalesOrderId[s.orderId] = []; shipmentsBySalesOrderId[s.orderId].push(s); } }
   } catch {}
 
   return { salesOrders, customerOptions: customersRes.data.data, warehouseOptions: warehousesRes.data.data, productOptions: productsRes.data.data, shipmentsBySalesOrderId, userEmail: email, userRole: role };

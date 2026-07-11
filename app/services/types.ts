@@ -135,10 +135,8 @@ export interface SalesOrder {
 
 export interface Shipment {
   id: string;
-  poId: string;
-  salesOrderId?: string;
-  purchaseOrder?: PurchaseOrder;
-  salesOrder?: SalesOrder;
+  orderType: string;
+  orderId: string;
   carrier?: string;
   trackingNumber?: string;
   shippedDate?: string;

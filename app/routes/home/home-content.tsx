@@ -22,10 +22,10 @@ import type { Product } from "~/services/types";
 
 export async function loader({ request }: Route.LoaderArgs) {
   try {
-    const response = await get<{ data: { data: Product[]; total: number } }>(
-      "/product/top-selling",
-    );
-    const products: IProduct[] = (response.data.data || []).map((p) => ({
+    const response = await get<{ data: Product[] }>(
+          "/product/top-selling",
+        );
+        const products: IProduct[] = (response.data || []).map((p) => ({
       id: p.id,
       name: p.name,
       sku: p.sku,

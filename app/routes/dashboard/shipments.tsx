@@ -1,8 +1,8 @@
-import { get, patch, post } from "~/services/api.server";
-import { getAccessToken } from "~/services/auth-helper.server";
 import { useState } from "react";
 import { Link, useFetcher, useRouteLoaderData } from "react-router";
 import type { Route } from "./+types/shipments";
+import { get, patch, post } from "~/services/api.server";
+import { getAccessToken } from "~/services/auth-helper.server";
 import type { Shipment } from "~/services/types";
 import {
   Box, Button, Dialog, DialogTitle, DialogContent, DialogActions,
@@ -23,7 +23,7 @@ export async function loader({ request }: Route.LoaderArgs) {
   const cookie = request.headers.get("Cookie") || "";
   const token = await getAccessToken(cookie);
   const [shipRes, poRes, soRes] = await Promise.all([
-    get<{ data: { data: Shipment[]; total: number; page: number; limit: number } }>("/shipment?page=1&limit=50", token, cookie),
+    get<{ data: { data: Shipment[]; total: number } }>("/shipment?page=1&limit=50", token, cookie),
     get<{ data: { data: { id: string }[] } }>("/purchase-order?page=1&limit=200", token, cookie),
     get<{ data: { data: { id: string }[] } }>("/sales-order?page=1&limit=200", token, cookie),
   ]);
@@ -37,9 +37,13 @@ export async function action({ request }: Route.ActionArgs) {
   const intent = formData.get("intent") as string;
 
   if (intent === "create-shipment" || intent === "update-shipment") {
-    const body: Record<string, unknown> = { poId: formData.get("poId"), carrier: formData.get("carrier") || undefined, trackingNumber: formData.get("trackingNumber") || undefined, status: formData.get("status") || "PENDING" };
-    const salesOrderId = formData.get("salesOrderId") as string;
-    if (salesOrderId) body.salesOrderId = salesOrderId;
+    const body: Record<string, unknown> = {
+      orderType: formData.get("orderType"),
+      orderId: formData.get("orderId"),
+      carrier: formData.get("carrier") || undefined,
+      trackingNumber: formData.get("trackingNumber") || undefined,
+      status: formData.get("status") || "PENDING",
+    };
     if (intent === "create-shipment") await post("/shipment", body, token, cookie);
     else await patch(`/shipment/${formData.get("id")}`, body, token, cookie);
     return { ok: true };
@@ -47,7 +51,7 @@ export async function action({ request }: Route.ActionArgs) {
   return { ok: false, error: "Unknown intent" };
 }
 
-function statusColor(s: string) { const m: Record<string, "warning" | "info" | "success" | "error"> = { PENDING: "warning", IN_TRANSIT: "info", DELIVERED: "success", CANCELLED: "error" }; return m[s] || "default"; }
+function statusColor(s: string) { const m: Record<string, "warning" | "info" | "success" | "error"> = { PENDING: "warning", SENDING: "info", ARRIVED: "success", CANCELLED: "error" }; return m[s] || "default"; }
 
 export default function ShipmentsSection({ loaderData, actionData }: Route.ComponentProps) {
   const role = useRole();
@@ -56,20 +60,24 @@ export default function ShipmentsSection({ loaderData, actionData }: Route.Compo
   const soOptions = (loaderData?.soOptions as any[]) ?? [];
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editId, setEditId] = useState<string | null>(null);
-  const [form, setForm] = useState({ poId: "", salesOrderId: "", carrier: "", trackingNumber: "", status: "PENDING" });
+  const [orderType, setOrderType] = useState("PURCHASE");
+  const [form, setForm] = useState({ orderId: "", carrier: "", trackingNumber: "", status: "PENDING" });
   const fetcher = useFetcher();
   const canMutate = role === "Admin" || role === "Employee";
 
-  function openCreate() { setEditId(null); setForm({ poId: "", salesOrderId: "", carrier: "", trackingNumber: "", status: "PENDING" }); setDialogOpen(true); }
-  function openEdit(s: any) { setEditId(s.id); setForm({ poId: s.poId || "", salesOrderId: s.salesOrderId || "", carrier: s.carrier || "", trackingNumber: s.trackingNumber || "", status: s.status || "PENDING" }); setDialogOpen(true); }
+  function openCreate() { setEditId(null); setOrderType("PURCHASE"); setForm({ orderId: "", carrier: "", trackingNumber: "", status: "PENDING" }); setDialogOpen(true); }
+  function openEdit(s: any) { setEditId(s.id); setOrderType(s.orderType || "PURCHASE"); setForm({ orderId: s.orderId || "", carrier: s.carrier || "", trackingNumber: s.trackingNumber || "", status: s.status || "PENDING" }); setDialogOpen(true); }
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     const fd = new FormData(e.target as HTMLFormElement);
     fd.set("intent", editId ? "update-shipment" : "create-shipment");
     if (editId) fd.set("id", editId);
+    fd.set("orderType", orderType);
     fetcher.submit(fd, { method: "post" });
     setDialogOpen(false);
   }
+
+  const currentOrderOptions = orderType === "PURCHASE" ? poOptions : soOptions;
 
   return (
     <Box>
@@ -82,7 +90,7 @@ export default function ShipmentsSection({ loaderData, actionData }: Route.Compo
         <Table size="small">
           <TableHead>
             <TableRow>
-              <TableCell>Shipment#</TableCell><TableCell>PO#</TableCell><TableCell>SO#</TableCell>
+              <TableCell>Shipment#</TableCell><TableCell>Type</TableCell><TableCell>Order#</TableCell>
               <TableCell>Carrier</TableCell><TableCell>Tracking</TableCell><TableCell>Status</TableCell>
               {canMutate && <TableCell align="right">Actions</TableCell>}
             </TableRow>
@@ -96,10 +104,10 @@ export default function ShipmentsSection({ loaderData, actionData }: Route.Compo
             {shipments.map((s: any) => (
               <TableRow key={s.id} hover>
                 <TableCell sx={{ fontFamily: "monospace", fontSize: "0.75rem" }}>
-                  <Link to={`/dashboard/shipments/${s.id}`} style={{ textDecoration: "none", color: "inherit" }}>{s.id}</Link>
+                  <Link to={`/dashboard/shipments/${s.id}`} style={{ textDecoration: "none", color: "inherit" }}>{s.id.substring(0, 8)}</Link>
                 </TableCell>
-                <TableCell sx={{ fontFamily: "monospace", fontSize: "0.75rem" }}>{s.purchaseOrder?.id ?? s.poId}</TableCell>
-                <TableCell sx={{ fontFamily: "monospace", fontSize: "0.75rem" }}>{s.salesOrder?.id ?? s.salesOrderId ?? "—"}</TableCell>
+                <TableCell><Chip label={s.orderType} size="small" variant="outlined" /></TableCell>
+                <TableCell sx={{ fontFamily: "monospace", fontSize: "0.75rem" }}>{s.orderId?.substring(0, 8) || "—"}</TableCell>
                 <TableCell>{s.carrier || "—"}</TableCell>
                 <TableCell sx={{ fontFamily: "monospace", fontSize: "0.75rem" }}>{s.trackingNumber || "—"}</TableCell>
                 <TableCell><Chip label={s.status} size="small" color={statusColor(s.status)} /></TableCell>
@@ -117,20 +125,27 @@ export default function ShipmentsSection({ loaderData, actionData }: Route.Compo
         <form onSubmit={handleSubmit}>
           <DialogTitle>{editId ? "Edit Shipment" : "New Shipment"}</DialogTitle>
           <DialogContent sx={{ display: "flex", flexDirection: "column", gap: 2, pt: "8px !important" }}>
-            <TextField name="poId" label="Purchase Order" select value={form.poId} onChange={(e) => setForm({ ...form, poId: e.target.value })} required fullWidth>
-              <MenuItem value="">Select PO...</MenuItem>
-              {poOptions.map((po: any) => <MenuItem key={po.id} value={po.id}>{po.id}</MenuItem>)}
+            <TextField name="orderType" label="Order Type" select value={orderType}
+              onChange={(e) => { setOrderType(e.target.value); setForm({ ...form, orderId: "" }); }} required fullWidth>
+              <MenuItem value="PURCHASE">Purchase Order</MenuItem>
+              <MenuItem value="SALES">Sales Order</MenuItem>
             </TextField>
-            <TextField name="salesOrderId" label="Sales Order (optional)" select value={form.salesOrderId} onChange={(e) => setForm({ ...form, salesOrderId: e.target.value })} fullWidth>
-              <MenuItem value="">Select SO...</MenuItem>
-              {soOptions.map((so: any) => <MenuItem key={so.id} value={so.id}>{so.id}</MenuItem>)}
+            <TextField name="orderId" label="Order" select value={form.orderId}
+              onChange={(e) => setForm({ ...form, orderId: e.target.value })} required fullWidth>
+              <MenuItem value="">Select order...</MenuItem>
+              {currentOrderOptions.map((o: any) => (
+                <MenuItem key={o.id} value={o.id}>{o.id.substring(0, 8)}</MenuItem>
+              ))}
             </TextField>
-            <TextField name="carrier" label="Carrier" value={form.carrier} onChange={(e) => setForm({ ...form, carrier: e.target.value })} fullWidth />
-            <TextField name="trackingNumber" label="Tracking Number" value={form.trackingNumber} onChange={(e) => setForm({ ...form, trackingNumber: e.target.value })} fullWidth />
-            <TextField name="status" label="Status" select value={form.status} onChange={(e) => setForm({ ...form, status: e.target.value })} fullWidth>
+            <TextField name="carrier" label="Carrier" value={form.carrier}
+              onChange={(e) => setForm({ ...form, carrier: e.target.value })} fullWidth />
+            <TextField name="trackingNumber" label="Tracking Number" value={form.trackingNumber}
+              onChange={(e) => setForm({ ...form, trackingNumber: e.target.value })} fullWidth />
+            <TextField name="status" label="Status" select value={form.status}
+              onChange={(e) => setForm({ ...form, status: e.target.value })} fullWidth>
               <MenuItem value="PENDING">Pending</MenuItem>
-              <MenuItem value="IN_TRANSIT">In Transit</MenuItem>
-              <MenuItem value="DELIVERED">Delivered</MenuItem>
+              <MenuItem value="SENDING">Sending</MenuItem>
+              <MenuItem value="ARRIVED">Arrived</MenuItem>
             </TextField>
           </DialogContent>
           <DialogActions>
