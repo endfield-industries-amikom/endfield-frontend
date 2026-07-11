@@ -1,8 +1,10 @@
 export interface IProduct {
-  id: number;
-  title: string;
-  description: string;
-  image?: string;
-  price: number;
-  isBest: boolean;
+  id: string;
+  name: string;
+  sku: string;
+  description?: string;
+  category?: string;
+  unitPrice: number;
+  imageUri?: string;
+  isBest?: boolean;
 }

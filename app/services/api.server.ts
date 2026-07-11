@@ -78,6 +78,23 @@ export function put<T = unknown>(
   return apiRequest<T>(path, { method: "PUT", body, token, cookie });
 }
 
+export function patch<T = unknown>(
+  path: string,
+  body: unknown,
+  token?: string,
+  cookie?: string,
+): Promise<T> {
+  return apiRequest<T>(path, { method: "PATCH", body, token, cookie });
+}
+
+export function del<T = unknown>(
+  path: string,
+  token?: string,
+  cookie?: string,
+): Promise<T> {
+  return apiRequest<T>(path, { method: "DELETE", token, cookie });
+}
+
 // ---------------------------------------------------------------------------
 // Full‑response variant — returns headers so SSR actions can forward
 // Set‑Cookie headers from the backend to the browser.

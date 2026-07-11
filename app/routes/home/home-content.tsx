@@ -9,10 +9,37 @@ import {
 import { NavLink } from "react-router";
 import { Swiper, SwiperSlide } from "swiper/react";
 import { Navigation, Autoplay } from "swiper/modules";
-import { products } from "~/data/Products";
-import ProductCard from "~/components/data/Product-Card";
 import ProductsSectionHeader from "~/components/products/ProductsSectionHeader";
 import ProductsGrid from "~/components/products/ProductsGrid";
+import { get } from "~/services/api.server";
+import type { Route } from "./+types/home-content";
+import type { IProduct } from "~/interfaces/IProduct";
+import type { Product } from "~/services/types";
+
+/* ------------------------------------------------------------------ */
+/*  Loader – fetch top 10 products from API                            */
+/* ------------------------------------------------------------------ */
+
+export async function loader({ request }: Route.LoaderArgs) {
+  try {
+    const response = await get<{ data: { data: Product[]; total: number } }>(
+      "/top-selling",
+    );
+    const products: IProduct[] = (response.data.data || []).map((p) => ({
+      id: p.id,
+      name: p.name,
+      sku: p.sku,
+      description: p.description,
+      category: p.category,
+      unitPrice: p.unitPrice,
+      imageUri: p.imageUri,
+      isBest: false,
+    }));
+    return { products };
+  } catch {
+    return { products: [] as IProduct[] };
+  }
+}
 
 const images = [
   "https://i0.wp.com/news.qoo-app.com/en/wp-content/uploads/sites/3/2022/03/03_HD.554121.jpg?resize=900%2C506&ssl=1",
@@ -22,11 +49,13 @@ const images = [
   "https://images8.alphacoders.com/140/thumb-1920-1405303.jpg",
 ];
 
-export default function HomeContent() {
+export default function HomeContent({ loaderData }: Route.ComponentProps) {
+  const products = loaderData?.products ?? [];
+
   return (
     <Box className="scroll-smooth overflow-x-hidden">
       <div className="relative bg-[url('https://cdn2.unrealengine.com/arknights-endfield-key-3840x2160-58c8d21aa303.jpg')] bg-cover bg-center flex items-center justify-center no-repeat lg:h-[100vh] xs:h-[50vh] md:h-[50vh]">
-        <Box       
+        <Box
           sx={{
             display: "grid",
             gridTemplateColumns: { xs: "0.5fr", lg: "1fr 1fr" },
@@ -36,8 +65,8 @@ export default function HomeContent() {
             height: "100%"
           }}
         >
-          <Box 
-          sx={{ 
+          <Box
+          sx={{
             maxWidth: "lg",
             backgroundImage: "linear-gradient(90deg, #F8F546 50%, transparent 100%)",
             height: { xs: 200, md: 480, lg: "100%" },
@@ -46,7 +75,7 @@ export default function HomeContent() {
         >
           <Box sx={{
             display: "flex",
-            flexDirection: "column", 
+            flexDirection: "column",
             justifyContent: "center",
             height: "100%",
             position: "relative",
@@ -69,7 +98,7 @@ export default function HomeContent() {
             >
               //ENDFIELD
             </Typography>
-            <Typography 
+            <Typography
               className="text-effect text-stripe-effect flicker-appearX"
               variant="h2"
               sx={{
@@ -89,7 +118,7 @@ export default function HomeContent() {
                 opacity: 0.7,
               }}
             >
-            //ENDFIELD   
+            //ENDFIELD
             </Typography>
 
             <Typography
@@ -113,10 +142,10 @@ export default function HomeContent() {
               Endfield Industry delivers reliable supply chain solutions that optimize sourcing, logistics, and distribution with efficiency and excellence.
             </Typography>
           </Box>
-          
+
 
           </Box>
-          <Box 
+          <Box
           sx={{
             Width: "100%",
             Height: 200,
@@ -378,9 +407,9 @@ export default function HomeContent() {
             <Button
               variant="contained"
               sx={{
-                bgcolor: "#202020",
+                bgcolor: "#FAFAFA",
                 textTransform: "none",
-                borderRadius: 2,
+                borderRadius: 0,
                 px: { xs: 4, md: 6 },
                 "&:hover": {
                   bgcolor: "#F8F546",
@@ -396,15 +425,6 @@ export default function HomeContent() {
       </Box>
 
       {/* Sekat */}
-      {/* Add to experimental for image
-        <div className="relative bg-[#F0F000] mt-[5vh] w-full h-[8vh] md:h-[10vh] overflow-visible">
-          <img
-            src="/baut-idk.png"
-            alt="Baut"
-            className="absolute left-2 md:left-6 top-8 sm:top-10 translate-y-[60%] h-[160%] w-auto object-contain z-10 sm:h-[120%] md:h-[140%] lg:h-[150%] xl:h-[160%] xl:top-8.5 lg:top-9"
-          />
-        </div>
-      */}
       <div className="relative bg-[#F0F000] mt-[5vh] w-full h-[8vh] md:h-[10vh] overflow-visible"></div>
 
       <Container maxWidth="lg" sx={{ py: { xs: 5, md: 8 }, mb: 6 }}>
@@ -413,7 +433,18 @@ export default function HomeContent() {
             title="Our Product"
             subtitle="Discover our range of innovative products."
           />
-          <ProductsGrid products={products} />
+          {products.length > 0 ? (
+            <ProductsGrid products={products} />
+          ) : (
+            <Box sx={{ textAlign: "center", py: 8 }}>
+              <Typography variant="h6" color="text.secondary">
+                No Product Yet
+              </Typography>
+              <Typography variant="body2" color="text.disabled" sx={{ mt: 1 }}>
+                Our product catalog is being prepared. Check back soon!
+              </Typography>
+            </Box>
+          )}
         </Stack>
         <Box sx={{ display: "flex", justifyContent: "center", mt: 4 }}>
           <NavLink to="/products">

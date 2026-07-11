@@ -1,9 +1,11 @@
 import type { Route } from "../../../+types/root";
-import { Box, Container, Stack } from "@mui/material";
+import { Box, Container, Stack, Typography } from "@mui/material";
 import ProductsGrid from "~/components/products/ProductsGrid";
 import ProductsHero from "~/components/products/ProductsHero";
 import ProductsSectionHeader from "~/components/products/ProductsSectionHeader";
-import { products as productsItems } from "~/data/Products";
+import { get } from "~/services/api.server";
+import type { Product } from "~/services/types";
+import type { IProduct } from "~/interfaces/IProduct";
 
 export const meta: Route.MetaFunction = () => {
   return [
@@ -12,7 +14,30 @@ export const meta: Route.MetaFunction = () => {
   ];
 };
 
-export default function Products() {
+export async function loader() {
+  try {
+    const response = await get<{ data: { data: Product[]; total: number } }>(
+      "/product?page=1&limit=50",
+    );
+    const products: IProduct[] = (response.data.data || []).map((p) => ({
+      id: p.id,
+      name: p.name,
+      sku: p.sku,
+      description: p.description,
+      category: p.category,
+      unitPrice: p.unitPrice,
+      imageUri: p.imageUri,
+      isBest: false,
+    }));
+    return { products };
+  } catch {
+    return { products: [] as IProduct[] };
+  }
+}
+
+export default function Products({ loaderData }: any) {
+  const products = loaderData?.products ?? [];
+
   return (
     <Box sx={{ bgcolor: "#FAFAFA", minHeight: "100vh", pb: 10 }}>
       <Container maxWidth="lg">
@@ -22,7 +47,15 @@ export default function Products() {
             title="Our Product"
             subtitle="Discover our range of innovative products."
           />
-          <ProductsGrid products={productsItems} />
+          {products.length > 0 ? (
+            <ProductsGrid products={products} />
+          ) : (
+            <Box sx={{ textAlign: "center", py: 8 }}>
+              <Typography variant="h6" color="text.secondary">
+                No Product Yet
+              </Typography>
+            </Box>
+          )}
         </Stack>
       </Container>
     </Box>

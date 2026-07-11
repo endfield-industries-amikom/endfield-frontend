@@ -6,6 +6,7 @@ import {
   Scripts,
   ScrollRestoration,
 } from "react-router";
+import { ThemeProvider, createTheme, CssBaseline } from "@mui/material";
 
 import "./app.css";
 
@@ -23,10 +24,67 @@ export const links = () => [
   },
 ];
 
-
 export function meta() {
   return [{ title: "Endfield Industries" }];
 }
+
+const theme = createTheme({
+  cssVariables: true,
+  palette: {
+    primary: {
+      main: "#F8F546",
+      contrastText: "#202020",
+    },
+    secondary: {
+      main: "#202020",
+      contrastText: "#F8F546",
+    },
+    background: {
+      default: "#FAFAFA",
+    },
+  },
+  typography: {
+    fontFamily: '"Helvetica", "Inter", ui-sans-serif, system-ui, sans-serif',
+    h4: { fontWeight: 700 },
+    h5: { fontWeight: 700 },
+    h6: { fontWeight: 600 },
+  },
+  shape: { borderRadius: 10 },
+  components: {
+    MuiTextField: {
+      defaultProps: {
+        variant: "outlined",
+        size: "small",
+      },
+    },
+    MuiOutlinedInput: {
+      styleOverrides: {
+        root: {
+          borderRadius: 6,
+          "&.Mui-focused .MuiOutlinedInput-notchedOutline": {
+            borderColor: "#202020",
+          },
+        },
+      },
+    },
+    MuiInputLabel: {
+      styleOverrides: {
+        root: {
+          "&.Mui-focused": {
+            color: "#202020",
+          },
+        },
+      },
+    },
+    MuiCard: {
+      styleOverrides: {
+        root: {
+          borderRadius: 10,
+        },
+      },
+    },
+  },
+});
 
 export function Layout({ children }: { children: React.ReactNode }) {
   return (
@@ -38,14 +96,16 @@ export function Layout({ children }: { children: React.ReactNode }) {
         <Links />
       </head>
       <body>
-        {children}
+        <ThemeProvider theme={theme}>
+          <CssBaseline />
+          {children}
+        </ThemeProvider>
         <ScrollRestoration />
         <Scripts />
       </body>
     </html>
   );
 }
-
 
 export default function App() {
   return (
@@ -54,7 +114,6 @@ export default function App() {
     </div>
   );
 }
-
 
 export function ErrorBoundary({ error }: any) {
   let message = "Oops!";

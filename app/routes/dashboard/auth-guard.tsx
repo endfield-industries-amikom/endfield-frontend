@@ -26,13 +26,13 @@ export async function loader({
   try {
     // Forward cookies to /auth/refresh — the backend validates the session
     // via @fastify/session (sessionId cookie). If valid, returns a fresh JWT.
-    const result = await post<{ access_token: string }>(
+    const result = await post<{ data: { access_token: string } }>(
       "/auth/refresh",
       {},
       undefined,
       cookie,
     );
-    return { accessToken: result.access_token };
+    return { accessToken: result.data.access_token };
   } catch {
     // Session expired or invalid — redirect to login
     return redirect("/dashboard/login");

@@ -112,6 +112,23 @@ export default function Navbar() {
                   </Button>
                 );
               })}
+              <Button
+                component={NavLink}
+                to="/dashboard"
+                sx={{
+                  textTransform: "none",
+                  fontWeight: 700,
+                  ml: 2,
+                  px: 2.5,
+                  py: 1,
+                  bgcolor: "#EDE72A",
+                  color: "#000",
+                  borderRadius: "8px",
+                  "&:hover": { bgcolor: "#fff84a" },
+                }}
+              >
+                Dashboard
+              </Button>
             </Box>
 
             <IconButton
@@ -182,7 +199,22 @@ export default function Navbar() {
                 <ListItemText primary={item.label} />
               </ListItemButton>
             ))}
-          </List>
+          <ListItemButton
+            component={NavLink}
+            to="/dashboard"
+            onClick={handleDrawerToggle}
+            sx={{
+              borderRadius: 1,
+              mt: 1,
+              bgcolor: "#EDE72A",
+              color: "#000",
+              fontWeight: 700,
+              "&:hover": { bgcolor: "#fff84a" },
+            }}
+          >
+            <ListItemText primary="Dashboard" />
+          </ListItemButton>
+        </List>
           <Box sx={{ px: 3, mt: "auto", pb: 3 }}>
             <TextField
               fullWidth

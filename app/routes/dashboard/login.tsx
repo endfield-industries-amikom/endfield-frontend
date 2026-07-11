@@ -8,7 +8,10 @@ import {
   ToggleButtonGroup,
   Alert,
   CircularProgress,
+  InputAdornment,
+  IconButton,
 } from "@mui/material";
+import { Visibility, VisibilityOff } from "@mui/icons-material";
 import { apiRequestFull } from "~/services/api.server";
 
 /* ------------------------------------------------------------------ */
@@ -108,6 +111,7 @@ export default function Login({
 }: Route.ComponentProps) {
   const [mode, setMode] = useState("login");
   const [role, setRole] = useState("employee");
+  const [showPassword, setShowPassword] = useState(false);
   const navigation = useNavigation();
   const isSubmitting = navigation.state === "submitting";
   const error = actionData?.error;
@@ -275,10 +279,25 @@ export default function Login({
               <TextField
                 fullWidth
                 name="password"
-                type="password"
+                type={showPassword ? "text" : "password"}
                 label="Password"
                 variant="outlined"
                 required
+                slotProps={{
+                  input: {
+                    endAdornment: (
+                      <InputAdornment position="end">
+                        <IconButton
+                          onClick={() => setShowPassword(!showPassword)}
+                          edge="end"
+                          size="small"
+                        >
+                          {showPassword ? <VisibilityOff /> : <Visibility />}
+                        </IconButton>
+                      </InputAdornment>
+                    ),
+                  },
+                }}
               />
 
               <Button
