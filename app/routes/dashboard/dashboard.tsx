@@ -1,4 +1,19 @@
-import { Fragment, useState } from "react";
+import { Fragment, useState, useEffect } from "react";
+import { useFetcher, useRouteLoaderData } from "react-router";
+
+/** Decode a JWT payload to extract user info without verification. */
+function parseJwt(
+  token: string,
+): { sub: string; email: string; role: string } | null {
+  try {
+    const base64Url = token.split(".")[1];
+    const base64 = base64Url.replace(/-/g, "+").replace(/_/g, "/");
+    const raw = atob(base64);
+    return JSON.parse(raw);
+  } catch {
+    return null;
+  }
+}
 
 function MasterData() {
   return (
@@ -492,6 +507,27 @@ function Report() {
 
 export default function Dashboard() {
   const [active, setActive] = useState("masterdata");
+  const [userEmail, setUserEmail] = useState("");
+  const [userRole, setUserRole] = useState("");
+  const logoutFetcher = useFetcher();
+  const isLoggingOut = logoutFetcher.state !== "idle";
+
+  // Access token refreshed server‑side by the auth‑guard parent loader
+  const parentData = useRouteLoaderData<{ accessToken: string }>(
+    "routes/dashboard/auth-guard",
+  );
+  const accessToken = parentData?.accessToken || "";
+
+  // Extract user info from the JWT on mount
+  useEffect(() => {
+    if (accessToken) {
+      const payload = parseJwt(accessToken);
+      if (payload) {
+        setUserEmail(payload.email);
+        setUserRole(payload.role);
+      }
+    }
+  }, [accessToken]);
 
   const menu = [
     { id: "masterdata", label: "Master Data" },
@@ -544,9 +580,28 @@ export default function Dashboard() {
               Endfield ERP Dashboard
             </h2>
 
-            <span className="px-3 py-1 text-sm bg-yellow-400 rounded-full shadow">
-              Live System
-            </span>
+            <div className="flex items-center gap-4">
+              {userEmail && (
+                <span className="text-sm text-stone-600">
+                  {userEmail}
+                  {userRole && (
+                    <span className="ml-2 px-2 py-0.5 text-xs bg-yellow-200 rounded-full">
+                      {userRole}
+                    </span>
+                  )}
+                </span>
+              )}
+              <logoutFetcher.Form method="post" action="/dashboard/login">
+                <input type="hidden" name="intent" value="logout" />
+                <button
+                  type="submit"
+                  disabled={isLoggingOut}
+                  className="px-4 py-1.5 text-sm bg-stone-300 hover:bg-stone-400 rounded-full transition-colors disabled:opacity-50"
+                >
+                  {isLoggingOut ? "..." : "Logout"}
+                </button>
+              </logoutFetcher.Form>
+            </div>
           </div>
 
           {/* CONTENT SWITCH */}

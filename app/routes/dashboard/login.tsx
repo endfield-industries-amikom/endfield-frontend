@@ -1,15 +1,116 @@
 import { useState } from "react";
-import Typography from "@mui/material/Typography";
+import { Form, redirect, useNavigation } from "react-router";
+import type { Route } from "./+types/login";
 import {
   Button,
   TextField,
   ToggleButton,
   ToggleButtonGroup,
+  Alert,
+  CircularProgress,
 } from "@mui/material";
+import { apiRequestFull } from "~/services/api.server";
 
-export default function Login() {
+/* ------------------------------------------------------------------ */
+/*  Server‑side loader – redirect already‑logged‑in users             */
+/* ------------------------------------------------------------------ */
+
+export async function loader({ request }: Route.LoaderArgs) {
+  const cookie = request.headers.get("Cookie") || "";
+  if (cookie.includes("refresh_token=")) {
+    return redirect("/dashboard");
+  }
+  return null;
+}
+
+/* ------------------------------------------------------------------ */
+/*  Server‑side action – login / register / logout (all private API)  */
+/* ------------------------------------------------------------------ */
+
+export async function action({ request }: Route.ActionArgs) {
+  const formData = await request.formData();
+  const intent = formData.get("intent") as string;
+  const cookie = request.headers.get("Cookie") || "";
+
+  /* ---- logout ---- */
+  if (intent === "logout") {
+    const headers = new Headers();
+    try {
+      const logoutRes = await apiRequestFull("/auth/logout", {
+        method: "POST",
+        body: {},
+        cookie,
+      });
+      // Forward any Set‑Cookie the backend sends (clearing sessionId)
+      const setCookie = logoutRes.headers.get("set-cookie");
+      if (setCookie) headers.set("Set-Cookie", setCookie);
+    } catch {
+      // Still clear on our side even if backend call fails
+    }
+    // Fallback: clear sessionId cookie ourselves
+    headers.set(
+      "Set-Cookie",
+      "sessionId=; Path=/; HttpOnly; Max-Age=0",
+    );
+    return redirect("/dashboard/login", { headers });
+  }
+
+  /* ---- register / login ---- */
+  const mode = formData.get("mode") as string;
+  const email = (formData.get("email") as string).trim();
+  const password = formData.get("password") as string;
+
+  if (!email || !password) {
+    return { error: "Email and password are required." };
+  }
+
+  try {
+    if (mode === "register") {
+      const username = (formData.get("username") as string).trim();
+      if (!username || username.length < 3) {
+        return { error: "Username must be at least 3 characters." };
+      }
+      // RegisterUserDto: { username, email, password }
+      await apiRequestFull("/auth/register", {
+        method: "POST",
+        body: { username, email, password },
+      });
+    }
+
+    // Always perform login (SignInDto: { email, password })
+    const loginResult = await apiRequestFull<{
+      data: { access_token: string; refreshToken: string };
+    }>("/auth/login", {
+      method: "POST",
+      body: { email, password },
+    });
+
+    // Forward Set‑Cookie (sessionId) from backend → browser
+    // @fastify/session auto‑sets this when req.session is modified
+    const headers = new Headers();
+    const setCookie = loginResult.headers.get("set-cookie");
+    if (setCookie) headers.set("Set-Cookie", setCookie);
+
+    return redirect("/dashboard", { headers });
+  } catch (err) {
+    return {
+      error: err instanceof Error ? err.message : "Authentication failed",
+    };
+  }
+}
+
+/* ------------------------------------------------------------------ */
+/*  Client component – pure UI, no direct API calls                   */
+/* ------------------------------------------------------------------ */
+
+export default function Login({
+  actionData,
+}: Route.ComponentProps) {
   const [mode, setMode] = useState("login");
   const [role, setRole] = useState("employee");
+  const navigation = useNavigation();
+  const isSubmitting = navigation.state === "submitting";
+  const error = actionData?.error;
 
   return (
     <div className="min-h-screen relative overflow-hidden">
@@ -35,16 +136,11 @@ export default function Login() {
           <div className="relative z-10 h-full flex flex-col justify-between p-9 text-white ml-4">
             <div className="flex items-center gap-4 ">
               <div className="w-12 h-12 rounded-xl bg-yellow-400 flex items-center justify-center">
-                <span className="font-bold text-black text-xl">
-                  EI
-                </span>
+                <span className="font-bold text-black text-xl">EI</span>
               </div>
 
               <div>
-                <h1 className="text-2xl font-bold">
-                  Endfield Industries
-                </h1>
-
+                <h1 className="text-2xl font-bold">Endfield Industries</h1>
                 <p className="text-sm text-gray-300">
                   Logistics Intelligence Platform
                 </p>
@@ -57,46 +153,47 @@ export default function Login() {
                 <br />
                 Control
               </h2>
-
               <p className="mt-6 max-w-md text-gray-300 text-lg">
-                The definitive operating system for global logistics.
-                Real-time tracking, warehouse visibility,
-                inventory intelligence, and workflow automation.
+                The definitive operating system for global logistics. Real-time
+                tracking, warehouse visibility, inventory intelligence, and
+                workflow automation.
               </p>
-
               <div className="flex gap-10 mt-10">
-                <div>
-                </div>
-
-                <div>
-                
-                </div>
+                <div></div>
+                <div></div>
               </div>
             </div>
 
             <div className="text-sm text-gray-400">
-              <p className="text-green-400 text-xl font-bold">
-                    ONLINE
-                  </p>
-
-                  <p className="text-sm text-gray-400">
-                    NODE CLUSTER
-                  </p>
+              <p className="text-green-400 text-xl font-bold">ONLINE</p>
+              <p className="text-sm text-gray-400">NODE CLUSTER</p>
               © 2026 Endfield Industries
             </div>
           </div>
         </div>
 
         <div className="flex items-center justify-center px-8 py-14">
-          <div className="w-full max-w-md">
-            <h2 className="text-4xl font-bold text-[#222]">
-              Welcome Back
-            </h2>
+          <Form method="post" className="w-full max-w-md">
+            {/* Hidden fields for the action */}
+            <input type="hidden" name="mode" value={mode} />
+            <input type="hidden" name="role" value={role} />
 
+            <h2 className="text-4xl font-bold text-[#222]">
+              {mode === "login" ? "Welcome Back" : "Create Account"}
+            </h2>
             <p className="text-gray-600 mt-3 mb-8">
-              Enter your credentials to access dashboard.
+              {mode === "login"
+                ? "Enter your credentials to access dashboard."
+                : "Register as a customer to get started."}
             </p>
 
+            {error && (
+              <Alert severity="error" sx={{ mb: 3 }}>
+                {error}
+              </Alert>
+            )}
+
+            {/* Mode toggle – client-only UI state */}
             <ToggleButtonGroup
               value={mode}
               exclusive
@@ -119,141 +216,76 @@ export default function Login() {
                 },
               }}
             >
-              <ToggleButton value="login" 
-              sx={{
-                 position: "relative",
+              <ToggleButton
+                value="login"
+                sx={{
+                  position: "relative",
                   overflow: "hidden",
                   transition: "all .35s ease",
-
                   "&:hover": {
                     bgcolor: "#fff84a",
                     transform: "translateY(-3px)",
                     boxShadow:
                       "0 0 20px rgba(237,231,42,.6), 0 0 40px rgba(237,231,42,.3)",
                   },
-
-                  "&:active": {
-                    transform: "scale(.98)",
-                  },
-              }}
+                  "&:active": { transform: "scale(.98)" },
+                }}
               >
                 LOGIN
               </ToggleButton>
-
-              <ToggleButton value="register"
-              sx={{
-                 position: "relative",
+              <ToggleButton
+                value="register"
+                sx={{
+                  position: "relative",
                   overflow: "hidden",
                   transition: "all .35s ease",
-
                   "&:hover": {
                     bgcolor: "#fff84a",
                     transform: "translateY(-3px)",
                     boxShadow:
                       "0 0 20px rgba(237,231,42,.6), 0 0 40px rgba(237,231,42,.3)",
                   },
-
-                  "&:active": {
-                    transform: "scale(.98)",
-                  },
-              }}>
+                  "&:active": { transform: "scale(.98)" },
+                }}
+              >
                 REGISTER
               </ToggleButton>
             </ToggleButtonGroup>
 
-                      <div
-              className={`mb-7 ${
-                mode === "register"
-                  ? "flex justify-center"
-                  : "grid grid-cols-2 gap-4"
-              }`}
-            >
-              {mode === "login" && (
-                <Button
-                  variant={role === "employee" ? "contained" : "outlined"}
-                  onClick={() => setRole("employee")}
-                  sx={{
-                    "&.MuiButton-root": {
-                    borderRadius: "16px",
-                  },
-                    py: 1.2,
-                    bgcolor: role === "employee" ? "#EDE72A" : "transparent",
-                    color: "#000",
-                    textTransform: "none",
-                    fontSize: "1rem",
-                    boxShadow: "0 8px 24px rgba(237,231,42,0.25)",
-                    transition: "all .3s ease",
-                    "&:hover": {
-                      bgcolor: "#f7f14a",
-                      transform: "translateY(-4px) scale(1.02)",
-                      boxShadow: "0 16px 40px rgba(237,231,42,0.45)",
-                    },
-                    "&:active": {
-                      transform: "translateY(0) scale(.98)",
-                    },
-                  }}
-                >
-                  EMPLOYEE
-                </Button>
-              )}
-
-              <Button
-                variant={role === "consumer" ? "contained" : "outlined"}
-                onClick={() => setRole("consumer")}
-                sx={{
-                  "&.MuiButton-root": {
-                    borderRadius: "16px",
-                  },
-                  py: 1.5,
-                  bgcolor: role === "consumer" ? "#EDE72A" : "transparent",
-                  color: "#000",
-                  textTransform: "none",
-                  fontSize: "1rem",
-                  boxShadow: "0 8px 24px rgba(237,231,42,0.25)",
-                  transition: "all .3s ease",
-                  "&:hover": {
-                    bgcolor: "#f7f14a",
-                    transform: "translateY(-4px) scale(1.02)",
-                    boxShadow: "0 16px 40px rgba(237,231,42,0.45)",
-                    
-                  },
-                  "&:active": {
-                    transform: "translateY(0) scale(.98)",
-                  },
-                }}
-              >
-                CONSUMER
-              </Button>
-            </div>
-            <div className="flex items-center gap-3 mb-5">
-              <div className="flex-1 h-px bg-gray-300" />
-              <span className="text-xs text-gray-500">
-                OR EMAIL
-              </span>
-              <div className="flex-1 h-px bg-gray-300" />
-            </div>
-
             <div className="space-y-6">
+              {mode === "register" && (
+                <TextField
+                  fullWidth
+                  name="username"
+                  label="Username"
+                  variant="outlined"
+                  required
+                  sx={{ mb: 2 }}
+                />
+              )}
               <TextField
                 fullWidth
+                name="email"
                 label="Email Address"
                 variant="outlined"
-                sx={{
-                  mb: 2,
-                }}
+                type="email"
+                required
+                sx={{ mb: 2 }}
               />
-
               <TextField
                 fullWidth
+                name="password"
                 type="password"
                 label="Password"
                 variant="outlined"
+                required
               />
 
               <Button
                 fullWidth
                 variant="contained"
-                onClick={()=> {document.cookie = "auth=true; path=/;"; window.location.href="/dashboard"}}
+                type="submit"
+                disabled={isSubmitting}
                 sx={{
                   py: 1.8,
                   mt: 2,
@@ -261,30 +293,28 @@ export default function Login() {
                   color: "#000",
                   fontWeight: 700,
                   borderRadius: "12px",
-                position: "relative",
+                  position: "relative",
                   overflow: "hidden",
                   transition: "all .35s ease",
-
                   "&:hover": {
                     bgcolor: "#fff84a",
                     transform: "translateY(-3px)",
                     boxShadow:
                       "0 0 20px rgba(237,231,42,.6), 0 0 40px rgba(237,231,42,.3)",
                   },
-
-                  "&:active": {
-                    transform: "scale(.98)",
-                  },
+                  "&:active": { transform: "scale(.98)" },
                 }}
               >
-                AUTHORIZE ACCESS
+                {isSubmitting ? (
+                  <CircularProgress size={24} sx={{ color: "#000" }} />
+                ) : mode === "login" ? (
+                  "AUTHORIZE ACCESS"
+                ) : (
+                  "CREATE ACCOUNT"
+                )}
               </Button>
             </div>
-
-            <div className="mt-8 text-center text-xs text-gray-500">
-              Secure Environment • AES-256 Encryption Active
-            </div>
-          </div>
+          </Form>
         </div>
       </div>
     </div>
