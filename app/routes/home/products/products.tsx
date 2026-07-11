@@ -16,17 +16,17 @@ export const meta: Route.MetaFunction = () => {
 
 export async function loader() {
   try {
-    const response = await get<{ data: Product[] }>(
-          "/product/top-selling",
-        );
-        const products: IProduct[] = (response.data || []).map((p) => ({
+    const response = await get<{ data: { data: Product[] } }>(
+      "/product?page=1&limit=50",
+    );
+    const products: IProduct[] = (response.data.data || []).map((p) => ({
       id: p.id,
-      name: p.name,
-      sku: p.sku,
-      description: p.description,
-      category: p.category,
-      unitPrice: p.unitPrice,
-      imageUri: p.imageUri,
+      name: p.item?.name || "",
+      sku: p.item?.sku || "",
+      description: p.item?.description,
+      category: p.item?.category,
+      unitPrice: Number(p.item?.unitPrice || 0),
+      imageUri: p.item?.imageUri,
       isBest: false,
     }));
     return { products };

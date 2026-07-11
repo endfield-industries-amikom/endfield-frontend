@@ -26,13 +26,13 @@ export async function loader({ request }: Route.LoaderArgs) {
           "/product/top-selling",
         );
         const products: IProduct[] = (response.data || []).map((p) => ({
-      id: p.id,
-      name: p.name,
-      sku: p.sku,
-      description: p.description,
-      category: p.category,
-      unitPrice: p.unitPrice,
-      imageUri: p.imageUri,
+          id: p.id,
+          name: p.item?.name || "",
+          sku: p.item?.sku || "",
+          description: p.item?.description,
+          category: p.item?.category,
+          unitPrice: Number(p.item?.unitPrice || 0),
+          imageUri: p.item?.imageUri,
       isBest: false,
     }));
     return { products };
