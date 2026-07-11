@@ -112,11 +112,10 @@ export interface OrderItem {
   lineTotal: number;
 }
 
-export interface PurchaseOrder {
+export interface OrderBase {
   id: string;
-  supplierId: string;
   warehouseId: string;
-  supplier?: Supplier;
+  warehouse?: { id: string; name: string; code: string };
   orderDate: string;
   status: string;
   totalAmount: number;
@@ -125,18 +124,18 @@ export interface PurchaseOrder {
   updatedAt: string;
 }
 
+export interface PurchaseOrder {
+  orderId: string;
+  supplierId: string;
+  supplier?: Supplier;
+  order: OrderBase;
+}
+
 export interface SalesOrder {
-  id: string;
+  orderId: string;
   customerId: string;
-  warehouseId: string;
   customer?: Customer;
-  warehouse?: Warehouse;
-  orderDate: string;
-  status: string;
-  totalAmount: number;
-  notes?: string;
-  createdAt: string;
-  updatedAt: string;
+  order: OrderBase;
 }
 
 export interface Shipment {

@@ -50,7 +50,13 @@ export async function action({ request }: Route.ActionArgs) {
 
   if (intent === "create-purchase-order" || intent === "update-purchase-order") {
     const itemsJson = formData.get("items") as string;
-    const items = itemsJson ? JSON.parse(itemsJson) : [];
+    const rawItems: LineItem[] = itemsJson ? JSON.parse(itemsJson) : [];
+    const items = rawItems.map((item) => ({
+      orderType: "PURCHASE",
+      itemId: item.itemId,
+      quantity: item.quantity,
+      unitPrice: item.unitPrice,
+    }));
     const body = {
       supplierId: formData.get("supplierId"),
       warehouseId: formData.get("warehouseId"),
@@ -86,7 +92,7 @@ export default function PurchaseOrdersSection({ loaderData, actionData }: Route.
   const isAdmin = role === "Admin";
 
   function openCreate() { setEditId(null); setForm({ supplierId: "", warehouseId: "", notes: "" }); setLineItems([{ ...emptyLine }]); setDialogOpen(true); }
-  function openEdit(po: any) { setEditId(po.id); setForm({ supplierId: po.supplierId || "", warehouseId: po.warehouseId || "", notes: po.notes || "" }); setLineItems([{ ...emptyLine }]); setDialogOpen(true); }
+  function openEdit(po: any) { setEditId(po.orderId); setForm({ supplierId: po.supplierId || "", warehouseId: po.order?.warehouseId || "", notes: po.order?.notes || "" }); setLineItems([{ ...emptyLine }]); setDialogOpen(true); }
 
   function addLine() { setLineItems([...lineItems, { ...emptyLine }]); }
   function removeLine(idx: number) { setLineItems(lineItems.filter((_, i) => i !== idx)); }
@@ -125,13 +131,13 @@ export default function PurchaseOrdersSection({ loaderData, actionData }: Route.
               <Card variant="outlined">
                 <Box sx={{ p: 2, bgcolor: "grey.50", borderBottom: "1px dashed", borderColor: "divider", display: "flex", justifyContent: "space-between" }}>
                   <Box>
-                    <Typography variant="subtitle2" component={Link} to={`/dashboard/purchase-orders/${order.id}`}
+                    <Typography variant="subtitle2" component={Link} to={`/dashboard/purchase-orders/${order.orderId}`}
                       sx={{ fontWeight: 700, textDecoration: "none", color: "inherit", fontFamily: "monospace" }}>
-                      PO-{order.id.substring(0, 8)}
+                      PO-{order.orderId.substring(0, 8)}
                     </Typography>
-                    <Typography variant="caption" color="text.secondary">{new Date(order.orderDate).toLocaleDateString()}</Typography>
+                    <Typography variant="caption" color="text.secondary">{new Date(order.order?.orderDate).toLocaleDateString()}</Typography>
                   </Box>
-                  <Chip label={order.status} size="small" color={statusColor(order.status)} />
+                  <Chip label={order.order?.status} size="small" color={statusColor(order.order?.status)} />
                 </Box>
                 <CardContent sx={{ py: 1.5 }}>
                   <Box sx={{ display: "flex", justifyContent: "space-between", fontSize: "0.85rem" }}>
@@ -140,21 +146,21 @@ export default function PurchaseOrdersSection({ loaderData, actionData }: Route.
                   </Box>
                   <Box sx={{ display: "flex", justifyContent: "space-between", fontSize: "0.85rem" }}>
                     <Typography variant="body2" color="text.secondary">Warehouse:</Typography>
-                    <Typography variant="body2">{order.warehouse?.name || order.warehouseId}</Typography>
+                    <Typography variant="body2">{order.order?.warehouse?.name || order.order?.warehouseId}</Typography>
                   </Box>
                   <Divider sx={{ my: 1 }} />
                   <Box sx={{ display: "flex", justifyContent: "space-between" }}>
                     <Typography sx={{ fontWeight: 600 }}>Total:</Typography>
-                    <Typography sx={{ fontWeight: 600 }}>${Number(order.totalAmount).toLocaleString()}</Typography>
+                    <Typography sx={{ fontWeight: 600 }}>${Number(order.order?.totalAmount).toLocaleString()}</Typography>
                   </Box>
                 </CardContent>
                 {canMutate && (
                   <CardActions sx={{ borderTop: "1px solid", borderColor: "divider", px: 2, py: 1, bgcolor: "grey.50" }}>
                     <Button size="small" startIcon={<EditIcon fontSize="small" />} onClick={() => openEdit(order)} sx={{ color: "text.secondary" }}>Edit</Button>
-                    {isAdmin && order.status === "PENDING" && (
+                    {isAdmin && order.order?.status === "PENDING" && (
                       <approveFetcher.Form method="post">
                         <input type="hidden" name="intent" value="approve-po" />
-                        <input type="hidden" name="id" value={order.id} />
+                        <input type="hidden" name="id" value={order.orderId} />
                         <Button size="small" type="submit" startIcon={<CheckIcon fontSize="small" />} color="success">Approve</Button>
                       </approveFetcher.Form>
                     )}

@@ -61,7 +61,13 @@ export async function action({ request }: Route.ActionArgs) {
 
   if (intent === "create-sales-order" || intent === "update-sales-order") {
     const itemsJson = formData.get("items") as string;
-    const items = itemsJson ? JSON.parse(itemsJson) : [];
+    const rawItems: LineItem[] = itemsJson ? JSON.parse(itemsJson) : [];
+    const items = rawItems.map((item) => ({
+      orderType: "SALES",
+      itemId: item.itemId,
+      quantity: item.quantity,
+      unitPrice: item.unitPrice,
+    }));
     const body = { customerId: formData.get("customerId"), warehouseId: formData.get("warehouseId"), notes: formData.get("notes") || undefined, items };
     if (intent === "create-sales-order") await post("/sales-order", body, token, cookie);
     else await patch(`/sales-order/${formData.get("id")}`, body, token, cookie);
@@ -91,7 +97,7 @@ export default function SalesOrdersSection({ loaderData, actionData }: Route.Com
   const isConsumer = role === "Consumer";
 
   function openCreate() { setEditId(null); setForm({ customerId: "", warehouseId: "", notes: "" }); setLineItems([{ ...emptyLine }]); setDialogOpen(true); }
-  function openEdit(so: any) { setEditId(so.id); setForm({ customerId: so.customerId || "", warehouseId: so.warehouseId || "", notes: so.notes || "" }); setLineItems([{ ...emptyLine }]); setDialogOpen(true); }
+  function openEdit(so: any) { setEditId(so.orderId); setForm({ customerId: so.customerId || "", warehouseId: so.order?.warehouseId || "", notes: so.order?.notes || "" }); setLineItems([{ ...emptyLine }]); setDialogOpen(true); }
 
   function addLine() { setLineItems([...lineItems, { ...emptyLine }]); }
   function removeLine(idx: number) { setLineItems(lineItems.filter((_, i) => i !== idx)); }
@@ -126,17 +132,17 @@ export default function SalesOrdersSection({ loaderData, actionData }: Route.Com
       ) : (
         <Grid container spacing={2}>
           {salesOrders.map((order: any) => (
-            <Grid key={order.id} size={{ xs: 12, sm: 6 }}>
+            <Grid key={order.orderId} size={{ xs: 12, sm: 6 }}>
               <Card variant="outlined">
                 <Box sx={{ p: 2, bgcolor: "grey.50", borderBottom: "1px dashed", borderColor: "divider", display: "flex", justifyContent: "space-between" }}>
                   <Box>
-                    <Typography variant="subtitle2" component={Link} to={`/dashboard/sales-orders/${order.id}`}
+                    <Typography variant="subtitle2" component={Link} to={`/dashboard/sales-orders/${order.orderId}`}
                       sx={{ fontWeight: 700, textDecoration: "none", color: "inherit", fontFamily: "monospace" }}>
-                      SO-{order.id.substring(0, 8)}
+                      SO-{order.orderId.substring(0, 8)}
                     </Typography>
-                    <Typography variant="caption" color="text.secondary">{new Date(order.orderDate).toLocaleDateString()}</Typography>
+                    <Typography variant="caption" color="text.secondary">{new Date(order.order?.orderDate).toLocaleDateString()}</Typography>
                   </Box>
-                  <Chip label={order.status} size="small" color={statusColor(order.status)} />
+                  <Chip label={order.order?.status} size="small" color={statusColor(order.order?.status)} />
                 </Box>
                 <CardContent sx={{ py: 1.5 }}>
                   <Box sx={{ display: "flex", justifyContent: "space-between", fontSize: "0.85rem" }}>
@@ -150,16 +156,16 @@ export default function SalesOrdersSection({ loaderData, actionData }: Route.Com
                   <Divider sx={{ my: 1 }} />
                   <Box sx={{ display: "flex", justifyContent: "space-between" }}>
                     <Typography sx={{ fontWeight: 600 }}>Total:</Typography>
-                    <Typography sx={{ fontWeight: 600 }}>${Number(order.totalAmount).toLocaleString()}</Typography>
+                    <Typography sx={{ fontWeight: 600 }}>${Number(order.order?.totalAmount).toLocaleString()}</Typography>
                   </Box>
                 </CardContent>
-                {((isAdmin || isEmployee) && ((shipmentsBySalesOrderId[order.id] ?? []).every((s: Shipment) => s.status === "PENDING"))) && (
+                {((isAdmin || isEmployee) && ((shipmentsBySalesOrderId[order.orderId] ?? []).every((s: Shipment) => s.status === "PENDING"))) && (
                   <CardActions sx={{ borderTop: "1px solid", borderColor: "divider", px: 2, py: 1, bgcolor: "grey.50" }}>
                     <Button size="small" startIcon={<EditIcon fontSize="small" />} onClick={() => openEdit(order)} sx={{ color: "text.secondary" }}>Edit</Button>
-                    {isAdmin && order.status === "CONFIRMED" && (
+                    {isAdmin && order.order?.status === "CONFIRMED" && (
                       <shipFetcher.Form method="post">
                         <input type="hidden" name="intent" value="ship-order" />
-                        <input type="hidden" name="id" value={order.id} />
+                        <input type="hidden" name="id" value={order.orderId} />
                         <Button size="small" type="submit" startIcon={<LocalShippingIcon fontSize="small" />} color="success">Ship</Button>
                       </shipFetcher.Form>
                     )}
