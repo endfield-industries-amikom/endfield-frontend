@@ -31,7 +31,7 @@ export async function loader({ request }: Route.LoaderArgs) {
     get<{ data: { data: SalesOrder[]; total: number } }>("/sales-order?page=1&limit=50", token, cookie),
     get<{ data: { data: { id: string; name: string; code: string; email?: string }[] } }>("/customers?page=1&limit=200", token, cookie),
     get<{ data: { data: { id: string; name: string; code: string }[] } }>("/warehouses?page=1&limit=200", token, cookie),
-    get<{ data: { data: { id: string; name: string; sku: string; unitPrice: number }[] } }>("/product?page=1&limit=200", token, cookie),
+    get<{ data: { data: { id: string; name: string; sku: string; unitPrice: number }[] } }>("/item?page=1&limit=200&isSellable=true", token, cookie),
   ]);
 
   let salesOrders = soRes.data.data;
@@ -50,8 +50,8 @@ export async function loader({ request }: Route.LoaderArgs) {
   return { salesOrders, customerOptions: customersRes.data.data, warehouseOptions: warehousesRes.data.data, productOptions: productsRes.data.data, shipmentsBySalesOrderId, userEmail: email, userRole: role };
 }
 
-interface LineItem { productId: string; quantity: number; unitPrice: number; }
-const emptyLine: LineItem = { productId: "", quantity: 1, unitPrice: 0 };
+interface LineItem { itemId: string; quantity: number; unitPrice: number; }
+const emptyLine: LineItem = { itemId: "", quantity: 1, unitPrice: 0 };
 
 export async function action({ request }: Route.ActionArgs) {
   const cookie = request.headers.get("Cookie") || "";
@@ -97,7 +97,7 @@ export default function SalesOrdersSection({ loaderData, actionData }: Route.Com
   function removeLine(idx: number) { setLineItems(lineItems.filter((_, i) => i !== idx)); }
   function updateLine(idx: number, field: keyof LineItem, value: string | number) {
     const updated = lineItems.map((l, i) => i === idx ? { ...l, [field]: value } : l);
-    if (field === "productId" && typeof value === "string") {
+    if (field === "itemId" && typeof value === "string") {
       const prod = productOptions.find((p: any) => p.id === value);
       if (prod) updated[idx].unitPrice = prod.unitPrice;
     }
@@ -109,7 +109,7 @@ export default function SalesOrdersSection({ loaderData, actionData }: Route.Com
     const fd = new FormData(e.target as HTMLFormElement);
     fd.set("intent", editId ? "update-sales-order" : "create-sales-order");
     if (editId) fd.set("id", editId);
-    fd.set("items", JSON.stringify(lineItems.filter((l) => l.productId)));
+    fd.set("items", JSON.stringify(lineItems.filter((l) => l.itemId)));
     fetcher.submit(fd, { method: "post" });
     setDialogOpen(false);
   }
@@ -194,8 +194,8 @@ export default function SalesOrdersSection({ loaderData, actionData }: Route.Com
               <Box key={idx} sx={{ display: "flex", gap: 1, alignItems: "center" }}>
                 <Autocomplete size="small" options={productOptions}
                   getOptionLabel={(opt: any) => `${opt.name} (${opt.sku})`}
-                  value={productOptions.find((p: any) => p.id === item.productId) || null}
-                  onChange={(_, val) => updateLine(idx, "productId", val?.id || "")}
+                  value={productOptions.find((p: any) => p.id === item.itemId) || null}
+                  onChange={(_, val) => updateLine(idx, "itemId", val?.id || "")}
                   sx={{ flex: 2 }}
                   renderInput={(params) => <TextField {...params} label="Product" />}
                 />
@@ -208,9 +208,9 @@ export default function SalesOrdersSection({ loaderData, actionData }: Route.Com
                 <IconButton size="small" color="error" onClick={() => removeLine(idx)}><DeleteIcon fontSize="small" /></IconButton>
               </Box>
             ))}
-            {lineItems.filter((l) => l.productId).length > 0 && (
+            {lineItems.filter((l) => l.itemId).length > 0 && (
               <Typography variant="body2" color="text.secondary">
-                Total: ${lineItems.filter((l) => l.productId).reduce((sum, l) => sum + l.quantity * l.unitPrice, 0).toLocaleString()}
+                Total: ${lineItems.filter((l) => l.itemId).reduce((sum, l) => sum + l.quantity * l.unitPrice, 0).toLocaleString()}
               </Typography>
             )}
           </DialogContent>

@@ -51,21 +51,23 @@ interface ProductOption {
 export async function loader({ request }: Route.LoaderArgs) {
   const cookie = request.headers.get("Cookie") || "";
   const token = await getAccessToken(cookie);
-  const [schematicsRes, productsRes] = await Promise.all([
+  const [schematicsRes, itemsRes] = await Promise.all([
     get<{ data: { data: ProductionSchematic[]; total: number; page: number; limit: number } }>(
       "/production-schematic?page=1&limit=50",
       token,
       cookie,
     ),
-    get<{ data: { data: { id: string; name: string; sku: string }[] } }>(
-      "/product?page=1&limit=200",
+    get<{ data: { data: { id: string; name: string; sku: string; isManufactureable?: boolean }[] } }>(
+      "/item?page=1&limit=200",
       token,
       cookie,
     ),
   ]);
+  const allItems = (itemsRes.data.data as any[]) ?? [];
   return {
     schematics: schematicsRes.data.data,
-    productOptions: productsRes.data.data as ProductOption[],
+    productOptions: allItems,
+    outputProductOptions: allItems.filter((p: any) => p.isManufactureable !== false),
   };
 }
 
@@ -102,7 +104,7 @@ export async function action({ request }: Route.ActionArgs) {
       inputQty,
       duration: Number(formData.get("duration")),
       outputQty: Number(formData.get("outputQty")),
-      outputProductId: formData.get("outputProductId"),
+      outputItemId: formData.get("outputProductId"),
     };
 
     if (intent === "create-schematic") {
@@ -134,6 +136,7 @@ export default function SchematicsSection({
   const role = useRole();
   const schematics = loaderData?.schematics ?? [];
   const productOptions = loaderData?.productOptions ?? [];
+  const outputProductOptions = (loaderData?.outputProductOptions ?? productOptions) as ProductOption[];
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editId, setEditId] = useState<string | null>(null);
   const [form, setForm] = useState({ name: "", type: "", duration: "", outputQty: "", outputProductId: "" });
@@ -264,7 +267,7 @@ export default function SchematicsSection({
                     <Box sx={{ display: "flex", justifyContent: "space-between" }}>
                       <span>Output:</span>
                       <Typography component="span" sx={{ fontWeight: 500 }}>
-                        {s.outputQty}× {s.outputProduct?.name || s.outputProductId}
+                        {s.outputQty}× {s.outputItem?.name || s.outputItemId}
                       </Typography>
                     </Box>
                     {s.inputs?.length > 0 && (
@@ -326,9 +329,9 @@ export default function SchematicsSection({
               <Select name="outputProductId" label="Output Product" value={form.outputProductId}
                 onChange={(e) => setForm({ ...form, outputProductId: e.target.value })}>
                 <MenuItem value="">Select output product...</MenuItem>
-                {productOptions.map((p) => (
-                  <MenuItem key={p.id} value={p.id}>{p.name} ({p.sku})</MenuItem>
-                ))}
+                {outputProductOptions.map((p) => (
+                                  <MenuItem key={p.id} value={p.id}>{p.name} ({p.sku})</MenuItem>
+                                ))}
               </Select>
             </FormControl>
 

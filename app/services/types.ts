@@ -14,31 +14,35 @@ export interface ApiResponse<T> {
   data: T;
 }
 
-export interface Product {
+export interface Item {
   id: string;
   name: string;
   sku: string;
   description?: string;
   category?: string;
-  type: string;
-  capacityUsage: number;
+  unitPrice: number;
+  isSellable: boolean;
+  isPurchaseable: boolean;
+  isManufactureable: boolean;
   imageUri?: string;
   soldQty: number;
-  unitPrice: number;
   createdAt: string;
   updatedAt: string;
 }
 
+export interface Product {
+  id: string;
+  itemId: string;
+  type: string;
+  capacityUsage: number;
+  item: Item;
+}
+
 export interface Material {
   id: string;
-  name: string;
-  sku: string;
-  description?: string;
-  category?: string;
+  itemId: string;
   unit?: string;
-  unitPrice: number;
-  createdAt: string;
-  updatedAt: string;
+  item: Item;
 }
 
 export interface Customer {
@@ -87,7 +91,9 @@ export interface Region {
 export interface Inventory {
   id: string;
   warehouseId: string;
-  productId: string;
+  itemId: string;
+  item?: Item;
+  warehouse?: { id: string; name: string; code: string };
   quantityOnHand: number;
   reservedQuantity: number;
   reorderLevel: number;
@@ -99,8 +105,8 @@ export interface OrderItem {
   id: string;
   orderType: string;
   orderId: string;
-  productId: string;
-  product?: Product;
+  itemId: string;
+  item?: Item;
   quantity: number;
   unitPrice: number;
   lineTotal: number;
@@ -155,8 +161,8 @@ export interface ProductionSchematic {
   inputQty: number[];
   duration: number;
   outputQty: number;
-  outputProductId: string;
-  outputProduct?: Product;
+  outputItemId: string;
+  outputItem?: Item;
   createdAt: string;
   updatedAt: string;
 }

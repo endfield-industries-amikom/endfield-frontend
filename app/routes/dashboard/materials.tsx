@@ -7,7 +7,7 @@ import type { Material } from "~/services/types";
 import {
   Box, Button, Dialog, DialogTitle, DialogContent, DialogActions,
   TextField, Table, TableBody, TableCell, TableContainer, TableHead,
-  TableRow, Paper, Typography, IconButton,
+  TableRow, Paper, Typography, IconButton, Checkbox, FormControlLabel,
 } from "@mui/material";
 import AddIcon from "@mui/icons-material/Add";
 import EditIcon from "@mui/icons-material/Edit";
@@ -43,6 +43,8 @@ export async function action({ request }: Route.ActionArgs) {
       category: formData.get("category") || undefined,
       unit: formData.get("unit") || undefined,
       unitPrice: Number(formData.get("unitPrice")),
+      isSellable: formData.get("isSellable") === "on",
+      isPurchaseable: formData.get("isPurchaseable") === "on",
     };
     if (intent === "create-material") await post("/material", body, token, cookie);
     else await patch(`/material/${formData.get("id")}`, body, token, cookie);
@@ -55,7 +57,7 @@ export async function action({ request }: Route.ActionArgs) {
   return { ok: false, error: "Unknown intent" };
 }
 
-const emptyForm = { name: "", sku: "", description: "", category: "", unit: "", unitPrice: "" };
+const emptyForm = { name: "", sku: "", description: "", category: "", unit: "", unitPrice: "", isSellable: true, isPurchaseable: true };
 
 export default function MaterialsSection({ loaderData, actionData }: Route.ComponentProps) {
   const role = useRole();
@@ -67,7 +69,7 @@ export default function MaterialsSection({ loaderData, actionData }: Route.Compo
   const canMutate = role === "Admin" || role === "Employee";
 
   function openCreate() { setEditId(null); setForm(emptyForm); setDialogOpen(true); }
-  function openEdit(m: Material) { setEditId(m.id); setForm({ name: m.name, sku: m.sku, description: m.description || "", category: m.category || "", unit: m.unit || "", unitPrice: String(m.unitPrice) }); setDialogOpen(true); }
+  function openEdit(m: Material) { setEditId(m.id); setForm({ name: m.item?.name || "", sku: m.item?.sku || "", description: m.item?.description || "", category: m.item?.category || "", unit: m.unit || "", unitPrice: String(m.item?.unitPrice || ""), isSellable: m.item?.isSellable ?? true, isPurchaseable: m.item?.isPurchaseable ?? true }); setDialogOpen(true); }
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     const fd = new FormData(e.target as HTMLFormElement);
@@ -101,11 +103,11 @@ export default function MaterialsSection({ loaderData, actionData }: Route.Compo
             )}
             {materials.map((m) => (
               <TableRow key={m.id} hover>
-                <TableCell><Link to={`/dashboard/materials/${m.id}`} style={{ textDecoration: "none", fontWeight: 500, color: "inherit" }}>{m.name}</Link></TableCell>
-                <TableCell sx={{ fontFamily: "monospace", fontSize: "0.8rem" }}>{m.sku}</TableCell>
-                <TableCell>{m.category || "—"}</TableCell>
-                <TableCell>{m.unit || "—"}</TableCell>
-                <TableCell>{m.unitPrice.toLocaleString("en-US", { style: "currency", currency: "USD" })}</TableCell>
+                <TableCell><Link to={`/dashboard/materials/${m.id}`} style={{ textDecoration: "none", fontWeight: 500, color: "inherit" }}>{m.item?.name}</Link></TableCell>
+                                <TableCell sx={{ fontFamily: "monospace", fontSize: "0.8rem" }}>{m.item?.sku}</TableCell>
+                                <TableCell>{m.item?.category || "—"}</TableCell>
+                                <TableCell>{m.unit || "—"}</TableCell>
+                                <TableCell>{(Number(m.item?.unitPrice) || 0).toLocaleString("en-US", { style: "currency", currency: "USD" })}</TableCell>
                 {canMutate && (
                   <TableCell align="right">
                     <IconButton size="small" onClick={() => openEdit(m)}><EditIcon fontSize="small" /></IconButton>
@@ -133,6 +135,17 @@ export default function MaterialsSection({ loaderData, actionData }: Route.Compo
               <TextField name="unit" label="Unit" value={form.unit} onChange={(e) => setForm({ ...form, unit: e.target.value })} fullWidth />
             </Box>
             <TextField name="unitPrice" label="Unit Price" type="number" value={form.unitPrice} onChange={(e) => setForm({ ...form, unitPrice: e.target.value })} required fullWidth slotProps={{ htmlInput: { step: "0.01" } }} />
+
+            <Box sx={{ display: "flex", gap: 2 }}>
+              <FormControlLabel
+                control={<Checkbox name="isSellable" checked={form.isSellable}
+                  onChange={(e) => setForm({ ...form, isSellable: e.target.checked })} />}
+                label="Sellable" />
+              <FormControlLabel
+                control={<Checkbox name="isPurchaseable" checked={form.isPurchaseable}
+                  onChange={(e) => setForm({ ...form, isPurchaseable: e.target.checked })} />}
+                label="Purchasable" />
+            </Box>
           </DialogContent>
           <DialogActions>
             <Button variant="outlined" onClick={() => setDialogOpen(false)}>Cancel</Button>

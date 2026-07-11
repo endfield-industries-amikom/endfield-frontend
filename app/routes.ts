@@ -6,6 +6,7 @@ import {
 } from "@react-router/dev/routes";
 
 export default [
+  route("api/v1/image/:id", "routes/api/image-proxy.tsx"),
   layout("routes/home/home.tsx", [
     index("routes/home/home-content.tsx"),
     route("about", "routes/home/about.tsx"),
