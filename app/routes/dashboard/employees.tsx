@@ -46,8 +46,7 @@ export async function action({ request }: Route.ActionArgs) {
     return { ok: true };
   }
   if (intent === "delete-user") {
-    try { await del(`/admin/users/${formData.get("id")}`, token, cookie); }
-    catch { await post(`/admin/users/${formData.get("id")}/delete`, {}, token, cookie); }
+    await del(`/admin/users/${formData.get("id")}`, token, cookie);
     return { ok: true };
   }
   return { ok: false, error: "Unknown intent" };

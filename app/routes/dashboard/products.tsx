@@ -11,7 +11,7 @@ import AddIcon from "@mui/icons-material/Add";
 import EditIcon from "@mui/icons-material/Edit";
 import DeleteIcon from "@mui/icons-material/Delete";
 import CloudUploadIcon from "@mui/icons-material/CloudUpload";
-import { get, post, patch, apiRequest } from "~/services/api.server";
+import { get, post, patch, del, apiRequest } from "~/services/api.server";
 import { getAccessToken } from "~/services/auth-helper.server";
 
 function useRole() {
@@ -94,7 +94,7 @@ export async function action({ request }: Route.ActionArgs) {
   }
 
   if (intent === "delete-product") {
-    await post(`/product/${formData.get("id")}/delete`, {}, token, cookie);
+    await del(`/product/${formData.get("id")}`, token, cookie);
     return { ok: true };
   }
 

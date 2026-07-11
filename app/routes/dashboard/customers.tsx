@@ -1,4 +1,4 @@
-import { get, patch, post } from "~/services/api.server";
+import { get, patch, post, del } from "~/services/api.server";
 import { getAccessToken } from "~/services/auth-helper.server";
 import { useState } from "react";
 import { Link, useFetcher } from "react-router";
@@ -41,7 +41,7 @@ export async function action({ request }: Route.ActionArgs) {
     return { ok: true };
   }
   if (intent === "delete-customer") {
-    await post(`/customers/${formData.get("id")}/delete`, {}, token, cookie);
+    await del(`/customers/${formData.get("id")}`, token, cookie);
     return { ok: true };
   }
   return { ok: false, error: "Unknown intent" };

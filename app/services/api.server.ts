@@ -99,6 +99,14 @@ export function del<T = unknown>(
 ): Promise<T> {
   return apiRequest<T>(path, { method: "DELETE", token, cookie });
 }
+
+export function deleteEntity<T = unknown>(
+  path: string,
+  token?: string,
+  cookie?: string,
+): Promise<T> {
+  return apiRequest<T>(path, { method: "DELETE", token, cookie });
+}
 // ---------------------------------------------------------------------------
 // Full‑response variant — returns headers so SSR actions can forward
 // Set‑Cookie headers from the backend to the browser.

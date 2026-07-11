@@ -1,4 +1,4 @@
-import { get, patch, post } from "~/services/api.server";
+import { get, patch, post, del } from "~/services/api.server";
 import { getAccessToken } from "~/services/auth-helper.server";
 import { useState } from "react";
 import { Link, useFetcher, useRouteLoaderData } from "react-router";
@@ -86,7 +86,7 @@ export async function action({ request }: Route.ActionArgs) {
 
   if (intent === "delete-warehouse") {
     const id = formData.get("id") as string;
-    await post(`/warehouses/${id}/delete`, {}, token, cookie);
+    await del(`/warehouses/${id}`, token, cookie);
     return { ok: true };
   }
 
