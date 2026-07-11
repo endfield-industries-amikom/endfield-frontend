@@ -11,7 +11,7 @@ import AddIcon from "@mui/icons-material/Add";
 import EditIcon from "@mui/icons-material/Edit";
 import DeleteIcon from "@mui/icons-material/Delete";
 import CloudUploadIcon from "@mui/icons-material/CloudUpload";
-import { get, post, patch } from "~/services/api.server";
+import { get, post, patch, apiRequest } from "~/services/api.server";
 import { getAccessToken } from "~/services/auth-helper.server";
 
 function useRole() {
@@ -33,33 +33,12 @@ export async function loader({ request }: Route.LoaderArgs) {
 export async function action({ request }: Route.ActionArgs) {
   const cookie = request.headers.get("Cookie") || "";
   const token = await getAccessToken(cookie);
-  const contentType = request.headers.get("Content-Type") || "";
 
-  if (contentType.includes("multipart/form-data")) {
-    const formData = await request.formData();
-    const intent = formData.get("intent") as string;
-
-    if (intent === "upload-image") {
-      const id = formData.get("id") as string;
-      const file = formData.get("file") as File;
-      if (!file || !id) return { ok: false, error: "Missing file or id" };
-
-      const uploadFd = new FormData();
-      uploadFd.append("file", file);
-
-      await fetch(`${process.env.API_GATEWAY_URL || ""}/product/${id}/image`, {
-        method: "POST",
-        headers: { Authorization: `Bearer ${token}`, Cookie: cookie },
-        body: uploadFd,
-      });
-      return { ok: true };
-    }
-  }
-
+  // Always parse as multipart — text fields + optional file
   const formData = await request.formData();
   const intent = formData.get("intent") as string;
 
-  if (intent === "create-product" || intent === "update-product") {
+  if (intent === "create-product") {
     const body: Record<string, unknown> = {
       name: formData.get("name"),
       sku: formData.get("sku"),
@@ -72,15 +51,46 @@ export async function action({ request }: Route.ActionArgs) {
     const type = formData.get("type") as string;
     if (type) body.type = type;
 
-    let id: string;
-    if (intent === "create-product") {
-      const res = await post<{ data: Product }>("/product", body, token, cookie);
-      id = res.data.id;
-    } else {
-      id = formData.get("id") as string;
-      await patch(`/product/${id}`, body, token, cookie);
+    // Step 1: create product
+    const res = await post<{ data: Product }>("/product", body, token, cookie);
+    const productId = res.data.id;
+
+    // Step 2: upload image if file provided
+    const file = formData.get("imageFile") as File | null;
+    if (file && file.size > 0) {
+      const uploadFd = new FormData();
+      uploadFd.append("file", file);
+      await apiRequest(`/product/${productId}/image`, { method: "POST", body: uploadFd, isMultipart: true, token, cookie });
     }
-    return { ok: true, createdId: id };
+
+    return { ok: true };
+  }
+
+  if (intent === "update-product") {
+    const id = formData.get("id") as string;
+    const body: Record<string, unknown> = {
+      name: formData.get("name"),
+      sku: formData.get("sku"),
+      description: formData.get("description") || undefined,
+      category: formData.get("category") || undefined,
+      unitPrice: Number(formData.get("unitPrice")),
+    };
+    const capacityUsage = formData.get("capacityUsage") as string;
+    if (capacityUsage) body.capacityUsage = Number(capacityUsage);
+    const type = formData.get("type") as string;
+    if (type) body.type = type;
+
+    await patch(`/product/${id}`, body, token, cookie);
+
+    // Upload image if file provided
+    const file = formData.get("imageFile") as File | null;
+    if (file && file.size > 0) {
+      const uploadFd = new FormData();
+      uploadFd.append("file", file);
+      await apiRequest(`/product/${id}/image`, { method: "POST", body: uploadFd, isMultipart: true, token, cookie });
+    }
+
+    return { ok: true };
   }
 
   if (intent === "delete-product") {
@@ -128,27 +138,26 @@ export default function ProductsSection({ loaderData, actionData }: Route.Compon
   }
 
   function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
-    const file = e.target.files?.[0];
-    if (file) {
-      setImageFile(file);
-      setImagePreview(URL.createObjectURL(file));
-    }
+    const file = e.target.files?.[0] || null;
+    setImageFile(file);
+    setImagePreview(file ? URL.createObjectURL(file) : "");
   }
 
-  async function handleSubmit(e: React.FormEvent) {
+  function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     const fd = new FormData(e.target as HTMLFormElement);
     fd.set("intent", editId ? "update-product" : "create-product");
     if (editId) fd.set("id", editId);
-    fetcher.submit(fd, { method: "post" });
+    // Append image file if selected
+    if (imageFile) fd.set("imageFile", imageFile);
+    fetcher.submit(fd, { method: "post", encType: "multipart/form-data" });
     setDialogOpen(false);
   }
 
   function getImageSrc(p: Product): string | undefined {
-    if (!p.imageUri) return undefined;
-    if (p.imageUri.startsWith("/api/")) return `${process.env.API_GATEWAY_URL || ""}${p.imageUri}`;
-    return p.imageUri;
-  }
+      if (!p.imageUri) return undefined;
+      return p.imageUri;
+    }
 
   return (
     <Box>

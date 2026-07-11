@@ -20,9 +20,7 @@ export default function ProductCard({
 }: ProductCardProps) {
   const isGrid = layout === "grid";
 
-  const imageUrl = data.imageUri?.startsWith("/api/")
-    ? `${process.env.API_GATEWAY_URL || ""}${data.imageUri}`
-    : data.imageUri;
+  const imageUrl = data.imageUri;
 
   const cardSx = {
     width: isGrid ? "100%" : { xs: 220, sm: 240, md: 260 },

@@ -15,7 +15,6 @@ export async function loader({ request, params }: Route.LoaderArgs) {
 
 function imageSrc(p: Product): string | undefined {
   if (!p.imageUri) return undefined;
-  if (p.imageUri.startsWith("/api/")) return `${process.env.API_GATEWAY_URL || ""}${p.imageUri}`;
   return p.imageUri;
 }
 

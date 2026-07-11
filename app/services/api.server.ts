@@ -7,15 +7,16 @@ export interface ApiOptions {
   body?: unknown;
   headers?: Record<string, string>;
   token?: string;
-  /** Forward cookies from the incoming request (SSR loaders/actions) */
   cookie?: string;
+  /** Set true for file uploads — sends body as FormData, skips Content-Type */
+  isMultipart?: boolean;
 }
 
 export async function apiRequest<T = unknown>(
   path: string,
   options: ApiOptions = {},
 ): Promise<T> {
-  const { method = "GET", body, headers = {}, token, cookie } = options;
+  const { method = "GET", body, headers = {}, token, cookie, isMultipart } = options;
 
   if (!API_BASE) {
     throw new Error("API_GATEWAY_URL not configured");
@@ -26,7 +27,7 @@ export async function apiRequest<T = unknown>(
 
   try {
     const requestHeaders: Record<string, string> = {
-      "Content-Type": "application/json",
+      ...(isMultipart ? {} : { "Content-Type": "application/json" }),
       ...headers,
     };
     if (token) requestHeaders["Authorization"] = `Bearer ${token}`;
@@ -35,7 +36,11 @@ export async function apiRequest<T = unknown>(
     const response = await fetch(`${API_BASE}${path}`, {
       method,
       headers: requestHeaders,
-      body: body ? JSON.stringify(body) : undefined,
+      body: body
+        ? isMultipart
+          ? (body as FormData)
+          : JSON.stringify(body)
+        : undefined,
       signal: controller.signal,
     });
 
@@ -94,7 +99,6 @@ export function del<T = unknown>(
 ): Promise<T> {
   return apiRequest<T>(path, { method: "DELETE", token, cookie });
 }
-
 // ---------------------------------------------------------------------------
 // Full‑response variant — returns headers so SSR actions can forward
 // Set‑Cookie headers from the backend to the browser.
