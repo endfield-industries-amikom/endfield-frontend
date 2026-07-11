@@ -25,7 +25,7 @@ const images = [
 export default function HomeContent() {
   return (
     <Box className="scroll-smooth overflow-x-hidden">
-      <div className="relative bg-[url('https://cdn2.unrealengine.com/arknights-endfield-key-3840x2160-58c8d21aa303.jpg')] bg-cover bg-center flex items-center justify-center no-repeat lg:h-[100vh] xs:h-[50vh] md:h-[50vh]">
+      <div className="relative bg-[url('/HeroSection.png')] bg-cover bg-center flex items-center justify-center no-repeat lg:h-[100vh] xs:h-[50vh] md:h-[50vh]">
         <Box       
           sx={{
             display: "grid",
