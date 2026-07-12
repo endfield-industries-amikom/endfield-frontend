@@ -3,7 +3,7 @@ import { Link, useFetcher, useRouteLoaderData } from "react-router";
 import type { Route } from "./+types/shipments";
 import { get, patch, post } from "~/services/api.server";
 import { getAccessToken } from "~/services/auth-helper.server";
-import type { Shipment } from "~/services/types";
+import type { OrderItem, Shipment } from "~/services/types";
 import {
   Box, Button, Dialog, DialogTitle, DialogContent, DialogActions,
   TextField, Table, TableBody, TableCell, TableContainer, TableHead,
@@ -101,7 +101,7 @@ export default function ShipmentsSection({ loaderData, actionData }: Route.Compo
                 <Typography color="text.secondary" sx={{ py: 2 }}>No shipments found.</Typography>
               </TableCell></TableRow>
             )}
-            {shipments.map((s: any) => (
+            {shipments.map((s) => (
               <TableRow key={s.id} hover>
                 <TableCell sx={{ fontFamily: "monospace", fontSize: "0.75rem" }}>
                   <Link to={`/dashboard/shipments/${s.id}`} style={{ textDecoration: "none", color: "inherit" }}>{s.id.substring(0, 8)}</Link>
@@ -133,8 +133,8 @@ export default function ShipmentsSection({ loaderData, actionData }: Route.Compo
             <TextField name="orderId" label="Order" select value={form.orderId}
               onChange={(e) => setForm({ ...form, orderId: e.target.value })} required fullWidth>
               <MenuItem value="">Select order...</MenuItem>
-              {currentOrderOptions.map((o: any) => (
-                <MenuItem key={o.id} value={o.id}>{o.id.substring(0, 8)}</MenuItem>
+              {currentOrderOptions.map((o: OrderItem) => (
+                <MenuItem key={o.orderId} value={o.orderId}>{"PO-" + (o.orderId?.substring(0, 8) ?? "Unknown")}</MenuItem>
               ))}
             </TextField>
             <TextField name="carrier" label="Carrier" value={form.carrier}

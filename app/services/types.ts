@@ -102,7 +102,6 @@ export interface Inventory {
 }
 
 export interface OrderItem {
-  id: string;
   orderType: string;
   orderId: string;
   itemId: string;

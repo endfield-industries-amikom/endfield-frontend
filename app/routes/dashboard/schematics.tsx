@@ -3,7 +3,9 @@ import { getAccessToken } from "~/services/auth-helper.server";
 import { useState } from "react";
 import { Link, useFetcher, useRouteLoaderData } from "react-router";
 import type { Route } from "./+types/schematics";
-import type { ProductionSchematic } from "~/services/types";
+import type { ProductionSchematic, Item } from "~/services/types";
+
+interface ItemOption { id: string; name: string; sku: string; unitPrice: number; isManufactureable?: boolean; }
 import {
   Box, Button, Dialog, DialogTitle, DialogContent, DialogActions,
   TextField, Typography, IconButton, Chip, Card, CardContent, CardActions,
@@ -63,11 +65,11 @@ export async function loader({ request }: Route.LoaderArgs) {
       cookie,
     ),
   ]);
-  const allItems = (itemsRes.data.data as any[]) ?? [];
+  const allItems = (itemsRes.data.data as ItemOption[]) ?? [];
   return {
     schematics: schematicsRes.data.data,
     productOptions: allItems,
-    outputProductOptions: allItems.filter((p: any) => p.isManufactureable !== false),
+    outputProductOptions: allItems.filter((p: ItemOption) => p.isManufactureable !== false),
   };
 }
 
@@ -104,7 +106,7 @@ export async function action({ request }: Route.ActionArgs) {
       inputQty,
       duration: Number(formData.get("duration")),
       outputQty: Number(formData.get("outputQty")),
-      outputItemId: formData.get("outputProductId"),
+      outputItemId: formData.get("outputItemId"),
     };
 
     if (intent === "create-schematic") {
@@ -136,10 +138,10 @@ export default function SchematicsSection({
   const role = useRole();
   const schematics = loaderData?.schematics ?? [];
   const productOptions = loaderData?.productOptions ?? [];
-  const outputProductOptions = (loaderData?.outputProductOptions ?? productOptions) as ProductOption[];
+  const outputProductOptions = (loaderData?.outputProductOptions ?? productOptions) as ItemOption[];
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editId, setEditId] = useState<string | null>(null);
-  const [form, setForm] = useState({ name: "", type: "", duration: "", outputQty: "", outputProductId: "" });
+  const [form, setForm] = useState({ name: "", type: "", duration: "", outputQty: "", outputItemId: "" });
   const [materialInputs, setMaterialInputs] = useState<MaterialInput[]>([{ productId: "", quantity: 1 }]);
   const fetcher = useFetcher();
   const produceFetcher = useFetcher();
@@ -155,19 +157,19 @@ export default function SchematicsSection({
 
   function openCreate() {
     setEditId(null);
-    setForm({ name: "", type: "", duration: "", outputQty: "", outputProductId: "" });
+    setForm({ name: "", type: "", duration: "", outputQty: "", outputItemId: "" });
     setMaterialInputs([{ productId: "", quantity: 1 }]);
     setDialogOpen(true);
   }
 
-  function openEdit(s: any) {
-    setEditId(s.id);
-    setForm({
+  function openEdit(s: ProductionSchematic) {
+      setEditId(s.id);
+      setForm({
       name: s.name || "",
       type: s.type || "",
       duration: String(s.duration || 0),
       outputQty: String(s.outputQty || 0),
-      outputProductId: s.outputProductId || "",
+      outputItemId: s.outputItemId || "",
     });
     const materials: MaterialInput[] = (s.inputs || []).map((pid: string, i: number) => ({
       productId: pid,
@@ -229,7 +231,7 @@ export default function SchematicsSection({
         </Card>
       ) : (
         <Grid container spacing={2}>
-          {schematics.map((s: any) => (
+          {schematics.map((s) => (
             <Grid key={s.id} size={{ xs: 12, sm: 6, md: 4 }}>
               <Card sx={{
                 bgcolor: "#fffbeb",
@@ -255,8 +257,8 @@ export default function SchematicsSection({
                         {s.type}
                       </Typography>
                     </Box>
-                    <Chip label={s.active !== false ? "Active" : "Inactive"}
-                      size="small" color={s.active !== false ? "success" : "default"} />
+                    <Chip label={(s as any).active !== false ? "Active" : "Inactive"}
+                      size="small" color={(s as any).active !== false ? "success" : "default"} />
                   </Box>
 
                   <Box sx={{ display: "flex", flexDirection: "column", gap: 0.5, fontSize: "0.85rem", color: "text.secondary" }}>
@@ -326,8 +328,8 @@ export default function SchematicsSection({
 
             <FormControl fullWidth required>
               <InputLabel>Output Product</InputLabel>
-              <Select name="outputProductId" label="Output Product" value={form.outputProductId}
-                onChange={(e) => setForm({ ...form, outputProductId: e.target.value })}>
+              <Select name="outputItemId" label="Output Product" value={form.outputItemId}
+                onChange={(e) => setForm({ ...form, outputItemId: e.target.value })}>
                 <MenuItem value="">Select output product...</MenuItem>
                 {outputProductOptions.map((p) => (
                                   <MenuItem key={p.id} value={p.id}>{p.name} ({p.sku})</MenuItem>

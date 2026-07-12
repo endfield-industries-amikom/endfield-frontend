@@ -175,7 +175,7 @@ export default function WarehousesSection({
                 </TableCell>
               </TableRow>
             )}
-            {warehouses.map((w: any) => (
+            {warehouses.map((w) => (
               <TableRow key={w.id} hover>
                 <TableCell>
                   <Link to={`/dashboard/warehouses/${w.id}`}
@@ -217,7 +217,7 @@ export default function WarehousesSection({
             <TextField name="regionId" label="Region" select value={form.regionId}
               onChange={(e) => setForm({ ...form, regionId: e.target.value })} fullWidth>
               <MenuItem value="">Select region...</MenuItem>
-              {regionOptions.map((r: any) => (
+              {regionOptions.map((r: { id: string; name: string; code: string }) => (
                 <MenuItem key={r.id} value={r.id}>{r.name}</MenuItem>
               ))}
             </TextField>
