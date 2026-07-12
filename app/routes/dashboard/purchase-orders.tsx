@@ -3,7 +3,8 @@ import { Link, useFetcher, useRouteLoaderData } from "react-router";
 import type { Route } from "./+types/purchase-orders";
 import { get, patch, post } from "~/services/api.server";
 import { getAccessToken } from "~/services/auth-helper.server";
-import { Box, Button, Dialog, DialogTitle, DialogContent, DialogActions, TextField, Typography, IconButton, MenuItem, Chip, Card, CardContent, CardActions, Grid, Divider, Autocomplete, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper } from "@mui/material";
+import type { PurchaseOrder } from "~/types";
+import { Box, Button, Dialog, DialogTitle, DialogContent, DialogActions, TextField, Typography, IconButton, MenuItem, Chip, Card, CardContent, CardActions, Grid, Divider, Autocomplete } from "@mui/material";
 import AddIcon from "@mui/icons-material/Add";
 import EditIcon from "@mui/icons-material/Edit";
 import CheckIcon from "@mui/icons-material/Check";
@@ -11,6 +12,8 @@ import DeleteIcon from "@mui/icons-material/Delete";
 
 interface SelectOption { id: string; name: string; code: string; }
 interface ItemOption { id: string; name: string; sku: string; unitPrice: number; }
+interface LineItem { itemId: string; quantity: number; unitPrice: number; }
+const emptyLine: LineItem = { itemId: "", quantity: 1, unitPrice: 0 };
 
 function useRole() {
   const parent = useRouteLoaderData<{ accessToken: string }>("routes/dashboard/auth-guard");
@@ -23,16 +26,13 @@ export async function loader({ request }: Route.LoaderArgs) {
   const cookie = request.headers.get("Cookie") || "";
   const token = await getAccessToken(cookie);
   const [poRes, suppliersRes, warehousesRes, productsRes] = await Promise.all([
-    get<{ data: { data: { orderId: string; supplierId: string; supplier?: { id: string; name: string; code: string }; order: { warehouseId: string; warehouse?: { id: string; name: string; code: string }; orderDate: string; status: string; totalAmount: number; notes?: string } }[] } }>("/purchase-order?page=1&limit=50", token, cookie),
+    get<{ data: { data: PurchaseOrder[] } }>("/purchase-order?page=1&limit=50", token, cookie),
     get<{ data: { data: SelectOption[] } }>("/supplier?page=1&limit=200", token, cookie),
     get<{ data: { data: SelectOption[] } }>("/warehouses?page=1&limit=200", token, cookie),
     get<{ data: { data: ItemOption[] } }>("/item?page=1&limit=200&isPurchaseable=true", token, cookie),
   ]);
   return { purchaseOrders: poRes.data.data, supplierOptions: suppliersRes.data.data, warehouseOptions: warehousesRes.data.data, productOptions: productsRes.data.data };
 }
-
-interface LineItem { itemId: string; quantity: number; unitPrice: number; }
-const emptyLine: LineItem = { itemId: "", quantity: 1, unitPrice: 0 };
 
 export async function action({ request }: Route.ActionArgs) {
   const cookie = request.headers.get("Cookie") || "";
@@ -61,11 +61,9 @@ function statusColor(s: string | undefined) {
   return m[s || ""] || "default";
 }
 
-type PO = { orderId: string; supplierId: string; supplier?: SelectOption; order: { warehouseId: string; warehouse?: SelectOption; orderDate: string; status: string; totalAmount: number; notes?: string } };
-
 export default function PurchaseOrdersSection({ loaderData, actionData }: Route.ComponentProps) {
   const role = useRole();
-  const purchaseOrders: PO[] = loaderData?.purchaseOrders ?? [];
+  const purchaseOrders: PurchaseOrder[] = loaderData?.purchaseOrders ?? [];
   const supplierOptions: SelectOption[] = loaderData?.supplierOptions ?? [];
   const warehouseOptions: SelectOption[] = loaderData?.warehouseOptions ?? [];
   const productOptions: ItemOption[] = loaderData?.productOptions ?? [];
@@ -79,7 +77,10 @@ export default function PurchaseOrdersSection({ loaderData, actionData }: Route.
   const isAdmin = role === "Admin";
 
   function openCreate() { setEditId(null); setForm({ supplierId: "", warehouseId: "", notes: "" }); setLineItems([{ ...emptyLine }]); setDialogOpen(true); }
-  function openEdit(po: PO) { setEditId(po.orderId); setForm({ supplierId: po.supplierId || "", warehouseId: po.order.warehouseId || "", notes: po.order.notes || "" }); setLineItems([{ ...emptyLine }]); setDialogOpen(true); }
+  function openEdit(po: PurchaseOrder) { setEditId(po.orderId); setForm({ supplierId: po.supplierId || "", warehouseId: po.order.warehouseId || "", notes: po.order.notes || "" });
+      const existingItems: LineItem[] = (po.order.orderItems ?? []).map((oi) => ({ itemId: oi.itemId, quantity: oi.quantity, unitPrice: Number(oi.unitPrice) }));
+      setLineItems(existingItems.length > 0 ? existingItems : [{ ...emptyLine }]);
+      setDialogOpen(true); }
 
   function addLine() { setLineItems([...lineItems, { ...emptyLine }]); }
   function removeLine(idx: number) { setLineItems(lineItems.filter((_, i) => i !== idx)); }
@@ -131,7 +132,7 @@ export default function PurchaseOrdersSection({ loaderData, actionData }: Route.
                   <Divider sx={{ my: 1 }} />
                   <Box sx={{ display: "flex", justifyContent: "space-between" }}><Typography sx={{ fontWeight: 600 }}>Total:</Typography><Typography sx={{ fontWeight: 600 }}>${Number(order.order.totalAmount).toLocaleString()}</Typography></Box>
                 </CardContent>
-                {canMutate && (
+                {canMutate && order.order.status === "PENDING" && (
                   <CardActions sx={{ borderTop: "1px solid", borderColor: "divider", px: 2, py: 1, bgcolor: "grey.50" }}>
                     <Button size="small" startIcon={<EditIcon fontSize="small" />} onClick={() => openEdit(order)} sx={{ color: "text.secondary" }}>Edit</Button>
                     {isAdmin && order.order.status === "PENDING" && (

@@ -97,6 +97,8 @@ export async function action({ request }: Route.ActionArgs) {
 /*  Component                                                          */
 /* ------------------------------------------------------------------ */
 
+interface RegionOption { id: string; name: string; }
+
 const emptyForm = { name: "", code: "", address: "", regionId: "", maxCapacity: "" };
 
 export default function WarehousesSection({
@@ -105,7 +107,7 @@ export default function WarehousesSection({
 }: Route.ComponentProps) {
   const role = useRole();
   const warehouses = loaderData?.warehouses ?? [];
-  const regionOptions = (loaderData?.regionOptions as any[]) ?? [];
+  const regionOptions: RegionOption[] = loaderData?.regionOptions ?? [];
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editId, setEditId] = useState<string | null>(null);
   const [form, setForm] = useState(emptyForm);
@@ -121,7 +123,7 @@ export default function WarehousesSection({
     setDialogOpen(true);
   }
 
-  function openEdit(w: any) {
+  function openEdit(w: Warehouse) {
     setEditId(w.id);
     setForm({
       name: w.name || "",
@@ -190,8 +192,8 @@ export default function WarehousesSection({
                 </TableCell>
                 {canMutate && (
                   <TableCell align="right">
-                    <IconButton size="small" onClick={() => openEdit(w)}><EditIcon fontSize="small" /></IconButton>
-                    <deleteFetcher.Form method="post" style={{ display: "inline" }}>
+                    <IconButton size="small" onClick={(e) => { e.stopPropagation(); openEdit(w); }}><EditIcon fontSize="small" /></IconButton>
+                    <deleteFetcher.Form method="post" style={{ display: "inline" }} onClick={(e) => e.stopPropagation()}>
                       <input type="hidden" name="intent" value="delete-warehouse" />
                       <input type="hidden" name="id" value={w.id} />
                       <IconButton size="small" type="submit" color="error"><DeleteIcon fontSize="small" /></IconButton>
@@ -215,7 +217,7 @@ export default function WarehousesSection({
             <TextField name="regionId" label="Region" select value={form.regionId}
               onChange={(e) => setForm({ ...form, regionId: e.target.value })} fullWidth>
               <MenuItem value="">Select region...</MenuItem>
-              {regionOptions.map((r: { id: string; name: string; code: string }) => (
+              {regionOptions.map((r) => (
                 <MenuItem key={r.id} value={r.id}>{r.name}</MenuItem>
               ))}
             </TextField>

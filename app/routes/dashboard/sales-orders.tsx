@@ -8,12 +8,11 @@ import AddIcon from "@mui/icons-material/Add";
 import EditIcon from "@mui/icons-material/Edit";
 import LocalShippingIcon from "@mui/icons-material/LocalShipping";
 import DeleteIcon from "@mui/icons-material/Delete";
-import type { Shipment } from "~/types";
+import type { SalesOrder, Shipment } from "~/types";
 
 interface SelectOption { id: string; name: string; code: string; }
 interface CustOption { id: string; name: string; code: string; email?: string; }
 interface ItemOption { id: string; name: string; sku: string; unitPrice: number; }
-type SO = { orderId: string; customerId: string; customer?: CustOption; order: { warehouseId: string; warehouse?: SelectOption; orderDate: string; status: string; totalAmount: number; notes?: string } };
 
 function useRole() {
   const parent = useRouteLoaderData<{ accessToken: string }>("routes/dashboard/auth-guard");
@@ -29,7 +28,7 @@ export async function loader({ request }: Route.LoaderArgs) {
   try { const p = JSON.parse(atob(token.split(".")[1])); role = p.role || "Consumer"; email = p.email || null; } catch {}
 
   const [soRes, customersRes, warehousesRes, productsRes] = await Promise.all([
-    get<{ data: { data: SO[]; total: number } }>("/sales-order?page=1&limit=50", token, cookie),
+    get<{ data: { data: SalesOrder[]; total: number } }>("/sales-order?page=1&limit=50", token, cookie),
     get<{ data: { data: CustOption[] } }>("/customers?page=1&limit=200", token, cookie),
     get<{ data: { data: SelectOption[] } }>("/warehouses?page=1&limit=200", token, cookie),
     get<{ data: { data: ItemOption[] } }>("/item?page=1&limit=200&isSellable=true", token, cookie),
@@ -77,12 +76,11 @@ function statusColor(s: string | undefined) { const m: Record<string, "warning" 
 
 export default function SalesOrdersSection({ loaderData, actionData }: Route.ComponentProps) {
   const role = useRole();
-  const salesOrders: SO[] = loaderData?.salesOrders ?? [];
+  const salesOrders: SalesOrder[] = loaderData?.salesOrders ?? [];
   const customerOptions: CustOption[] = loaderData?.customerOptions ?? [];
   const warehouseOptions: SelectOption[] = loaderData?.warehouseOptions ?? [];
   const productOptions: ItemOption[] = loaderData?.productOptions ?? [];
-  const shipmentsBySalesOrderId: Record<string, Shipment[]> = loaderData?.shipmentsBySalesOrderId ?? {};
-  const [dialogOpen, setDialogOpen] = useState(false);
+    const [dialogOpen, setDialogOpen] = useState(false);
   const [editId, setEditId] = useState<string | null>(null);
   const [form, setForm] = useState({ customerId: "", warehouseId: "", notes: "" });
   const [lineItems, setLineItems] = useState<LineItem[]>([{ ...emptyLine }]);
@@ -91,7 +89,10 @@ export default function SalesOrdersSection({ loaderData, actionData }: Route.Com
   const isAdmin = role === "Admin"; const isEmployee = role === "Employee"; const isConsumer = role === "Consumer";
 
   function openCreate() { setEditId(null); setForm({ customerId: "", warehouseId: "", notes: "" }); setLineItems([{ ...emptyLine }]); setDialogOpen(true); }
-  function openEdit(so: SO) { setEditId(so.orderId); setForm({ customerId: so.customerId || "", warehouseId: so.order.warehouseId || "", notes: so.order.notes || "" }); setLineItems([{ ...emptyLine }]); setDialogOpen(true); }
+  function openEdit(so: SalesOrder) { setEditId(so.orderId); setForm({ customerId: so.customerId || "", warehouseId: so.order.warehouseId || "", notes: so.order.notes || "" });
+      const existingItems: LineItem[] = (so.order.orderItems ?? []).map((oi) => ({ itemId: oi.itemId, quantity: oi.quantity, unitPrice: Number(oi.unitPrice) }));
+      setLineItems(existingItems.length > 0 ? existingItems : [{ ...emptyLine }]);
+      setDialogOpen(true); }
 
   function addLine() { setLineItems([...lineItems, { ...emptyLine }]); }
   function removeLine(idx: number) { setLineItems(lineItems.filter((_, i) => i !== idx)); }
@@ -141,14 +142,16 @@ export default function SalesOrdersSection({ loaderData, actionData }: Route.Com
                   <Divider sx={{ my: 1 }} />
                   <Box sx={{ display: "flex", justifyContent: "space-between" }}><Typography sx={{ fontWeight: 600 }}>Total:</Typography><Typography sx={{ fontWeight: 600 }}>${Number(order.order.totalAmount).toLocaleString()}</Typography></Box>
                 </CardContent>
-                {((isAdmin || isEmployee) && ((shipmentsBySalesOrderId[order.orderId] ?? []).every((s) => s.status === "PENDING"))) && (
-                  <CardActions sx={{ borderTop: "1px solid", borderColor: "divider", px: 2, py: 1, bgcolor: "grey.50" }}>
-                    <Button size="small" startIcon={<EditIcon fontSize="small" />} onClick={() => openEdit(order)} sx={{ color: "text.secondary" }}>Edit</Button>
-                    {isAdmin && order.order.status === "CONFIRMED" && (
-                      <shipFetcher.Form method="post"><input type="hidden" name="intent" value="ship-order" /><input type="hidden" name="id" value={order.orderId} /><Button size="small" type="submit" startIcon={<LocalShippingIcon fontSize="small" />} color="success">Ship</Button></shipFetcher.Form>
-                    )}
-                  </CardActions>
-                )}
+                {((isAdmin || isEmployee) && order.order.status === "PENDING") && (
+                                  <CardActions sx={{ borderTop: "1px solid", borderColor: "divider", px: 2, py: 1, bgcolor: "grey.50" }}>
+                                    <Button size="small" startIcon={<EditIcon fontSize="small" />} onClick={() => openEdit(order)} sx={{ color: "text.secondary" }}>Edit</Button>
+                                  </CardActions>
+                                )}
+                                {isAdmin && order.order.status === "CONFIRMED" && (
+                                  <CardActions sx={{ borderTop: "1px solid", borderColor: "divider", px: 2, py: 1, bgcolor: "grey.50" }}>
+                                    <shipFetcher.Form method="post"><input type="hidden" name="intent" value="ship-order" /><input type="hidden" name="id" value={order.orderId} /><Button size="small" type="submit" startIcon={<LocalShippingIcon fontSize="small" />} color="success">Ship</Button></shipFetcher.Form>
+                                  </CardActions>
+                                )}
               </Card>
             </Grid>
           ))}

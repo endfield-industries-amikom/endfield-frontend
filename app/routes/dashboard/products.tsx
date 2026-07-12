@@ -45,13 +45,12 @@ export async function action({ request }: Route.ActionArgs) {
       description: formData.get("description") || undefined,
       category: formData.get("category") || undefined,
       unitPrice: Number(formData.get("unitPrice")),
+      type: "product",
       isSellable: formData.get("isSellable") === "on",
       isManufactureable: formData.get("isManufactureable") === "on",
     };
     const capacityUsage = formData.get("capacityUsage") as string;
     if (capacityUsage) body.capacityUsage = Number(capacityUsage);
-    const type = formData.get("type") as string;
-    if (type) body.type = type;
 
     // Step 1: create product
     const res = await post<{ data: Product }>("/product", body, token, cookie);
@@ -77,13 +76,12 @@ export async function action({ request }: Route.ActionArgs) {
       description: formData.get("description") || undefined,
       category: formData.get("category") || undefined,
       unitPrice: Number(formData.get("unitPrice")),
+      type: "product",
       isSellable: formData.get("isSellable") === "on",
       isManufactureable: formData.get("isManufactureable") === "on",
     };
     const capacityUsage = formData.get("capacityUsage") as string;
     if (capacityUsage) body.capacityUsage = Number(capacityUsage);
-    const type = formData.get("type") as string;
-    if (type) body.type = type;
 
     await patch(`/product/${id}`, body, token, cookie);
 
@@ -107,7 +105,7 @@ export async function action({ request }: Route.ActionArgs) {
   return { ok: false, error: "Unknown intent" };
 }
 
-const emptyForm = { name: "", sku: "", description: "", category: "", unitPrice: "", capacityUsage: "", type: "product", isSellable: true, isManufactureable: true };
+const emptyForm = { name: "", sku: "", description: "", category: "", unitPrice: "", capacityUsage: "", isSellable: true, isManufactureable: true };
 
 export default function ProductsSection({ loaderData, actionData }: Route.ComponentProps) {
   const role = useRole();
@@ -135,9 +133,8 @@ export default function ProductsSection({ loaderData, actionData }: Route.Compon
       setForm({
         name: p.item?.name || "", sku: p.item?.sku || "", description: p.item?.description || "",
         category: p.item?.category || "", unitPrice: String(p.item?.unitPrice || ""),
-        capacityUsage: String(p.capacityUsage ?? ""),
-        type: p.type || "product",
-        isSellable: p.item?.isSellable ?? true,
+        capacityUsage: String(p.item?.capacityUsage ?? ""),
+                isSellable: p.item?.isSellable ?? true,
         isManufactureable: p.item?.isManufactureable ?? true,
       });
       setImageFile(null);
@@ -202,7 +199,7 @@ export default function ProductsSection({ loaderData, actionData }: Route.Compon
                 <TableCell><Link to={`/dashboard/products/${p.id}`} style={{ textDecoration: "none", fontWeight: 500, color: "inherit" }}>{p.item?.name}</Link></TableCell>
                 <TableCell sx={{ fontFamily: "monospace", fontSize: "0.8rem" }}>{p.item?.sku}</TableCell>
                 <TableCell>{p.item?.category || "—"}</TableCell>
-                <TableCell>{p.capacityUsage ?? "—"}</TableCell>
+                <TableCell>{p.item?.capacityUsage ?? "—"}</TableCell>
                 <TableCell>{(Number(p.item?.unitPrice) || 0).toLocaleString("en-US", { style: "currency", currency: "USD" })}</TableCell>
                 {canMutate && (
                   <TableCell align="right">
@@ -232,9 +229,7 @@ export default function ProductsSection({ loaderData, actionData }: Route.Compon
               onChange={(e) => setForm({ ...form, description: e.target.value })} fullWidth multiline rows={2} />
             <Box sx={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 2 }}>
               <TextField name="category" label="Category" value={form.category}
-                onChange={(e) => setForm({ ...form, category: e.target.value })} fullWidth />
-              <TextField name="type" label="Type" value={form.type}
-                onChange={(e) => setForm({ ...form, type: e.target.value })} fullWidth />
+                              onChange={(e) => setForm({ ...form, category: e.target.value })} fullWidth />
             </Box>
             <Box sx={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 2 }}>
               <TextField name="unitPrice" label="Unit Price" type="number" value={form.unitPrice}

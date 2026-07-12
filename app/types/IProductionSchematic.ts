@@ -10,6 +10,8 @@ export interface ProductionSchematic {
   outputQty: number;
   outputItemId: string;
   outputItem?: Item;
+  active: boolean;
+  warehouseIds: string[];
   createdAt: string;
   updatedAt: string;
 }

@@ -3,14 +3,12 @@ import { Link, useFetcher, useRouteLoaderData } from "react-router";
 import type { Route } from "./+types/shipments";
 import { get, patch, post } from "~/services/api.server";
 import { getAccessToken } from "~/services/auth-helper.server";
-import type { OrderItem, Shipment } from "~/types";
-import {
-  Box, Button, Dialog, DialogTitle, DialogContent, DialogActions,
-  TextField, Table, TableBody, TableCell, TableContainer, TableHead,
-  TableRow, Paper, Typography, IconButton, MenuItem, Chip,
-} from "@mui/material";
+import type { Shipment } from "~/types";
+import { Box, Button, Dialog, DialogTitle, DialogContent, DialogActions, TextField, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper, Typography, IconButton, MenuItem, Chip } from "@mui/material";
 import AddIcon from "@mui/icons-material/Add";
 import EditIcon from "@mui/icons-material/Edit";
+
+interface OrderOption { orderId: string; order: { status: string }; }
 
 function useRole() {
   const parent = useRouteLoaderData<{ accessToken: string }>("routes/dashboard/auth-guard");
@@ -24,10 +22,12 @@ export async function loader({ request }: Route.LoaderArgs) {
   const token = await getAccessToken(cookie);
   const [shipRes, poRes, soRes] = await Promise.all([
     get<{ data: { data: Shipment[]; total: number } }>("/shipment?page=1&limit=50", token, cookie),
-    get<{ data: { data: { id: string }[] } }>("/purchase-order?page=1&limit=200", token, cookie),
-    get<{ data: { data: { id: string }[] } }>("/sales-order?page=1&limit=200", token, cookie),
+    get<{ data: { data: OrderOption[] } }>("/purchase-order?page=1&limit=200", token, cookie),
+    get<{ data: { data: OrderOption[] } }>("/sales-order?page=1&limit=200", token, cookie),
   ]);
-  return { shipments: shipRes.data.data, poOptions: poRes.data.data, soOptions: soRes.data.data };
+  const approvedPO = (poRes.data.data ?? []).filter((o) => o.order?.status === "APPROVED");
+  const approvedSO = (soRes.data.data ?? []).filter((o) => o.order?.status === "APPROVED" || o.order?.status === "CONFIRMED");
+  return { shipments: shipRes.data.data, poOptions: approvedPO, soOptions: approvedSO };
 }
 
 export async function action({ request }: Route.ActionArgs) {
@@ -51,22 +51,25 @@ export async function action({ request }: Route.ActionArgs) {
   return { ok: false, error: "Unknown intent" };
 }
 
-function statusColor(s: string) { const m: Record<string, "warning" | "info" | "success" | "error"> = { PENDING: "warning", SENDING: "info", ARRIVED: "success", CANCELLED: "error" }; return m[s] || "default"; }
+function statusColor(s: string) {
+  const m: Record<string, "warning" | "info" | "success" | "error"> = { PENDING: "warning", SENDING: "info", ARRIVED: "success", CANCELLED: "error" };
+  return m[s] || "default";
+}
 
 export default function ShipmentsSection({ loaderData, actionData }: Route.ComponentProps) {
   const role = useRole();
-  const shipments = loaderData?.shipments ?? [];
-  const poOptions = (loaderData?.poOptions as any[]) ?? [];
-  const soOptions = (loaderData?.soOptions as any[]) ?? [];
+  const shipments: Shipment[] = loaderData?.shipments ?? [];
+  const poOptions: OrderOption[] = loaderData?.poOptions ?? [];
+  const soOptions: OrderOption[] = loaderData?.soOptions ?? [];
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editId, setEditId] = useState<string | null>(null);
-  const [orderType, setOrderType] = useState("PURCHASE");
+  const [orderType, setOrderType] = useState<"PURCHASE" | "SALES">("PURCHASE");
   const [form, setForm] = useState({ orderId: "", carrier: "", trackingNumber: "", status: "PENDING" });
   const fetcher = useFetcher();
   const canMutate = role === "Admin" || role === "Employee";
 
   function openCreate() { setEditId(null); setOrderType("PURCHASE"); setForm({ orderId: "", carrier: "", trackingNumber: "", status: "PENDING" }); setDialogOpen(true); }
-  function openEdit(s: any) { setEditId(s.id); setOrderType(s.orderType || "PURCHASE"); setForm({ orderId: s.orderId || "", carrier: s.carrier || "", trackingNumber: s.trackingNumber || "", status: s.status || "PENDING" }); setDialogOpen(true); }
+  function openEdit(s: Shipment) { setEditId(s.id); setOrderType(s.orderType as "PURCHASE" | "SALES"); setForm({ orderId: s.orderId || "", carrier: s.carrier || "", trackingNumber: s.trackingNumber || "", status: s.status || "PENDING" }); setDialogOpen(true); }
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     const fd = new FormData(e.target as HTMLFormElement);
@@ -126,15 +129,17 @@ export default function ShipmentsSection({ loaderData, actionData }: Route.Compo
           <DialogTitle>{editId ? "Edit Shipment" : "New Shipment"}</DialogTitle>
           <DialogContent sx={{ display: "flex", flexDirection: "column", gap: 2, pt: "8px !important" }}>
             <TextField name="orderType" label="Order Type" select value={orderType}
-              onChange={(e) => { setOrderType(e.target.value); setForm({ ...form, orderId: "" }); }} required fullWidth>
+              onChange={(e) => { setOrderType(e.target.value as "PURCHASE" | "SALES"); setForm({ ...form, orderId: "" }); }} required fullWidth>
               <MenuItem value="PURCHASE">Purchase Order</MenuItem>
               <MenuItem value="SALES">Sales Order</MenuItem>
             </TextField>
             <TextField name="orderId" label="Order" select value={form.orderId}
               onChange={(e) => setForm({ ...form, orderId: e.target.value })} required fullWidth>
               <MenuItem value="">Select order...</MenuItem>
-              {currentOrderOptions.map((o: OrderItem) => (
-                <MenuItem key={o.orderId} value={o.orderId}>{"PO-" + (o.orderId?.substring(0, 8) ?? "Unknown")}</MenuItem>
+              {currentOrderOptions.map((o) => (
+                <MenuItem key={o.orderId} value={o.orderId}>
+                  {`${orderType === "PURCHASE" ? "PO" : "SO"}-${o.orderId.substring(0, 8)}`}
+                </MenuItem>
               ))}
             </TextField>
             <TextField name="carrier" label="Carrier" value={form.carrier}

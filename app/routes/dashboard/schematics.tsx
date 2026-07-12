@@ -257,8 +257,8 @@ export default function SchematicsSection({
                         {s.type}
                       </Typography>
                     </Box>
-                    <Chip label={(s as any).active !== false ? "Active" : "Inactive"}
-                      size="small" color={(s as any).active !== false ? "success" : "default"} />
+                    <Chip label={s.active !== false ? "Active" : "Inactive"}
+                      size="small" color={s.active !== false ? "success" : "default"} />
                   </Box>
 
                   <Box sx={{ display: "flex", flexDirection: "column", gap: 0.5, fontSize: "0.85rem", color: "text.secondary" }}>

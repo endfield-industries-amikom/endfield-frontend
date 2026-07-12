@@ -5,6 +5,7 @@ export interface Item {
   description?: string;
   category?: string;
   unitPrice: number;
+  capacityUsage: number;
   isSellable: boolean;
   isPurchaseable: boolean;
   isManufactureable: boolean;

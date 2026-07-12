@@ -2,23 +2,31 @@ import { get } from "~/services/api.server";
 import { getAccessToken } from "~/services/auth-helper.server";
 import { Link } from "react-router";
 import type { Route } from "./+types/warehouse-detail";
-import type { Warehouse } from "~/types";
-import { Box, Paper, Typography, Button, Divider, Grid, LinearProgress } from "@mui/material";
+import type { Warehouse, Inventory } from "~/types";
+import {
+  Box, Paper, Typography, Button, Divider, Grid, LinearProgress,
+  Table, TableBody, TableCell, TableContainer, TableHead, TableRow,
+} from "@mui/material";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 
 export async function loader({ request, params }: Route.LoaderArgs) {
   const cookie = request.headers.get("Cookie") || "";
   const token = await getAccessToken(cookie);
-  const response = await get<{ data: Warehouse & { region?: { id: string; name: string }; _count?: { inventory: number } } }>(
-    `/warehouses/${params.id}`,
-    token,
-    cookie,
-  );
-  return { warehouse: response.data };
+
+  const [whRes, invRes] = await Promise.all([
+    get<{ data: Warehouse }>(`/warehouses/${params.id}`, token, cookie),
+    get<{ data: Inventory[] }>(`/warehouses/${params.id}/inventory`, token, cookie),
+  ]);
+
+  return {
+    warehouse: whRes.data,
+    inventory: invRes.data ?? [],
+  };
 }
 
 export default function WarehouseDetail({ loaderData }: Route.ComponentProps) {
   const warehouse = loaderData?.warehouse;
+  const inventory: Inventory[] = loaderData?.inventory ?? [];
 
   if (!warehouse) {
     return (
@@ -28,9 +36,10 @@ export default function WarehouseDetail({ loaderData }: Route.ComponentProps) {
     );
   }
 
-  const maxCap = warehouse.maxCapacity;
-  const currentCap = (warehouse as any).currentLoad;
-  const capacityPct = maxCap && currentCap != null ? Math.min(100, (currentCap / maxCap) * 100) : 0;
+  const maxCap = warehouse.maxCapacity ?? 0;
+  const currentCap = warehouse.currentLoad ?? 0;
+  const capacityPct = maxCap > 0 ? Math.min(100, (currentCap / maxCap) * 100) : 0;
+  const totalOnHand = inventory.reduce((sum, inv) => sum + inv.quantityOnHand, 0);
 
   return (
     <Box>
@@ -57,10 +66,10 @@ export default function WarehouseDetail({ loaderData }: Route.ComponentProps) {
         <Typography variant="h6" sx={{ fontWeight: 600 }}>{warehouse.name}</Typography>
         <Typography variant="body2" color="text.secondary">{warehouse.address || "—"}</Typography>
         <Typography variant="body2" color="text.secondary">
-          Region: {(warehouse as any).region?.name ?? "—"}
+          Region: {warehouse.region?.name ?? "—"}
         </Typography>
 
-        {maxCap != null && (
+        {maxCap > 0 && (
           <>
             <Divider sx={{ my: 2 }} />
             <Typography variant="caption" color="text.secondary">Capacity Usage</Typography>
@@ -71,7 +80,7 @@ export default function WarehouseDetail({ loaderData }: Route.ComponentProps) {
                   sx={{ height: 10, borderRadius: 5 }} />
               </Box>
               <Typography variant="body2" sx={{ fontWeight: 600 }}>
-                {currentCap ?? "—"} / {maxCap}
+                {currentCap} / {maxCap}
               </Typography>
             </Box>
           </>
@@ -79,14 +88,48 @@ export default function WarehouseDetail({ loaderData }: Route.ComponentProps) {
 
         <Divider sx={{ my: 2 }} />
 
-        <Grid container spacing={2}>
-          <Grid size={6}>
-            <Typography variant="caption" color="text.secondary">Inventory Records</Typography>
-            <Typography variant="h5" sx={{ fontWeight: 700 }}>
-              {(warehouse as any)._count?.inventory ?? "—"}
-            </Typography>
-          </Grid>
-        </Grid>
+        <Typography variant="subtitle1" sx={{ fontWeight: 600, mb: 2 }}>
+          Inventory ({inventory.length} records · {totalOnHand} total items)
+        </Typography>
+
+        {inventory.length === 0 ? (
+          <Typography variant="body2" color="text.secondary">
+            No inventory records for this warehouse.
+          </Typography>
+        ) : (
+          <TableContainer>
+            <Table size="small">
+              <TableHead>
+                <TableRow>
+                  <TableCell>Item</TableCell>
+                  <TableCell>SKU</TableCell>
+                  <TableCell align="right">On Hand</TableCell>
+                  <TableCell align="right">Reserved</TableCell>
+                  <TableCell align="right">Available</TableCell>
+                  <TableCell align="right">Reorder Level</TableCell>
+                </TableRow>
+              </TableHead>
+              <TableBody>
+                {inventory.map((inv) => (
+                  <TableRow key={inv.id} hover>
+                    <TableCell>
+                      <Typography variant="body2" sx={{ fontWeight: 500 }}>
+                        {inv.item?.name ?? inv.itemId}
+                      </Typography>
+                    </TableCell>
+                    <TableCell sx={{ fontFamily: "monospace", fontSize: "0.8rem" }}>
+                      {inv.item?.sku ?? "—"}
+                    </TableCell>
+                    <TableCell align="right">{inv.quantityOnHand}</TableCell>
+                    <TableCell align="right">{inv.reservedQuantity}</TableCell>
+                    <TableCell align="right">{inv.quantityOnHand - inv.reservedQuantity}</TableCell>
+                    <TableCell align="right">{inv.reorderLevel}</TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </TableContainer>
+        )}
 
         <Divider sx={{ my: 2 }} />
 
