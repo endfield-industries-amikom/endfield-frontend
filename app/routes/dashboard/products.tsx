@@ -227,10 +227,8 @@ export default function ProductsSection({ loaderData, actionData }: Route.Compon
               onChange={(e) => setForm({ ...form, sku: e.target.value })} required fullWidth />
             <TextField name="description" label="Description" value={form.description}
               onChange={(e) => setForm({ ...form, description: e.target.value })} fullWidth multiline rows={2} />
-            <Box sx={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 2 }}>
-              <TextField name="category" label="Category" value={form.category}
-                              onChange={(e) => setForm({ ...form, category: e.target.value })} fullWidth />
-            </Box>
+            <TextField name="category" label="Category" value={form.category}
+                          onChange={(e) => setForm({ ...form, category: e.target.value })} fullWidth />
             <Box sx={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 2 }}>
               <TextField name="unitPrice" label="Unit Price" type="number" value={form.unitPrice}
                 onChange={(e) => setForm({ ...form, unitPrice: e.target.value })}
@@ -238,9 +236,9 @@ export default function ProductsSection({ loaderData, actionData }: Route.Compon
               <TextField name="capacityUsage" label="Capacity Usage" type="number" value={form.capacityUsage}
                 onChange={(e) => setForm({ ...form, capacityUsage: e.target.value })}
                 fullWidth slotProps={{ htmlInput: { step: "0.01", min: "0" } }} />
-            </Box>
+                            </Box>
 
-            <Box sx={{ display: "flex", gap: 2 }}>
+                            <Box sx={{ display: "flex", gap: 2 }}>
               <FormControlLabel
                 control={<Checkbox name="isSellable" checked={form.isSellable}
                   onChange={(e) => setForm({ ...form, isSellable: e.target.checked })} />}
@@ -249,10 +247,10 @@ export default function ProductsSection({ loaderData, actionData }: Route.Compon
                 control={<Checkbox name="isManufactureable" checked={form.isManufactureable}
                   onChange={(e) => setForm({ ...form, isManufactureable: e.target.checked })} />}
                 label="Manufacturable" />
-            </Box>
+                            </Box>
 
-            {/* Image upload */}
-            <Box>
+                            {/* Image upload */}
+                            <Box>
               <Typography variant="body2" sx={{ mb: 1 }}>Product Image (optional)</Typography>
               <input type="file" accept="image/*" ref={fileInputRef}
                 onChange={handleFileChange} style={{ display: "none" }} />
