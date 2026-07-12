@@ -4,7 +4,7 @@ import ProductsGrid from "~/components/products/ProductsGrid";
 import ProductsHero from "~/components/products/ProductsHero";
 import ProductsSectionHeader from "~/components/products/ProductsSectionHeader";
 import { get } from "~/services/api.server";
-import type { Product } from "~/services/types";
+import type { Product } from "~/types";
 import type { IProduct } from "~/interfaces/IProduct";
 
 export const meta: Route.MetaFunction = () => {

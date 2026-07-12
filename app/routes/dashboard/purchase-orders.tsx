@@ -43,7 +43,7 @@ export async function action({ request }: Route.ActionArgs) {
   if (intent === "create-purchase-order" || intent === "update-purchase-order") {
     const itemsJson = formData.get("items") as string;
     const rawItems: LineItem[] = itemsJson ? JSON.parse(itemsJson) : [];
-    const items = rawItems.map((item) => ({ orderType: "PURCHASE", itemId: item.itemId, quantity: item.quantity, unitPrice: item.unitPrice }));
+    const items = rawItems.map((item) => ({ orderType: "PURCHASE", itemId: item.itemId, quantity: item.quantity, unitPrice: Number(item.unitPrice) }));
     const body = { supplierId: formData.get("supplierId"), warehouseId: formData.get("warehouseId"), notes: formData.get("notes") || undefined, items };
     if (intent === "create-purchase-order") await post("/purchase-order", body, token, cookie);
     else await patch(`/purchase-order/${formData.get("id")}`, body, token, cookie);

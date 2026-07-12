@@ -2,7 +2,7 @@ import { get } from "~/services/api.server";
 import { getAccessToken } from "~/services/auth-helper.server";
 import { Link } from "react-router";
 import type { Route } from "./+types/warehouse-detail";
-import type { Warehouse } from "~/services/types";
+import type { Warehouse } from "~/types";
 import { Box, Paper, Typography, Button, Divider, Grid, LinearProgress } from "@mui/material";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 
@@ -29,7 +29,7 @@ export default function WarehouseDetail({ loaderData }: Route.ComponentProps) {
   }
 
   const maxCap = warehouse.maxCapacity;
-  const currentCap = (warehouse as any).currentCapacity;
+  const currentCap = (warehouse as any).currentLoad;
   const capacityPct = maxCap && currentCap != null ? Math.min(100, (currentCap / maxCap) * 100) : 0;
 
   return (

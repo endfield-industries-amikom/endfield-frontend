@@ -3,7 +3,7 @@ import { Link, useFetcher, useRouteLoaderData } from "react-router";
 import type { Route } from "./+types/shipments";
 import { get, patch, post } from "~/services/api.server";
 import { getAccessToken } from "~/services/auth-helper.server";
-import type { OrderItem, Shipment } from "~/services/types";
+import type { OrderItem, Shipment } from "~/types";
 import {
   Box, Button, Dialog, DialogTitle, DialogContent, DialogActions,
   TextField, Table, TableBody, TableCell, TableContainer, TableHead,

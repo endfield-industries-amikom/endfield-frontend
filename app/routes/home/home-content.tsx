@@ -14,7 +14,7 @@ import ProductsGrid from "~/components/products/ProductsGrid";
 import { get } from "~/services/api.server";
 import type { Route } from "./+types/home-content";
 import type { IProduct } from "~/interfaces/IProduct";
-import type { Product } from "~/services/types";
+import type { Product } from "~/types";
 
 /* ------------------------------------------------------------------ */
 /*  Loader – fetch top 10 products from API                            */

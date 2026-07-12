@@ -8,7 +8,7 @@ import AddIcon from "@mui/icons-material/Add";
 import EditIcon from "@mui/icons-material/Edit";
 import LocalShippingIcon from "@mui/icons-material/LocalShipping";
 import DeleteIcon from "@mui/icons-material/Delete";
-import type { Shipment } from "~/services/types";
+import type { Shipment } from "~/types";
 
 interface SelectOption { id: string; name: string; code: string; }
 interface CustOption { id: string; name: string; code: string; email?: string; }
@@ -63,7 +63,7 @@ export async function action({ request }: Route.ActionArgs) {
   if (intent === "create-sales-order" || intent === "update-sales-order") {
     const itemsJson = formData.get("items") as string;
     const rawItems: LineItem[] = itemsJson ? JSON.parse(itemsJson) : [];
-    const items = rawItems.map((item) => ({ orderType: "SALES", itemId: item.itemId, quantity: item.quantity, unitPrice: item.unitPrice }));
+    const items = rawItems.map((item) => ({ orderType: "SALES", itemId: item.itemId, quantity: item.quantity, unitPrice: Number(item.unitPrice) }));
     const body = { customerId: formData.get("customerId"), warehouseId: formData.get("warehouseId"), notes: formData.get("notes") || undefined, items };
     if (intent === "create-sales-order") await post("/sales-order", body, token, cookie);
     else await patch(`/sales-order/${formData.get("id")}`, body, token, cookie);

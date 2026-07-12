@@ -3,7 +3,7 @@ import { getAccessToken } from "~/services/auth-helper.server";
 import { useState } from "react";
 import { Link, useFetcher, useRouteLoaderData } from "react-router";
 import type { Route } from "./+types/schematics";
-import type { ProductionSchematic, Item } from "~/services/types";
+import type { ProductionSchematic, Item } from "~/types";
 
 interface ItemOption { id: string; name: string; sku: string; unitPrice: number; isManufactureable?: boolean; }
 import {
