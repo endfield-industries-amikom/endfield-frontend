@@ -50,14 +50,18 @@ export async function action({ request }: Route.ActionArgs) {
     return { ok: true };
   }
   if (intent === "approve-po") {
-    await post(`/purchase-order/${formData.get("id")}/approve`, {}, token, cookie);
-    return { ok: true };
+    try {
+      await post(`/purchase-order/${formData.get("id")}/approve`, {}, token, cookie);
+      return { ok: true };
+    } catch (err) {
+      return { ok: false, error: err instanceof Error ? err.message : "Approval failed" };
+    }
   }
   return { ok: false, error: "Unknown intent" };
 }
 
 function statusColor(s: string | undefined) {
-  const m: Record<string, "warning" | "success" | "error" | "info"> = { PENDING: "warning", APPROVED: "success", REJECTED: "error", RECEIVED: "info" };
+  const m: Record<string, "warning" | "success" | "error" | "info"> = { PENDING: "warning", APPROVED: "success", REJECTED: "error", RECEIVED: "info", ARRIVED: "success", FAILED: "error" };
   return m[s || ""] || "default";
 }
 
@@ -77,7 +81,7 @@ export default function PurchaseOrdersSection({ loaderData, actionData }: Route.
   const isAdmin = role === "Admin";
 
   function openCreate() { setEditId(null); setForm({ supplierId: "", warehouseId: "", notes: "" }); setLineItems([{ ...emptyLine }]); setDialogOpen(true); }
-  function openEdit(po: PurchaseOrder) { setEditId(po.orderId); setForm({ supplierId: po.supplierId || "", warehouseId: po.order.warehouseId || "", notes: po.order.notes || "" });
+  function openEdit(po: PurchaseOrder) { setEditId(po.orderId); setForm({ supplierId: po.supplierId || "", warehouseId: po.warehouseId || "", notes: po.order.notes || "" });
       const existingItems: LineItem[] = (po.order.orderItems ?? []).map((oi) => ({ itemId: oi.itemId, quantity: oi.quantity, unitPrice: Number(oi.unitPrice) }));
       setLineItems(existingItems.length > 0 ? existingItems : [{ ...emptyLine }]);
       setDialogOpen(true); }
@@ -115,23 +119,23 @@ export default function PurchaseOrdersSection({ loaderData, actionData }: Route.
       ) : (
         <Grid container spacing={2}>
           {purchaseOrders.map((order) => (
-            <Grid key={order.orderId} size={{ xs: 12, sm: 6 }}>
-              <Card variant="outlined">
-                <Box sx={{ p: 2, bgcolor: "grey.50", borderBottom: "1px dashed", borderColor: "divider", display: "flex", justifyContent: "space-between" }}>
-                  <Box>
-                    <Typography variant="subtitle2" component={Link} to={`/dashboard/purchase-orders/${order.orderId}`} sx={{ fontWeight: 700, textDecoration: "none", color: "inherit", fontFamily: "monospace" }}>
-                      PO-{order.orderId.substring(0, 8)}
-                    </Typography>
-                    <Typography variant="caption" color="text.secondary">{new Date(order.order.orderDate).toLocaleDateString()}</Typography>
-                  </Box>
-                  <Chip label={order.order.status} size="small" color={statusColor(order.order.status)} />
-                </Box>
-                <CardContent sx={{ py: 1.5 }}>
-                  <Box sx={{ display: "flex", justifyContent: "space-between", fontSize: "0.85rem" }}><Typography variant="body2" color="text.secondary">Supplier:</Typography><Typography variant="body2">{order.supplier?.name || order.supplierId}</Typography></Box>
-                  <Box sx={{ display: "flex", justifyContent: "space-between", fontSize: "0.85rem" }}><Typography variant="body2" color="text.secondary">Warehouse:</Typography><Typography variant="body2">{order.order.warehouse?.name || order.order.warehouseId}</Typography></Box>
-                  <Divider sx={{ my: 1 }} />
-                  <Box sx={{ display: "flex", justifyContent: "space-between" }}><Typography sx={{ fontWeight: 600 }}>Total:</Typography><Typography sx={{ fontWeight: 600 }}>${Number(order.order.totalAmount).toLocaleString()}</Typography></Box>
-                </CardContent>
+                      <Grid key={order.orderId} size={{ xs: 12, sm: 6 }}>
+                        <Card variant="outlined">
+                          <Box sx={{ p: 2, bgcolor: "grey.50", borderBottom: "1px dashed", borderColor: "divider", display: "flex", justifyContent: "space-between" }}>
+                            <Box>
+                              <Typography variant="subtitle2" component={Link} to={`/dashboard/purchase-orders/${order.orderId}`} sx={{ fontWeight: 700, textDecoration: "none", color: "inherit", fontFamily: "monospace" }}>
+                                PO-{order.orderId.substring(0, 8)}
+                              </Typography>
+                              <Typography variant="caption" color="text.secondary">{new Date(order.order.orderDate).toLocaleDateString()}</Typography>
+                            </Box>
+                            <Chip label={order.order.status} size="small" color={statusColor(order.order.status)} />
+                          </Box>
+                          <CardContent sx={{ py: 1.5 }}>
+                            <Box sx={{ display: "flex", justifyContent: "space-between", fontSize: "0.85rem" }}><Typography variant="body2" color="text.secondary">Supplier:</Typography><Typography variant="body2">{order.supplier?.name || order.supplierId}</Typography></Box>
+                            <Box sx={{ display: "flex", justifyContent: "space-between", fontSize: "0.85rem" }}><Typography variant="body2" color="text.secondary">Warehouse:</Typography><Typography variant="body2">{order.warehouse?.name || order.warehouseId}</Typography></Box>
+                            <Divider sx={{ my: 1 }} />
+                            <Box sx={{ display: "flex", justifyContent: "space-between" }}><Typography sx={{ fontWeight: 600 }}>Total:</Typography><Typography sx={{ fontWeight: 600 }}>${Number(order.order.totalAmount).toLocaleString()}</Typography></Box>
+                          </CardContent>
                 {canMutate && order.order.status === "PENDING" && (
                   <CardActions sx={{ borderTop: "1px solid", borderColor: "divider", px: 2, py: 1, bgcolor: "grey.50" }}>
                     <Button size="small" startIcon={<EditIcon fontSize="small" />} onClick={() => openEdit(order)} sx={{ color: "text.secondary" }}>Edit</Button>

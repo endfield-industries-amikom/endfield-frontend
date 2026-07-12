@@ -80,7 +80,7 @@ export default function InventorySection({ loaderData, actionData }: Route.Compo
     <Box>
       <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", mb: 3 }}>
         <Typography variant="h5" sx={{ fontWeight: 700 }}>Inventory</Typography>
-        {canMutate && <Button variant="contained" startIcon={<AddIcon />} onClick={openCreate}>New Inventory</Button>}
+        {/*{canMutate && <Button variant="contained" startIcon={<AddIcon />} onClick={openCreate}>New Inventory</Button>}*/}
       </Box>
       {actionData?.error && <Typography color="error" sx={{ mb: 2 }}>{actionData.error}</Typography>}
       <TableContainer component={Paper}>

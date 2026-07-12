@@ -19,7 +19,7 @@ export default function CustomerDetail({ loaderData }: Route.ComponentProps) {
 
   return (
     <Box>
-      <Button component={Link} to="/dashboard/customers" startIcon={<ArrowBackIcon />} sx={{ mb: 3, color: "text.secondary" }}>Back to Customers</Button>
+      <Button component={Link} to="/dashboard/customer" startIcon={<ArrowBackIcon />} sx={{ mb: 3, color: "text.secondary" }}>Back to Customers</Button>
       <Typography variant="h5" sx={{ fontWeight: 700, mb: 3 }}>Customer Detail</Typography>
       <Paper sx={{ p: 4 }}>
         <Grid container spacing={2}><Grid size={6}><Typography variant="caption" color="text.secondary">Customer ID</Typography><Typography sx={{ fontFamily: "monospace", fontSize: "0.85rem" }}>{customer.id}</Typography></Grid><Grid size={6}><Typography variant="caption" color="text.secondary">Code</Typography><Typography sx={{ fontFamily: "monospace", fontSize: "0.85rem" }}>{customer.code}</Typography></Grid></Grid>

@@ -14,7 +14,7 @@ export async function loader({ request, params }: Route.LoaderArgs) {
 }
 
 function statusColor(s: string | undefined) {
-  const m: Record<string, "warning" | "success" | "error" | "info"> = { PENDING: "warning", APPROVED: "success", REJECTED: "error", RECEIVED: "info" };
+  const m: Record<string, "warning" | "success" | "error" | "info"> = { PENDING: "warning", APPROVED: "success", REJECTED: "error", RECEIVED: "info", ARRIVED: "success", FAILED: "error" };
   return m[s || ""] || "default";
 }
 
@@ -42,7 +42,7 @@ export default function PurchaseOrderDetail({ loaderData }: Route.ComponentProps
           </Grid>
           <Grid size={6}>
             <Typography variant="caption" color="text.secondary">Warehouse</Typography>
-            {order.warehouse ? <Box><Button component={Link} to={`/dashboard/warehouses/${order.warehouse.id}`} size="small" sx={{ fontWeight: 600, p: 0 }}>{order.warehouse.name}</Button><Typography variant="caption" sx={{ fontFamily: "monospace", display: "block" }}>{order.warehouse.code}</Typography></Box> : <Typography sx={{ fontFamily: "monospace", fontSize: "0.85rem" }}>{order.warehouseId}</Typography>}
+            {po.warehouse ? <Box><Button component={Link} to={`/dashboard/warehouses/${po.warehouse.id}`} size="small" sx={{ fontWeight: 600, p: 0 }}>{po.warehouse.name}</Button><Typography variant="caption" sx={{ fontFamily: "monospace", display: "block" }}>{po.warehouse.code}</Typography></Box> : <Typography sx={{ fontFamily: "monospace", fontSize: "0.85rem" }}>{po.warehouseId}</Typography>}
           </Grid>
         </Grid>
         <Box sx={{ mt: 2 }}><Grid container spacing={2}><Grid size={6}><Typography variant="caption" color="text.secondary">Order Date</Typography><Typography>{new Date(order.orderDate).toLocaleDateString()}</Typography></Grid><Grid size={6}><Typography variant="caption" color="text.secondary">Total Amount</Typography><Typography variant="h5" sx={{ fontWeight: 600 }}>${Number(order.totalAmount).toLocaleString("en-US", { style: "currency", currency: "USD" })}</Typography></Grid></Grid></Box>

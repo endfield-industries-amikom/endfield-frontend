@@ -95,7 +95,7 @@ export default function CustomersSection({ loaderData, actionData }: Route.Compo
             )}
             {customers.map((c) => (
               <TableRow key={c.id} hover>
-                <TableCell><Link to={`/dashboard/customers/${c.id}`} style={{ textDecoration: "none", fontWeight: 500, color: "inherit" }}>{c.name}</Link></TableCell>
+                <TableCell><Link to={`/dashboard/customer/${c.id}`} style={{ textDecoration: "none", fontWeight: 500, color: "inherit" }}>{c.name}</Link></TableCell>
                 <TableCell sx={{ fontFamily: "monospace", fontSize: "0.8rem" }}>{c.code}</TableCell>
                 <TableCell>{c.email || "—"}</TableCell>
                 <TableCell>{c.phone || "—"}</TableCell>

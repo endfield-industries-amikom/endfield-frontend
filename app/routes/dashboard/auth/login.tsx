@@ -55,7 +55,7 @@ export async function action({ request }: Route.ActionArgs) {
       "Set-Cookie",
       "sessionId=; Path=/; HttpOnly; Max-Age=0",
     );
-    return redirect("/dashboard/login", { headers });
+    return redirect("/dashboard/auth/login", { headers });
   }
 
   /* ---- register / login ---- */

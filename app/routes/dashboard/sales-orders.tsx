@@ -11,8 +11,9 @@ import DeleteIcon from "@mui/icons-material/Delete";
 import type { SalesOrder, Shipment } from "~/types";
 
 interface SelectOption { id: string; name: string; code: string; }
-interface CustOption { id: string; name: string; code: string; email?: string; }
 interface ItemOption { id: string; name: string; sku: string; unitPrice: number; }
+interface LineItem { itemId: string; quantity: number; unitPrice: number; }
+const emptyLine: LineItem = { itemId: "", quantity: 1, unitPrice: 0 };
 
 function useRole() {
   const parent = useRouteLoaderData<{ accessToken: string }>("routes/dashboard/auth-guard");
@@ -27,31 +28,22 @@ export async function loader({ request }: Route.LoaderArgs) {
   let role = "Consumer"; let email: string | null = null;
   try { const p = JSON.parse(atob(token.split(".")[1])); role = p.role || "Consumer"; email = p.email || null; } catch {}
 
-  const [soRes, customersRes, warehousesRes, productsRes] = await Promise.all([
+  const [soRes, customersRes, regionsRes, productsRes] = await Promise.all([
     get<{ data: { data: SalesOrder[]; total: number } }>("/sales-order?page=1&limit=50", token, cookie),
-    get<{ data: { data: CustOption[] } }>("/customers?page=1&limit=200", token, cookie),
-    get<{ data: { data: SelectOption[] } }>("/warehouses?page=1&limit=200", token, cookie),
+    get<{ data: { data: SelectOption[] } }>("/customers?page=1&limit=200", token, cookie),
+    get<{ data: { data: SelectOption[] } }>("/region?page=1&limit=200", token, cookie),
     get<{ data: { data: ItemOption[] } }>("/item?page=1&limit=200&isSellable=true", token, cookie),
   ]);
 
   let salesOrders = soRes.data.data;
   if (role === "Consumer" && email) {
-    const match = customersRes.data.data.find((c) => c.email?.toLowerCase() === email.toLowerCase());
+    const match = customersRes.data.data.find((c: { email?: string; id: string }) => c.email?.toLowerCase() === email.toLowerCase());
     if (match) salesOrders = salesOrders.filter((so) => so.customerId === match.id);
     else salesOrders = [];
   }
 
-  let shipmentsBySalesOrderId: Record<string, Shipment[]> = {};
-  try {
-    const shipRes = await get<{ data: { data: Shipment[] } }>("/shipment?page=1&limit=500", token, cookie);
-    for (const s of shipRes.data.data) { if (s.orderType === "SALES" && s.orderId) { if (!shipmentsBySalesOrderId[s.orderId]) shipmentsBySalesOrderId[s.orderId] = []; shipmentsBySalesOrderId[s.orderId].push(s); } }
-  } catch {}
-
-  return { salesOrders, customerOptions: customersRes.data.data, warehouseOptions: warehousesRes.data.data, productOptions: productsRes.data.data, shipmentsBySalesOrderId, userEmail: email, userRole: role };
+  return { salesOrders, customerOptions: customersRes.data.data, regionOptions: regionsRes.data.data, productOptions: productsRes.data.data, userRole: role };
 }
-
-interface LineItem { itemId: string; quantity: number; unitPrice: number; }
-const emptyLine: LineItem = { itemId: "", quantity: 1, unitPrice: 0 };
 
 export async function action({ request }: Route.ActionArgs) {
   const cookie = request.headers.get("Cookie") || "";
@@ -63,7 +55,11 @@ export async function action({ request }: Route.ActionArgs) {
     const itemsJson = formData.get("items") as string;
     const rawItems: LineItem[] = itemsJson ? JSON.parse(itemsJson) : [];
     const items = rawItems.map((item) => ({ orderType: "SALES", itemId: item.itemId, quantity: item.quantity, unitPrice: Number(item.unitPrice) }));
-    const body = { customerId: formData.get("customerId"), warehouseId: formData.get("warehouseId"), notes: formData.get("notes") || undefined, items };
+    const body: Record<string, unknown> = { notes: formData.get("notes") || undefined, items };
+    const customerId = formData.get("customerId") as string;
+    if (customerId) body.customerId = customerId;
+    const regionId = formData.get("regionId") as string;
+    if (regionId) body.regionId = regionId;
     if (intent === "create-sales-order") await post("/sales-order", body, token, cookie);
     else await patch(`/sales-order/${formData.get("id")}`, body, token, cookie);
     return { ok: true };
@@ -72,36 +68,32 @@ export async function action({ request }: Route.ActionArgs) {
   return { ok: false, error: "Unknown intent" };
 }
 
-function statusColor(s: string | undefined) { const m: Record<string, "warning" | "info" | "success" | "error"> = { PENDING: "warning", CONFIRMED: "info", SHIPPED: "success", CANCELLED: "error", DELIVERED: "success" }; return m[s || ""] || "default"; }
+function statusColor(s: string | undefined) { const m: Record<string, "warning" | "info" | "success" | "error"> = { PENDING: "warning", CONFIRMED: "info", SHIPPED: "success", CANCELLED: "error", DELIVERED: "success", FAILED: "error" }; return m[s || ""] || "default"; }
 
 export default function SalesOrdersSection({ loaderData, actionData }: Route.ComponentProps) {
   const role = useRole();
   const salesOrders: SalesOrder[] = loaderData?.salesOrders ?? [];
-  const customerOptions: CustOption[] = loaderData?.customerOptions ?? [];
-  const warehouseOptions: SelectOption[] = loaderData?.warehouseOptions ?? [];
+  const customerOptions: SelectOption[] = loaderData?.customerOptions ?? [];
+  const regionOptions: SelectOption[] = loaderData?.regionOptions ?? [];
   const productOptions: ItemOption[] = loaderData?.productOptions ?? [];
-    const [dialogOpen, setDialogOpen] = useState(false);
+  const [dialogOpen, setDialogOpen] = useState(false);
   const [editId, setEditId] = useState<string | null>(null);
-  const [form, setForm] = useState({ customerId: "", warehouseId: "", notes: "" });
+  const [form, setForm] = useState({ customerId: "", regionId: "", notes: "" });
   const [lineItems, setLineItems] = useState<LineItem[]>([{ ...emptyLine }]);
   const fetcher = useFetcher();
   const shipFetcher = useFetcher();
   const isAdmin = role === "Admin"; const isEmployee = role === "Employee"; const isConsumer = role === "Consumer";
 
-  function openCreate() { setEditId(null); setForm({ customerId: "", warehouseId: "", notes: "" }); setLineItems([{ ...emptyLine }]); setDialogOpen(true); }
-  function openEdit(so: SalesOrder) { setEditId(so.orderId); setForm({ customerId: so.customerId || "", warehouseId: so.order.warehouseId || "", notes: so.order.notes || "" });
-      const existingItems: LineItem[] = (so.order.orderItems ?? []).map((oi) => ({ itemId: oi.itemId, quantity: oi.quantity, unitPrice: Number(oi.unitPrice) }));
-      setLineItems(existingItems.length > 0 ? existingItems : [{ ...emptyLine }]);
-      setDialogOpen(true); }
+  function openCreate() { setEditId(null); setForm({ customerId: "", regionId: "", notes: "" }); setLineItems([{ ...emptyLine }]); setDialogOpen(true); }
+  function openEdit(so: SalesOrder) { setEditId(so.orderId); setForm({ customerId: so.customerId || "", regionId: so.regionId || "", notes: so.order.notes || "" });
+    const existingItems: LineItem[] = (so.order.orderItems ?? []).map((oi) => ({ itemId: oi.itemId, quantity: oi.quantity, unitPrice: Number(oi.unitPrice) }));
+    setLineItems(existingItems.length > 0 ? existingItems : [{ ...emptyLine }]); setDialogOpen(true); }
 
   function addLine() { setLineItems([...lineItems, { ...emptyLine }]); }
   function removeLine(idx: number) { setLineItems(lineItems.filter((_, i) => i !== idx)); }
   function updateLine(idx: number, field: keyof LineItem, value: string | number) {
     const updated = lineItems.map((l, i) => i === idx ? { ...l, [field]: value } : l);
-    if (field === "itemId" && typeof value === "string") {
-      const prod = productOptions.find((p) => p.id === value);
-      if (prod) updated[idx].unitPrice = prod.unitPrice;
-    }
+    if (field === "itemId" && typeof value === "string") { const prod = productOptions.find((p) => p.id === value); if (prod) updated[idx].unitPrice = prod.unitPrice; }
     setLineItems(updated);
   }
 
@@ -138,20 +130,20 @@ export default function SalesOrdersSection({ loaderData, actionData }: Route.Com
                 </Box>
                 <CardContent sx={{ py: 1.5 }}>
                   <Box sx={{ display: "flex", justifyContent: "space-between", fontSize: "0.85rem" }}><Typography variant="body2" color="text.secondary">Customer:</Typography><Typography variant="body2">{order.customer?.name || order.customerId}</Typography></Box>
-                  <Box sx={{ display: "flex", justifyContent: "space-between", fontSize: "0.85rem" }}><Typography variant="body2" color="text.secondary">Warehouse:</Typography><Typography variant="body2">{order.order.warehouse?.name || order.order.warehouseId}</Typography></Box>
+                  <Box sx={{ display: "flex", justifyContent: "space-between", fontSize: "0.85rem" }}><Typography variant="body2" color="text.secondary">Region:</Typography><Typography variant="body2">{order.region?.name || order.regionId}</Typography></Box>
                   <Divider sx={{ my: 1 }} />
                   <Box sx={{ display: "flex", justifyContent: "space-between" }}><Typography sx={{ fontWeight: 600 }}>Total:</Typography><Typography sx={{ fontWeight: 600 }}>${Number(order.order.totalAmount).toLocaleString()}</Typography></Box>
                 </CardContent>
                 {((isAdmin || isEmployee) && order.order.status === "PENDING") && (
-                                  <CardActions sx={{ borderTop: "1px solid", borderColor: "divider", px: 2, py: 1, bgcolor: "grey.50" }}>
-                                    <Button size="small" startIcon={<EditIcon fontSize="small" />} onClick={() => openEdit(order)} sx={{ color: "text.secondary" }}>Edit</Button>
-                                  </CardActions>
-                                )}
-                                {isAdmin && order.order.status === "CONFIRMED" && (
-                                  <CardActions sx={{ borderTop: "1px solid", borderColor: "divider", px: 2, py: 1, bgcolor: "grey.50" }}>
-                                    <shipFetcher.Form method="post"><input type="hidden" name="intent" value="ship-order" /><input type="hidden" name="id" value={order.orderId} /><Button size="small" type="submit" startIcon={<LocalShippingIcon fontSize="small" />} color="success">Ship</Button></shipFetcher.Form>
-                                  </CardActions>
-                                )}
+                  <CardActions sx={{ borderTop: "1px solid", borderColor: "divider", px: 2, py: 1, bgcolor: "grey.50" }}>
+                    <Button size="small" startIcon={<EditIcon fontSize="small" />} onClick={() => openEdit(order)} sx={{ color: "text.secondary" }}>Edit</Button>
+                  </CardActions>
+                )}
+                {isAdmin && order.order.status === "CONFIRMED" && (
+                  <CardActions sx={{ borderTop: "1px solid", borderColor: "divider", px: 2, py: 1, bgcolor: "grey.50" }}>
+                    <shipFetcher.Form method="post"><input type="hidden" name="intent" value="ship-order" /><input type="hidden" name="id" value={order.orderId} /><Button size="small" type="submit" startIcon={<LocalShippingIcon fontSize="small" />} color="success">Ship</Button></shipFetcher.Form>
+                  </CardActions>
+                )}
               </Card>
             </Grid>
           ))}
@@ -161,13 +153,15 @@ export default function SalesOrdersSection({ loaderData, actionData }: Route.Com
         <form onSubmit={handleSubmit}>
           <DialogTitle>{editId ? "Edit Sales Order" : "New Sales Order"}</DialogTitle>
           <DialogContent sx={{ display: "flex", flexDirection: "column", gap: 2, pt: "8px !important" }}>
-            <TextField name="customerId" label="Customer" select value={form.customerId} onChange={(e) => setForm({ ...form, customerId: e.target.value })} required fullWidth>
-              <MenuItem value="">Select customer...</MenuItem>
-              {customerOptions.map((c) => <MenuItem key={c.id} value={c.id}>{c.name} ({c.code})</MenuItem>)}
-            </TextField>
-            <TextField name="warehouseId" label="Warehouse" select value={form.warehouseId} onChange={(e) => setForm({ ...form, warehouseId: e.target.value })} required fullWidth>
-              <MenuItem value="">Select warehouse...</MenuItem>
-              {warehouseOptions.map((w) => <MenuItem key={w.id} value={w.id}>{w.name} ({w.code})</MenuItem>)}
+            {!isConsumer && (
+              <TextField name="customerId" label="Customer" select value={form.customerId} onChange={(e) => setForm({ ...form, customerId: e.target.value })} required fullWidth>
+                <MenuItem value="">Select customer...</MenuItem>
+                {customerOptions.map((c) => <MenuItem key={c.id} value={c.id}>{c.name} ({c.code})</MenuItem>)}
+              </TextField>
+            )}
+            <TextField name="regionId" label="Region" select value={form.regionId} onChange={(e) => setForm({ ...form, regionId: e.target.value })} required fullWidth>
+              <MenuItem value="">Select region...</MenuItem>
+              {regionOptions.map((r) => <MenuItem key={r.id} value={r.id}>{r.name} ({r.code})</MenuItem>)}
             </TextField>
             <TextField name="notes" label="Notes" value={form.notes} onChange={(e) => setForm({ ...form, notes: e.target.value })} fullWidth multiline rows={2} />
             <Divider />

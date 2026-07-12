@@ -26,8 +26,16 @@ export async function loader({ request }: Route.LoaderArgs) {
     get<{ data: { data: OrderOption[] } }>("/sales-order?page=1&limit=200", token, cookie),
   ]);
   const approvedPO = (poRes.data.data ?? []).filter((o) => o.order?.status === "APPROVED");
-  const approvedSO = (soRes.data.data ?? []).filter((o) => o.order?.status === "APPROVED" || o.order?.status === "CONFIRMED");
-  return { shipments: shipRes.data.data, poOptions: approvedPO, soOptions: approvedSO };
+  const approvedSO = (soRes.data.data ?? []).filter((o) => o.order?.status === "APPROVED");
+
+  // Consumer only sees SALES shipments
+  let role = "Consumer";
+  try { const p = JSON.parse(atob(token.split(".")[1])); role = p.role || "Consumer"; } catch {}
+  const shipments = role === "Consumer"
+    ? (shipRes.data.data ?? []).filter((s) => s.orderType === "SALES")
+    : shipRes.data.data;
+
+  return { shipments, poOptions: approvedPO, soOptions: approvedSO };
 }
 
 export async function action({ request }: Route.ActionArgs) {
@@ -52,7 +60,7 @@ export async function action({ request }: Route.ActionArgs) {
 }
 
 function statusColor(s: string) {
-  const m: Record<string, "warning" | "info" | "success" | "error"> = { PENDING: "warning", SENDING: "info", ARRIVED: "success", CANCELLED: "error" };
+  const m: Record<string, "warning" | "info" | "success" | "error"> = { PENDING: "warning", SENDING: "info", ARRIVED: "success", CANCELLED: "error", FAILED: "error" };
   return m[s] || "default";
 }
 

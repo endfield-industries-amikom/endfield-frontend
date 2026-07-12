@@ -14,7 +14,7 @@ export async function loader({ request, params }: Route.LoaderArgs) {
 }
 
 function statusColor(s: string | undefined) {
-  const m: Record<string, "warning" | "info" | "success" | "error"> = { PENDING: "warning", CONFIRMED: "info", SHIPPED: "success", CANCELLED: "error", DELIVERED: "success" };
+  const m: Record<string, "warning" | "info" | "success" | "error"> = { PENDING: "warning", CONFIRMED: "info", SHIPPED: "success", CANCELLED: "error", DELIVERED: "success", ARRIVED: "success", FAILED: "error" };
   return m[s || ""] || "default";
 }
 
@@ -33,8 +33,8 @@ export default function SalesOrderDetail({ loaderData }: Route.ComponentProps) {
         <Grid container spacing={2}><Grid size={6}><Typography variant="caption" color="text.secondary">SO#</Typography><Typography sx={{ fontFamily: "monospace", fontSize: "0.85rem" }}>{so.orderId}</Typography></Grid><Grid size={6}><Typography variant="caption" color="text.secondary">Status</Typography><Chip label={order.status} size="small" color={statusColor(order.status)} /></Grid></Grid>
         <Divider sx={{ my: 2 }} />
         <Grid container spacing={2}>
-          <Grid size={6}><Typography variant="caption" color="text.secondary">Customer</Typography>{so.customer ? <Box><Button component={Link} to={`/dashboard/customers/${so.customer.id}`} size="small" sx={{ fontWeight: 600, p: 0 }}>{so.customer.name}</Button><Typography variant="caption" sx={{ fontFamily: "monospace", display: "block" }}>{so.customer.code}</Typography></Box> : <Typography sx={{ fontFamily: "monospace", fontSize: "0.85rem" }}>{so.customerId}</Typography>}</Grid>
-          <Grid size={6}><Typography variant="caption" color="text.secondary">Warehouse</Typography>{order.warehouse ? <Box><Button component={Link} to={`/dashboard/warehouses/${order.warehouse.id}`} size="small" sx={{ fontWeight: 600, p: 0 }}>{order.warehouse.name}</Button><Typography variant="caption" sx={{ fontFamily: "monospace", display: "block" }}>{order.warehouse.code}</Typography></Box> : <Typography sx={{ fontFamily: "monospace", fontSize: "0.85rem" }}>{order.warehouseId}</Typography>}</Grid>
+          <Grid size={6}><Typography variant="caption" color="text.secondary">Customer</Typography>{so.customer ? <Box><Button component={Link} to={`/dashboard/customer/${so.customer.id}`} size="small" sx={{ fontWeight: 600, p: 0 }}>{so.customer.name}</Button><Typography variant="caption" sx={{ fontFamily: "monospace", display: "block" }}>{so.customer.code}</Typography></Box> : <Typography sx={{ fontFamily: "monospace", fontSize: "0.85rem" }}>{so.customerId}</Typography>}</Grid>
+          <Grid size={6}><Typography variant="caption" color="text.secondary">Region</Typography>{so.region ? <Box><Button component={Link} to={`/dashboard/regions/${so.region.id}`} size="small" sx={{ fontWeight: 600, p: 0 }}>{so.region.name}</Button><Typography variant="caption" sx={{ fontFamily: "monospace", display: "block" }}>{so.region.code}</Typography></Box> : <Typography sx={{ fontFamily: "monospace", fontSize: "0.85rem" }}>{so.regionId}</Typography>}</Grid>
         </Grid>
         <Box sx={{ mt: 2 }}><Grid container spacing={2}><Grid size={6}><Typography variant="caption" color="text.secondary">Order Date</Typography><Typography>{new Date(order.orderDate).toLocaleDateString()}</Typography></Grid><Grid size={6}><Typography variant="caption" color="text.secondary">Total Amount</Typography><Typography variant="h5" sx={{ fontWeight: 600 }}>${Number(order.totalAmount).toLocaleString("en-US", { style: "currency", currency: "USD" })}</Typography></Grid></Grid></Box>
         {order.notes && <><Divider sx={{ my: 2 }} /><Typography variant="caption" color="text.secondary">Notes</Typography><Typography>{order.notes}</Typography></>}
