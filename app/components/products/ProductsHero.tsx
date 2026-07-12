@@ -9,9 +9,13 @@ export default function ProductsHero() {
         justifyContent: "center",
       }}
     >
-      <div className="background-image text-stripe-effect font-black">
-        PRODUCTS
-      </div>
+      <Typography
+              className="background-image text-stripe-effect font-black"
+              component="div"
+              sx={{ fontSize: "clamp(3rem, 12vw, 12rem)", fontWeight: 700 }}
+            >
+              PRODUCTS
+            </Typography>
     </Box>
   );
 }

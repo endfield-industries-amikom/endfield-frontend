@@ -1,0 +1,135 @@
+import { get, patch, post, del } from "~/services/api.server";
+import { getAccessToken } from "~/services/auth-helper.server";
+import { useState } from "react";
+import { Link, useFetcher } from "react-router";
+import type { Route } from "./+types/customers";
+import type { Customer } from "~/services/types";
+import {
+  Box, Button, Dialog, DialogTitle, DialogContent, DialogActions,
+  TextField, Table, TableBody, TableCell, TableContainer, TableHead,
+  TableRow, Paper, Typography, IconButton,
+} from "@mui/material";
+import AddIcon from "@mui/icons-material/Add";
+import EditIcon from "@mui/icons-material/Edit";
+import DeleteIcon from "@mui/icons-material/Delete";
+
+export async function loader({ request }: Route.LoaderArgs) {
+  const cookie = request.headers.get("Cookie") || "";
+  const token = await getAccessToken(cookie);
+  const response = await get<{ data: { data: Customer[]; total: number; page: number; limit: number } }>(
+    "/customers?page=1&limit=50", token, cookie,
+  );
+  return { customers: response.data.data };
+}
+
+export async function action({ request }: Route.ActionArgs) {
+  const cookie = request.headers.get("Cookie") || "";
+  const token = await getAccessToken(cookie);
+  const formData = await request.formData();
+  const intent = formData.get("intent") as string;
+
+  if (intent === "create-customer" || intent === "update-customer") {
+    const body = {
+      name: formData.get("name"),
+      code: formData.get("code"),
+      email: formData.get("email") || undefined,
+      phone: formData.get("phone") || undefined,
+      address: formData.get("address") || undefined,
+    };
+    if (intent === "create-customer") await post("/customers", body, token, cookie);
+    else await patch(`/customers/${formData.get("id")}`, body, token, cookie);
+    return { ok: true };
+  }
+  if (intent === "delete-customer") {
+    await del(`/customers/${formData.get("id")}`, token, cookie);
+    return { ok: true };
+  }
+  return { ok: false, error: "Unknown intent" };
+}
+
+const emptyForm = { name: "", code: "", email: "", phone: "", address: "" };
+
+export default function CustomersSection({ loaderData, actionData }: Route.ComponentProps) {
+  const customers = loaderData?.customers ?? [];
+  const [dialogOpen, setDialogOpen] = useState(false);
+  const [editId, setEditId] = useState<string | null>(null);
+  const [form, setForm] = useState(emptyForm);
+  const fetcher = useFetcher();
+  const canMutate = false; // Customers auto-created on registration, read-only
+
+  function openCreate() { setEditId(null); setForm(emptyForm); setDialogOpen(true); }
+  function openEdit(c: Customer) {
+    setEditId(c.id);
+    setForm({ name: c.name, code: c.code, email: c.email || "", phone: c.phone || "", address: c.address || "" });
+    setDialogOpen(true);
+  }
+  function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    const fd = new FormData(e.target as HTMLFormElement);
+    fd.set("intent", editId ? "update-customer" : "create-customer");
+    if (editId) fd.set("id", editId);
+    fetcher.submit(fd, { method: "post" });
+    setDialogOpen(false);
+  }
+
+  return (
+    <Box>
+      <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", mb: 3 }}>
+        <Typography variant="h5" sx={{ fontWeight: 700 }}>Customers</Typography>
+        {canMutate && <Button variant="contained" startIcon={<AddIcon />} onClick={openCreate}>New Customer</Button>}
+      </Box>
+      {actionData?.error && <Typography color="error" sx={{ mb: 2 }}>{actionData.error}</Typography>}
+      <TableContainer component={Paper}>
+        <Table size="small">
+          <TableHead>
+            <TableRow>
+              <TableCell>Name</TableCell><TableCell>Code</TableCell><TableCell>Email</TableCell>
+              <TableCell>Phone</TableCell>{canMutate && <TableCell align="right">Actions</TableCell>}
+            </TableRow>
+          </TableHead>
+          <TableBody>
+            {customers.length === 0 && (
+              <TableRow><TableCell colSpan={canMutate ? 5 : 4} align="center">
+                <Typography color="text.secondary" sx={{ py: 2 }}>No customers found.</Typography>
+              </TableCell></TableRow>
+            )}
+            {customers.map((c) => (
+              <TableRow key={c.id} hover>
+                <TableCell><Link to={`/dashboard/customers/${c.id}`} style={{ textDecoration: "none", fontWeight: 500, color: "inherit" }}>{c.name}</Link></TableCell>
+                <TableCell sx={{ fontFamily: "monospace", fontSize: "0.8rem" }}>{c.code}</TableCell>
+                <TableCell>{c.email || "—"}</TableCell>
+                <TableCell>{c.phone || "—"}</TableCell>
+                {canMutate && (
+                  <TableCell align="right">
+                    <IconButton size="small" onClick={() => openEdit(c)}><EditIcon fontSize="small" /></IconButton>
+                    <fetcher.Form method="post" style={{ display: "inline" }}>
+                      <input type="hidden" name="intent" value="delete-customer" />
+                      <input type="hidden" name="id" value={c.id} />
+                      <IconButton size="small" type="submit" color="error"><DeleteIcon fontSize="small" /></IconButton>
+                    </fetcher.Form>
+                  </TableCell>
+                )}
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      </TableContainer>
+      <Dialog open={dialogOpen} onClose={() => setDialogOpen(false)} maxWidth="sm" fullWidth>
+        <form onSubmit={handleSubmit}>
+          <DialogTitle>{editId ? "Edit Customer" : "New Customer"}</DialogTitle>
+          <DialogContent sx={{ display: "flex", flexDirection: "column", gap: 2, pt: "8px !important" }}>
+            <TextField name="name" label="Name" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} required fullWidth />
+            <TextField name="code" label="Code" value={form.code} onChange={(e) => setForm({ ...form, code: e.target.value })} required fullWidth />
+            <TextField name="email" label="Email" type="email" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} fullWidth />
+            <TextField name="phone" label="Phone" value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} fullWidth />
+            <TextField name="address" label="Address" value={form.address} onChange={(e) => setForm({ ...form, address: e.target.value })} fullWidth multiline rows={2} />
+          </DialogContent>
+          <DialogActions>
+            <Button variant="outlined" onClick={() => setDialogOpen(false)}>Cancel</Button>
+            <Button type="submit" variant="contained">{editId ? "Update" : "Create"}</Button>
+          </DialogActions>
+        </form>
+      </Dialog>
+    </Box>
+  );
+}

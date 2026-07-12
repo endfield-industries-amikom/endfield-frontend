@@ -7,7 +7,6 @@ import {
   Typography,
 } from "@mui/material";
 import type { IProduct } from "~/interfaces/IProduct";
-import { useNavigate } from "react-router";
 
 type ProductCardLayout = "carousel" | "grid";
 
@@ -19,8 +18,9 @@ export default function ProductCard({
   layout = "carousel",
   ...data
 }: ProductCardProps) {
-  const navigate = useNavigate();
   const isGrid = layout === "grid";
+
+  const imageUrl = data.imageUri;
 
   const cardSx = {
     width: isGrid ? "100%" : { xs: 220, sm: 240, md: 260 },
@@ -51,7 +51,6 @@ export default function ProductCard({
           display: "flex",
           flexDirection: "column",
         }}
-        //onClick={() => navigate(`/products/${data.id}`)}
       >
         {data.isBest && (
           <Box
@@ -80,30 +79,30 @@ export default function ProductCard({
             </Typography>
           </Box>
         )}
-        {!data.image ? (
-          <Box
-            sx={{
-              display: "flex",
-              justifyContent: "center",
-              alignItems: "center",
-              height: mediaHeight,
-            }}
-          >
-            <Typography
-              sx={{
-                fontSize: isGrid ? "0.95rem" : "0.85rem",
-                px: 1,
-                textAlign: "center",
-              }}
-            >
-              {data.title}
-            </Typography>
-          </Box>
-        ) : (
-          <CardMedia
-            component="img"
-            image={data.image}
-            alt={data.title}
+        {!data.imageUri ? (
+                  <Box
+                    sx={{
+                      display: "flex",
+                      justifyContent: "center",
+                      alignItems: "center",
+                      height: mediaHeight,
+                    }}
+                  >
+                    <Typography
+                      sx={{
+                        fontSize: isGrid ? "0.95rem" : "0.85rem",
+                        px: 1,
+                        textAlign: "center",
+                      }}
+                    >
+                      {data.name}
+                    </Typography>
+                  </Box>
+                ) : (
+                  <CardMedia
+                    component="img"
+                    image={imageUrl}
+                    alt={data.name}
             sx={{ width: "100%", height: mediaHeight, objectFit: "cover" }}
           />
         )}
@@ -122,7 +121,7 @@ export default function ProductCard({
           }}
         >
           <Typography sx={{ fontSize: isGrid ? "0.95rem" : "0.85rem" }} noWrap>
-            {data.title}
+            {data.name}
           </Typography>
           <Typography
             sx={{
@@ -130,7 +129,7 @@ export default function ProductCard({
               fontWeight: 700,
             }}
           >
-            ${data.price}
+            ${data.unitPrice}
           </Typography>
           <Box
             sx={{
