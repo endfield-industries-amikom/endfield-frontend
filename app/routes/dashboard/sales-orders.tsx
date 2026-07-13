@@ -64,7 +64,22 @@ export async function action({ request }: Route.ActionArgs) {
     else await patch(`/sales-order/${formData.get("id")}`, body, token, cookie);
     return { ok: true };
   }
-  if (intent === "ship-order") { await post(`/sales-order/${formData.get("id")}/ship`, {}, token, cookie); return { ok: true }; }
+  if (intent === "ship-order") {
+    try {
+      await post(`/sales-order/${formData.get("id")}/ship`, {}, token, cookie);
+      return { ok: true };
+    } catch (err) {
+      return { ok: false, error: err instanceof Error ? err.message : "Shipment failed — check inventory" };
+    }
+  }
+  if (intent === "confirm-order") {
+    try {
+      await post(`/sales-order/${formData.get("id")}/confirm`, {}, token, cookie);
+      return { ok: true };
+    } catch (err) {
+      return { ok: false, error: err instanceof Error ? err.message : "Confirmation failed" };
+    }
+  }
   return { ok: false, error: "Unknown intent" };
 }
 
@@ -82,6 +97,7 @@ export default function SalesOrdersSection({ loaderData, actionData }: Route.Com
   const [lineItems, setLineItems] = useState<LineItem[]>([{ ...emptyLine }]);
   const fetcher = useFetcher();
   const shipFetcher = useFetcher();
+  const confirmFetcher = useFetcher();
   const isAdmin = role === "Admin"; const isEmployee = role === "Employee"; const isConsumer = role === "Consumer";
 
   function openCreate() { setEditId(null); setForm({ customerId: "", regionId: "", notes: "" }); setLineItems([{ ...emptyLine }]); setDialogOpen(true); }
@@ -114,6 +130,8 @@ export default function SalesOrdersSection({ loaderData, actionData }: Route.Com
         {isConsumer && <Button variant="contained" startIcon={<AddIcon />} onClick={openCreate}>New Order</Button>}
       </Box>
       {actionData?.error && <Typography color="error" sx={{ mb: 2 }}>{actionData.error}</Typography>}
+      {shipFetcher.data?.error && <Typography color="error" sx={{ mb: 2 }}>{(shipFetcher.data as { error?: string }).error}</Typography>}
+      {confirmFetcher.data?.error && <Typography color="error" sx={{ mb: 2 }}>{(confirmFetcher.data as { error?: string }).error}</Typography>}
       {salesOrders.length === 0 ? (
         <Card sx={{ p: 4, textAlign: "center" }}><Typography color="text.secondary">{isConsumer ? "You have no orders yet." : "No sales orders found."}</Typography></Card>
       ) : (
@@ -134,12 +152,21 @@ export default function SalesOrdersSection({ loaderData, actionData }: Route.Com
                   <Divider sx={{ my: 1 }} />
                   <Box sx={{ display: "flex", justifyContent: "space-between" }}><Typography sx={{ fontWeight: 600 }}>Total:</Typography><Typography sx={{ fontWeight: 600 }}>${Number(order.order.totalAmount).toLocaleString()}</Typography></Box>
                 </CardContent>
+                {isConsumer && order.order.status === "PENDING" && (
+                  <CardActions sx={{ borderTop: "1px solid", borderColor: "divider", px: 2, py: 1, bgcolor: "grey.50" }}>
+                    <confirmFetcher.Form method="post">
+                      <input type="hidden" name="intent" value="confirm-order" />
+                      <input type="hidden" name="id" value={order.orderId} />
+                      <Button size="small" type="submit" startIcon={<LocalShippingIcon fontSize="small" />} color="secondary">Confirm</Button>
+                    </confirmFetcher.Form>
+                  </CardActions>
+                )}
                 {((isAdmin || isEmployee) && order.order.status === "PENDING") && (
                   <CardActions sx={{ borderTop: "1px solid", borderColor: "divider", px: 2, py: 1, bgcolor: "grey.50" }}>
                     <Button size="small" startIcon={<EditIcon fontSize="small" />} onClick={() => openEdit(order)} sx={{ color: "text.secondary" }}>Edit</Button>
                   </CardActions>
                 )}
-                {isAdmin && order.order.status === "CONFIRMED" && (
+                {(isAdmin || isEmployee) && order.order.status === "CONFIRMED" && (
                   <CardActions sx={{ borderTop: "1px solid", borderColor: "divider", px: 2, py: 1, bgcolor: "grey.50" }}>
                     <shipFetcher.Form method="post"><input type="hidden" name="intent" value="ship-order" /><input type="hidden" name="id" value={order.orderId} /><Button size="small" type="submit" startIcon={<LocalShippingIcon fontSize="small" />} color="success">Ship</Button></shipFetcher.Form>
                   </CardActions>

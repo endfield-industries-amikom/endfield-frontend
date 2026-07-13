@@ -1,10 +1,9 @@
-import type { Route } from "../../../+types/root";
+import type { Route } from "./+types/products";
 import { Box, Container, Stack, Typography } from "@mui/material";
 import ProductsGrid from "~/components/products/ProductsGrid";
 import ProductsHero from "~/components/products/ProductsHero";
 import ProductsSectionHeader from "~/components/products/ProductsSectionHeader";
 import { get } from "~/services/api.server";
-import type { Product } from "~/types";
 import type { IProduct } from "~/interfaces/IProduct";
 
 export const meta: Route.MetaFunction = () => {
@@ -14,19 +13,29 @@ export const meta: Route.MetaFunction = () => {
   ];
 };
 
+interface TopSellingItem {
+  id: string;
+  name: string;
+  sku: string;
+  unitPrice: number;
+  imageUri?: string;
+  description?: string;
+  category?: string;
+}
+
 export async function loader() {
   try {
-    const response = await get<{ data: { data: Product[] } }>(
-      "/product?page=1&limit=50",
+    const response = await get<{ data: TopSellingItem[] }>(
+      "/product/top-selling",
     );
-    const products: IProduct[] = (response.data.data || []).map((p) => ({
+    const products: IProduct[] = (response.data || []).map((p) => ({
       id: p.id,
-      name: p.item?.name || "",
-      sku: p.item?.sku || "",
-      description: p.item?.description,
-      category: p.item?.category,
-      unitPrice: Number(p.item?.unitPrice || 0),
-      imageUri: p.item?.imageUri,
+      name: p.name,
+      sku: p.sku,
+      description: p.description,
+      category: p.category,
+      unitPrice: Number(p.unitPrice || 0),
+      imageUri: p.imageUri,
       isBest: false,
     }));
     return { products };
@@ -35,7 +44,7 @@ export async function loader() {
   }
 }
 
-export default function Products({ loaderData }: any) {
+export default function Products({ loaderData }: Route.ComponentProps) {
   const products = loaderData?.products ?? [];
 
   return (

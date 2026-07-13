@@ -27,9 +27,11 @@ export async function apiRequest<T = unknown>(
 
   try {
     const requestHeaders: Record<string, string> = {
-      ...(isMultipart ? {} : { "Content-Type": "application/json" }),
       ...headers,
     };
+    // Only set Content-Type when we have a body (empty JSON body with Content-Type header
+    // can cause servers to choke on an empty parse attempt)
+    if (body && !isMultipart) requestHeaders["Content-Type"] = "application/json";
     if (token) requestHeaders["Authorization"] = `Bearer ${token}`;
     if (cookie) requestHeaders["Cookie"] = cookie;
 
@@ -133,9 +135,9 @@ export async function apiRequestFull<T = unknown>(
 
   try {
     const requestHeaders: Record<string, string> = {
-      "Content-Type": "application/json",
       ...headers,
     };
+    if (body) requestHeaders["Content-Type"] = "application/json";
     if (token) requestHeaders["Authorization"] = `Bearer ${token}`;
     if (cookie) requestHeaders["Cookie"] = cookie;
 

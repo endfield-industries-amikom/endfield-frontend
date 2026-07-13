@@ -56,13 +56,12 @@ export async function action({ request }: Route.ActionArgs) {
     const res = await post<{ data: Product }>("/product", body, token, cookie);
     const productId = res.data.id;
 
-    // Step 2: upload image if file provided — use itemId from response
-    const itemId = res.data.itemId;
+    // Step 2: upload image if file provided — id is shared PK with Item
     const file = formData.get("imageFile") as File | null;
     if (file && file.size > 0) {
       const uploadFd = new FormData();
       uploadFd.append("file", file);
-      await apiRequest(`/product/${itemId}/image`, { method: "POST", body: uploadFd, isMultipart: true, token, cookie });
+      await apiRequest(`/product/${productId}/image`, { method: "POST", body: uploadFd, isMultipart: true, token, cookie });
     }
 
     return { ok: true };
@@ -85,13 +84,12 @@ export async function action({ request }: Route.ActionArgs) {
 
     await patch(`/product/${id}`, body, token, cookie);
 
-    // Upload image if file provided — use itemId
-    const itemId = (formData.get("itemId") as string) || id;
+    // Upload image if file provided — id is shared PK with Item
     const file = formData.get("imageFile") as File | null;
     if (file && file.size > 0) {
       const uploadFd = new FormData();
       uploadFd.append("file", file);
-      await apiRequest(`/product/${itemId}/image`, { method: "POST", body: uploadFd, isMultipart: true, token, cookie });
+      await apiRequest(`/product/${id}/image`, { method: "POST", body: uploadFd, isMultipart: true, token, cookie });
     }
 
     return { ok: true };

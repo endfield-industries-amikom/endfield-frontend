@@ -6,6 +6,8 @@ import {
   Stack,
   Typography,
 } from "@mui/material";
+import GroupsIcon from "@mui/icons-material/Groups";
+import HandshakeIcon from "@mui/icons-material/Handshake";
 import { NavLink } from "react-router";
 import { Swiper, SwiperSlide } from "swiper/react";
 import { Navigation, Autoplay } from "swiper/modules";
@@ -14,7 +16,6 @@ import ProductsGrid from "~/components/products/ProductsGrid";
 import { get } from "~/services/api.server";
 import type { Route } from "./+types/home-content";
 import type { IProduct } from "~/interfaces/IProduct";
-import type { Product } from "~/types";
 
 /* ------------------------------------------------------------------ */
 /*  Loader – fetch top 10 products from API                            */
@@ -22,17 +23,17 @@ import type { Product } from "~/types";
 
 export async function loader({ request }: Route.LoaderArgs) {
   try {
-    const response = await get<{ data: Product[] }>(
+    const response = await get<{ data: { id: string; name: string; sku: string; unitPrice: number; imageUri?: string; description?: string; category?: string }[] }>(
           "/product/top-selling",
         );
         const products: IProduct[] = (response.data || []).map((p) => ({
           id: p.id,
-          name: p.item?.name || "",
-          sku: p.item?.sku || "",
-          description: p.item?.description,
-          category: p.item?.category,
-          unitPrice: Number(p.item?.unitPrice || 0),
-          imageUri: p.item?.imageUri,
+          name: p.name,
+          sku: p.sku,
+          description: p.description,
+          category: p.category,
+          unitPrice: Number(p.unitPrice || 0),
+          imageUri: p.imageUri,
       isBest: false,
     }));
     return { products };
@@ -42,11 +43,11 @@ export async function loader({ request }: Route.LoaderArgs) {
 }
 
 const images = [
-  "https://i0.wp.com/news.qoo-app.com/en/wp-content/uploads/sites/3/2022/03/03_HD.554121.jpg?resize=900%2C506&ssl=1",
-  "https://pbs.twimg.com/media/GmIh4WvbcAQeRiM.jpg",
-  "https://s1.zerochan.net/Arknights%3A.Endfield.600.4273863.jpg",
-  "https://images.wallpapersden.com/image/download/arknights-endfield-gaming_bWdpZ22UmZqaraWkpJRmbmdlrWZlbWU.jpg",
-  "https://images8.alphacoders.com/140/thumb-1920-1405303.jpg",
+  "https://images.unsplash.com/photo-1581091226825-a6a2a5aee158?w=900&h=506&fit=crop",
+  "https://images.unsplash.com/photo-1587293852726-70cdb56c2866?w=900&h=506&fit=crop",
+  "https://images.unsplash.com/photo-1565793298595-6a879b1d9492?w=900&h=506&fit=crop",
+  "https://images.unsplash.com/photo-1621905252507-b35492cc74b4?w=900&h=506&fit=crop",
+  "https://images.unsplash.com/photo-1565008447742-97f6f38c985c?w=900&h=506&fit=crop",
 ];
 
 export default function HomeContent({ loaderData }: Route.ComponentProps) {
@@ -236,11 +237,16 @@ export default function HomeContent({ loaderData }: Route.ComponentProps) {
                       sx={{
                         width: 72,
                         height: 72,
-                        bgcolor: "#D9D9D9",
+                        bgcolor: "#F0F000",
                         borderRadius: 1,
                         flexShrink: 0,
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
                       }}
-                    />
+                    >
+                      <GroupsIcon sx={{ fontSize: 40, color: "#202020" }} />
+                    </Box>
                     <Box>
                       <Typography
                         variant="h6"
@@ -278,11 +284,16 @@ export default function HomeContent({ loaderData }: Route.ComponentProps) {
                       sx={{
                         width: 72,
                         height: 72,
-                        bgcolor: "#D9D9D9",
+                        bgcolor: "#F0F000",
                         borderRadius: 1,
                         flexShrink: 0,
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
                       }}
-                    />
+                    >
+                      <HandshakeIcon sx={{ fontSize: 40, color: "#202020" }} />
+                    </Box>
                     <Box>
                       <Typography
                         variant="h6"
