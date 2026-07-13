@@ -73,7 +73,7 @@ export default function About() {
 
           <div className="h-[30vh] md:h-[38vh] lg:h-[32vh] w-full rounded-xl overflow-hidden shadow-xl transition duration-300 hover:translate-y-[-1vh] hover:shadow-2xl">
             <img
-              src="https://cms.disway.id/uploads/60e9c019764479ece9276ef323c90323.png"
+              src="https://images.unsplash.com/photo-1541888946425-d81bb19240f5?w=800&h=600&fit=crop"
               alt="Image 2"
               className="w-full h-full object-cover object-top transition duration-500 hover:scale-110"
             />
@@ -137,7 +137,7 @@ export default function About() {
             <div className="w-[90vw] md:w-[70vw] lg:w-[49vw] h-[28vh] md:h-[38vh] lg:h-[38vh] rounded-xl shadow-xl overflow-hidden">
               <div className="w-full h-full transition duration-500 hover:scale-105">
                 <iframe
-                  src="https://www.youtube.com/embed/OYv6yJUgTQk"
+                  src="https://www.youtube.com/embed/75RCQZVB9MI?si=sZWhYszBkGRMPC5n"
                   className="w-full h-full rounded-xl"
                   title="YouTube video"
                   allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; fullscreen"

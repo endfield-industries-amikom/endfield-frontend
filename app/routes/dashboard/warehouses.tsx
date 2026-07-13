@@ -1,9 +1,9 @@
 import { get, patch, post, del } from "~/services/api.server";
 import { getAccessToken } from "~/services/auth-helper.server";
 import { useState } from "react";
-import { Link, useFetcher, useRouteLoaderData } from "react-router";
+import { Link, useFetcher, useNavigate, useRouteLoaderData } from "react-router";
 import type { Route } from "./+types/warehouses";
-import type { Warehouse } from "~/services/types";
+import type { Warehouse } from "~/types";
 import {
   Box, Button, Dialog, DialogTitle, DialogContent, DialogActions,
   TextField, Table, TableBody, TableCell, TableContainer, TableHead,
@@ -97,6 +97,8 @@ export async function action({ request }: Route.ActionArgs) {
 /*  Component                                                          */
 /* ------------------------------------------------------------------ */
 
+interface RegionOption { id: string; name: string; }
+
 const emptyForm = { name: "", code: "", address: "", regionId: "", maxCapacity: "" };
 
 export default function WarehousesSection({
@@ -105,11 +107,12 @@ export default function WarehousesSection({
 }: Route.ComponentProps) {
   const role = useRole();
   const warehouses = loaderData?.warehouses ?? [];
-  const regionOptions = (loaderData?.regionOptions as any[]) ?? [];
+  const regionOptions: RegionOption[] = loaderData?.regionOptions ?? [];
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editId, setEditId] = useState<string | null>(null);
   const [form, setForm] = useState(emptyForm);
   const fetcher = useFetcher();
+  const navigate = useNavigate();
   const deleteFetcher = useFetcher();
 
   const canMutate = role === "Admin";
@@ -120,7 +123,7 @@ export default function WarehousesSection({
     setDialogOpen(true);
   }
 
-  function openEdit(w: any) {
+  function openEdit(w: Warehouse) {
     setEditId(w.id);
     setForm({
       name: w.name || "",
@@ -175,25 +178,22 @@ export default function WarehousesSection({
                 </TableCell>
               </TableRow>
             )}
-            {warehouses.map((w: any) => (
-              <TableRow key={w.id} hover>
-                <TableCell>
-                  <Link to={`/dashboard/warehouses/${w.id}`}
-                    style={{ color: "inherit", textDecoration: "none", fontWeight: 500 }}>
-                    {w.name}
-                  </Link>
+            {warehouses.map((w:Warehouse) => (
+              <TableRow key={w.id} hover onClick={() => navigate(`/dashboard/warehouses/${w.id}`)} sx={{cursor: "pointer"}}>
+                <TableCell sx={{ color: "inherit", textDecoration: "none", fontWeight: 500 }}>
+                  {w.name}
                 </TableCell>
                 <TableCell sx={{ fontFamily: "monospace", fontSize: "0.8rem" }}>{w.code}</TableCell>
                 <TableCell>{w.address || "—"}</TableCell>
                 <TableCell>
                   {w.maxCapacity != null
-                    ? `${w.currentCapacity ?? "—"} / ${w.maxCapacity}`
+                    ? `${w.currentLoad ?? "—"} / ${w.maxCapacity}`
                     : "—"}
                 </TableCell>
                 {canMutate && (
                   <TableCell align="right">
-                    <IconButton size="small" onClick={() => openEdit(w)}><EditIcon fontSize="small" /></IconButton>
-                    <deleteFetcher.Form method="post" style={{ display: "inline" }}>
+                    <IconButton size="small" onClick={(e) => { e.stopPropagation(); openEdit(w); }}><EditIcon fontSize="small" /></IconButton>
+                    <deleteFetcher.Form method="post" style={{ display: "inline" }} onClick={(e) => e.stopPropagation()}>
                       <input type="hidden" name="intent" value="delete-warehouse" />
                       <input type="hidden" name="id" value={w.id} />
                       <IconButton size="small" type="submit" color="error"><DeleteIcon fontSize="small" /></IconButton>
@@ -217,7 +217,7 @@ export default function WarehousesSection({
             <TextField name="regionId" label="Region" select value={form.regionId}
               onChange={(e) => setForm({ ...form, regionId: e.target.value })} fullWidth>
               <MenuItem value="">Select region...</MenuItem>
-              {regionOptions.map((r: any) => (
+              {regionOptions.map((r) => (
                 <MenuItem key={r.id} value={r.id}>{r.name}</MenuItem>
               ))}
             </TextField>

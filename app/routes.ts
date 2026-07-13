@@ -15,14 +15,13 @@ export default [
     route("contact", "routes/home/contact.tsx"),
   ]),
   route("dashboard", "routes/dashboard/auth-guard.tsx", [
-    route("login", "routes/dashboard/login.tsx"),
+    route("auth/login", "routes/dashboard/auth/login.tsx"),
     layout("routes/dashboard/dashboard.tsx", [
       index("routes/dashboard/dashboard-index.tsx"),
-      /* detail routes must precede list routes */
       route("products/:id", "routes/dashboard/product-detail.tsx"),
       route("products", "routes/dashboard/products.tsx"),
-      route("customers/:id", "routes/dashboard/customer-detail.tsx"),
-      route("customers", "routes/dashboard/customers.tsx"),
+      route("customer/:id", "routes/dashboard/customer/customer-detail.tsx"),
+      route("customer", "routes/dashboard/customer/customers.tsx"),
       route("suppliers/:id", "routes/dashboard/supplier-detail.tsx"),
       route("suppliers", "routes/dashboard/suppliers.tsx"),
       route("warehouses/:id", "routes/dashboard/warehouse-detail.tsx"),
@@ -41,7 +40,7 @@ export default [
       route("schematics", "routes/dashboard/schematics.tsx"),
       route("materials/:id", "routes/dashboard/material-detail.tsx"),
       route("materials", "routes/dashboard/materials.tsx"),
-      route("employees", "routes/dashboard/employees.tsx"),
+      route("admin/employees", "routes/dashboard/admin/employees.tsx"),
     ]),
   ]),
 ] satisfies RouteConfig;

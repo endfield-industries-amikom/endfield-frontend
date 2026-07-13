@@ -1,7 +1,7 @@
 import { useState, useRef } from "react";
 import { Link, useFetcher, useRouteLoaderData } from "react-router";
 import type { Route } from "./+types/products";
-import type { Product } from "~/services/types";
+import type { Product } from "~/types";
 import {
   Box, Button, Dialog, DialogTitle, DialogContent, DialogActions,
   TextField, Table, TableBody, TableCell, TableContainer, TableHead,
@@ -45,25 +45,23 @@ export async function action({ request }: Route.ActionArgs) {
       description: formData.get("description") || undefined,
       category: formData.get("category") || undefined,
       unitPrice: Number(formData.get("unitPrice")),
+      type: "product",
       isSellable: formData.get("isSellable") === "on",
       isManufactureable: formData.get("isManufactureable") === "on",
     };
     const capacityUsage = formData.get("capacityUsage") as string;
     if (capacityUsage) body.capacityUsage = Number(capacityUsage);
-    const type = formData.get("type") as string;
-    if (type) body.type = type;
 
     // Step 1: create product
     const res = await post<{ data: Product }>("/product", body, token, cookie);
     const productId = res.data.id;
 
-    // Step 2: upload image if file provided — use itemId from response
-    const itemId = res.data.itemId;
+    // Step 2: upload image if file provided — id is shared PK with Item
     const file = formData.get("imageFile") as File | null;
     if (file && file.size > 0) {
       const uploadFd = new FormData();
       uploadFd.append("file", file);
-      await apiRequest(`/product/${itemId}/image`, { method: "POST", body: uploadFd, isMultipart: true, token, cookie });
+      await apiRequest(`/product/${productId}/image`, { method: "POST", body: uploadFd, isMultipart: true, token, cookie });
     }
 
     return { ok: true };
@@ -77,23 +75,21 @@ export async function action({ request }: Route.ActionArgs) {
       description: formData.get("description") || undefined,
       category: formData.get("category") || undefined,
       unitPrice: Number(formData.get("unitPrice")),
+      type: "product",
       isSellable: formData.get("isSellable") === "on",
       isManufactureable: formData.get("isManufactureable") === "on",
     };
     const capacityUsage = formData.get("capacityUsage") as string;
     if (capacityUsage) body.capacityUsage = Number(capacityUsage);
-    const type = formData.get("type") as string;
-    if (type) body.type = type;
 
     await patch(`/product/${id}`, body, token, cookie);
 
-    // Upload image if file provided — use itemId
-    const itemId = (formData.get("itemId") as string) || id;
+    // Upload image if file provided — id is shared PK with Item
     const file = formData.get("imageFile") as File | null;
     if (file && file.size > 0) {
       const uploadFd = new FormData();
       uploadFd.append("file", file);
-      await apiRequest(`/product/${itemId}/image`, { method: "POST", body: uploadFd, isMultipart: true, token, cookie });
+      await apiRequest(`/product/${id}/image`, { method: "POST", body: uploadFd, isMultipart: true, token, cookie });
     }
 
     return { ok: true };
@@ -107,7 +103,7 @@ export async function action({ request }: Route.ActionArgs) {
   return { ok: false, error: "Unknown intent" };
 }
 
-const emptyForm = { name: "", sku: "", description: "", category: "", unitPrice: "", capacityUsage: "", type: "product", isSellable: true, isManufactureable: true };
+const emptyForm = { name: "", sku: "", description: "", category: "", unitPrice: "", capacityUsage: "", isSellable: true, isManufactureable: true };
 
 export default function ProductsSection({ loaderData, actionData }: Route.ComponentProps) {
   const role = useRole();
@@ -135,9 +131,8 @@ export default function ProductsSection({ loaderData, actionData }: Route.Compon
       setForm({
         name: p.item?.name || "", sku: p.item?.sku || "", description: p.item?.description || "",
         category: p.item?.category || "", unitPrice: String(p.item?.unitPrice || ""),
-        capacityUsage: String(p.capacityUsage ?? ""),
-        type: p.type || "product",
-        isSellable: p.item?.isSellable ?? true,
+        capacityUsage: String(p.item?.capacityUsage ?? ""),
+                isSellable: p.item?.isSellable ?? true,
         isManufactureable: p.item?.isManufactureable ?? true,
       });
       setImageFile(null);
@@ -202,7 +197,7 @@ export default function ProductsSection({ loaderData, actionData }: Route.Compon
                 <TableCell><Link to={`/dashboard/products/${p.id}`} style={{ textDecoration: "none", fontWeight: 500, color: "inherit" }}>{p.item?.name}</Link></TableCell>
                 <TableCell sx={{ fontFamily: "monospace", fontSize: "0.8rem" }}>{p.item?.sku}</TableCell>
                 <TableCell>{p.item?.category || "—"}</TableCell>
-                <TableCell>{p.capacityUsage ?? "—"}</TableCell>
+                <TableCell>{p.item?.capacityUsage ?? "—"}</TableCell>
                 <TableCell>{(Number(p.item?.unitPrice) || 0).toLocaleString("en-US", { style: "currency", currency: "USD" })}</TableCell>
                 {canMutate && (
                   <TableCell align="right">
@@ -230,12 +225,8 @@ export default function ProductsSection({ loaderData, actionData }: Route.Compon
               onChange={(e) => setForm({ ...form, sku: e.target.value })} required fullWidth />
             <TextField name="description" label="Description" value={form.description}
               onChange={(e) => setForm({ ...form, description: e.target.value })} fullWidth multiline rows={2} />
-            <Box sx={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 2 }}>
-              <TextField name="category" label="Category" value={form.category}
-                onChange={(e) => setForm({ ...form, category: e.target.value })} fullWidth />
-              <TextField name="type" label="Type" value={form.type}
-                onChange={(e) => setForm({ ...form, type: e.target.value })} fullWidth />
-            </Box>
+            <TextField name="category" label="Category" value={form.category}
+                          onChange={(e) => setForm({ ...form, category: e.target.value })} fullWidth />
             <Box sx={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 2 }}>
               <TextField name="unitPrice" label="Unit Price" type="number" value={form.unitPrice}
                 onChange={(e) => setForm({ ...form, unitPrice: e.target.value })}
@@ -243,9 +234,9 @@ export default function ProductsSection({ loaderData, actionData }: Route.Compon
               <TextField name="capacityUsage" label="Capacity Usage" type="number" value={form.capacityUsage}
                 onChange={(e) => setForm({ ...form, capacityUsage: e.target.value })}
                 fullWidth slotProps={{ htmlInput: { step: "0.01", min: "0" } }} />
-            </Box>
+                            </Box>
 
-            <Box sx={{ display: "flex", gap: 2 }}>
+                            <Box sx={{ display: "flex", gap: 2 }}>
               <FormControlLabel
                 control={<Checkbox name="isSellable" checked={form.isSellable}
                   onChange={(e) => setForm({ ...form, isSellable: e.target.checked })} />}
@@ -254,10 +245,10 @@ export default function ProductsSection({ loaderData, actionData }: Route.Compon
                 control={<Checkbox name="isManufactureable" checked={form.isManufactureable}
                   onChange={(e) => setForm({ ...form, isManufactureable: e.target.checked })} />}
                 label="Manufacturable" />
-            </Box>
+                            </Box>
 
-            {/* Image upload */}
-            <Box>
+                            {/* Image upload */}
+                            <Box>
               <Typography variant="body2" sx={{ mb: 1 }}>Product Image (optional)</Typography>
               <input type="file" accept="image/*" ref={fileInputRef}
                 onChange={handleFileChange} style={{ display: "none" }} />

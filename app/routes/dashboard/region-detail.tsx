@@ -2,7 +2,7 @@ import { get } from "~/services/api.server";
 import { getAccessToken } from "~/services/auth-helper.server";
 import { Link } from "react-router";
 import type { Route } from "./+types/region-detail";
-import type { Region } from "~/services/types";
+import type { Region } from "~/types";
 import { Box, Paper, Typography, Button, Divider, Grid, Card, CardActionArea } from "@mui/material";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 

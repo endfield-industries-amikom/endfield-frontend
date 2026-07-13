@@ -3,7 +3,7 @@ import { getAccessToken } from "~/services/auth-helper.server";
 import { useState } from "react";
 import { Link, useFetcher, useRouteLoaderData } from "react-router";
 import type { Route } from "./+types/suppliers";
-import type { Supplier } from "~/services/types";
+import type { Supplier } from "~/types";
 import {
   Box, Button, Dialog, DialogTitle, DialogContent, DialogActions,
   TextField, Table, TableBody, TableCell, TableContainer, TableHead,

@@ -2,7 +2,7 @@ import { Link } from "react-router";
 import type { Route } from "./+types/product-detail";
 import { get } from "~/services/api.server";
 import { getAccessToken } from "~/services/auth-helper.server";
-import type { Product } from "~/services/types";
+import type { Product } from "~/types";
 import { Box, Paper, Typography, Button, Divider, Grid } from "@mui/material";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 
@@ -42,7 +42,7 @@ export default function ProductDetail({ loaderData }: Route.ComponentProps) {
             <Grid container spacing={2}>
               <Grid size={4}><Typography variant="caption" color="text.secondary">Category</Typography><Typography>{item?.category || "—"}</Typography></Grid>
               <Grid size={4}><Typography variant="caption" color="text.secondary">Type</Typography><Typography>{product.type || "product"}</Typography></Grid>
-              <Grid size={4}><Typography variant="caption" color="text.secondary">Capacity Usage</Typography><Typography>{product.capacityUsage ?? "—"}</Typography></Grid>
+              <Grid size={4}><Typography variant="caption" color="text.secondary">Capacity Usage</Typography><Typography>{product.item?.capacityUsage ?? "—"}</Typography></Grid>
             </Grid>
             <Grid container spacing={2} sx={{ mt: 1 }}>
               <Grid size={6}><Typography variant="caption" color="text.secondary">Unit Price</Typography><Typography variant="h5" sx={{ fontWeight: 700 }}>{(Number(item?.unitPrice) || 0).toLocaleString("en-US", { style: "currency", currency: "USD" })}</Typography></Grid>

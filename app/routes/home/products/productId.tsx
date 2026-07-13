@@ -1,6 +1,6 @@
 import type { Route } from "./+types/productId";
 import { get } from "~/services/api.server";
-import type { Product } from "~/services/types";
+import type { Product } from "~/types";
 import { Box, Paper, Typography, Grid, Divider, Container } from "@mui/material";
 
 export async function loader({ params }: Route.LoaderArgs) {

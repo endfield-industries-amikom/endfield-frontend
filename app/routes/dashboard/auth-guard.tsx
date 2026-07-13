@@ -12,7 +12,7 @@ export async function loader({
   const url = new URL(request.url);
 
   // Allow unauthenticated access to the login page itself
-  if (url.pathname === "/dashboard/login") {
+  if (url.pathname === "/dashboard/auth/login") {
     return { accessToken: "" };
   }
 
@@ -20,7 +20,7 @@ export async function loader({
 
   // No session cookie at all — definitely not logged in
   if (!cookie) {
-    return redirect("/dashboard/login");
+    return redirect("/dashboard/auth/login");
   }
 
   try {
@@ -35,7 +35,7 @@ export async function loader({
     return { accessToken: result.data.access_token };
   } catch {
     // Session expired or invalid — redirect to login
-    return redirect("/dashboard/login");
+    return redirect("/dashboard/auth/login");
   }
 }
 

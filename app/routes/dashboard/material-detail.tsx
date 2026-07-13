@@ -2,7 +2,7 @@ import { Link } from "react-router";
 import type { Route } from "./+types/material-detail";
 import { get } from "~/services/api.server";
 import { getAccessToken } from "~/services/auth-helper.server";
-import type { Material } from "~/services/types";
+import type { Material } from "~/types";
 import { Box, Paper, Typography, Button, Divider, Grid } from "@mui/material";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 
@@ -28,9 +28,9 @@ export default function MaterialDetail({ loaderData }: Route.ComponentProps) {
         <Divider sx={{ my: 2 }} />
         <Typography variant="h6" sx={{ fontWeight: 600 }}>{item?.name}</Typography>
         <Grid container spacing={2} sx={{ mt: 1 }}>
-          <Grid size={6}><Typography variant="caption" color="text.secondary">Category</Typography><Typography>{item?.category || "—"}</Typography></Grid>
-          <Grid size={6}><Typography variant="caption" color="text.secondary">Unit</Typography><Typography>{material.unit || "—"}</Typography></Grid>
-          <Grid size={6}><Typography variant="caption" color="text.secondary">Unit Price</Typography><Typography variant="h5" sx={{ fontWeight: 700 }}>{(Number(item?.unitPrice) || 0).toLocaleString("en-US", { style: "currency", currency: "USD" })}</Typography></Grid>
+                  <Grid size={6}><Typography variant="caption" color="text.secondary">Category</Typography><Typography>{item?.category || "—"}</Typography></Grid>
+                  <Grid size={6}><Typography variant="caption" color="text.secondary">Capacity Usage</Typography><Typography>{item?.capacityUsage ?? "—"}</Typography></Grid>
+                  <Grid size={6}><Typography variant="caption" color="text.secondary">Unit Price</Typography><Typography variant="h5" sx={{ fontWeight: 700 }}>{(Number(item?.unitPrice) || 0).toLocaleString("en-US", { style: "currency", currency: "USD" })}</Typography></Grid>
         </Grid>
         {item?.description && <><Divider sx={{ my: 2 }} /><Typography variant="caption" color="text.secondary">Description</Typography><Typography>{item.description}</Typography></>}
         <Divider sx={{ my: 2 }} />

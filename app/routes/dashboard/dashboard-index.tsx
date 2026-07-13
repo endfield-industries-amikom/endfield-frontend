@@ -17,7 +17,7 @@ export async function loader({ request }: Route.LoaderArgs) {
       get<{ data: { data: unknown[]; total: number } }>(`/region?page=1&limit=100`, token, cookie),
       get<{ data: { data: unknown[]; total: number } }>(`/product?page=1&limit=100`, token, cookie),
     ]);
-    const pendingOrders = (salesOrders.data.data as any[]).filter((o: any) => o.status === 'PENDING').length;
+    const pendingOrders = (salesOrders.data.data as any[]).filter((o) => (o as any).status === 'PENDING').length;
     return {
       pendingOrders,
       totalInventory: inventory.data.total,

@@ -3,32 +3,55 @@ import { Link, useFetcher, useRouteLoaderData } from "react-router";
 import type { Route } from "./+types/shipments";
 import { get, patch, post } from "~/services/api.server";
 import { getAccessToken } from "~/services/auth-helper.server";
-import type { Shipment } from "~/services/types";
-import {
-  Box, Button, Dialog, DialogTitle, DialogContent, DialogActions,
-  TextField, Table, TableBody, TableCell, TableContainer, TableHead,
-  TableRow, Paper, Typography, IconButton, MenuItem, Chip,
-} from "@mui/material";
+import type { Shipment } from "~/types";
+import { Box, Button, Dialog, DialogTitle, DialogContent, DialogActions, TextField, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper, Typography, IconButton, MenuItem, Chip } from "@mui/material";
 import AddIcon from "@mui/icons-material/Add";
 import EditIcon from "@mui/icons-material/Edit";
 
-function useRole() {
-  const parent = useRouteLoaderData<{ accessToken: string }>("routes/dashboard/auth-guard");
-  if (!parent?.accessToken) return "Consumer";
-  try { return JSON.parse(atob(parent.accessToken.split(".")[1])).role; }
+interface OrderOption { orderId: string; order: { status: string }; }
+
+function parseRole(token: string): string {
+  try { return JSON.parse(atob(token.split(".")[1])).role || "Consumer"; }
   catch { return "Consumer"; }
 }
+
+/* ------------------------------------------------------------------ */
+/*  Loader – role-aware data fetching                                  */
+/* ------------------------------------------------------------------ */
 
 export async function loader({ request }: Route.LoaderArgs) {
   const cookie = request.headers.get("Cookie") || "";
   const token = await getAccessToken(cookie);
+  const role = parseRole(token);
+
+  if (role === "Consumer") {
+    const [shipRes, soRes] = await Promise.all([
+      get<{ data: { data: Shipment[]; total: number } }>("/shipment?page=1&limit=50", token, cookie),
+      get<{ data: { data: OrderOption[] } }>("/sales-order?page=1&limit=200", token, cookie),
+    ]);
+    const shipments = (shipRes.data.data ?? []).filter((s) => s.orderType === "SALES");
+    return { shipments, poOptions: [], soOptions: soRes.data.data ?? [], userRole: "Consumer" };
+  }
+
   const [shipRes, poRes, soRes] = await Promise.all([
     get<{ data: { data: Shipment[]; total: number } }>("/shipment?page=1&limit=50", token, cookie),
-    get<{ data: { data: { id: string }[] } }>("/purchase-order?page=1&limit=200", token, cookie),
-    get<{ data: { data: { id: string }[] } }>("/sales-order?page=1&limit=200", token, cookie),
+    get<{ data: { data: OrderOption[] } }>("/purchase-order?page=1&limit=200", token, cookie),
+    get<{ data: { data: OrderOption[] } }>("/sales-order?page=1&limit=200", token, cookie),
   ]);
-  return { shipments: shipRes.data.data, poOptions: poRes.data.data, soOptions: soRes.data.data };
+  const approvedPO = (poRes.data.data ?? []).filter((o) => o.order?.status === "APPROVED");
+  const approvedSO = (soRes.data.data ?? []).filter((o) => o.order?.status === "SHIPPED");
+
+  return {
+    shipments: shipRes.data.data,
+    poOptions: approvedPO,
+    soOptions: approvedSO,
+    userRole: role,
+  };
 }
+
+/* ------------------------------------------------------------------ */
+/*  Action                                                              */
+/* ------------------------------------------------------------------ */
 
 export async function action({ request }: Route.ActionArgs) {
   const cookie = request.headers.get("Cookie") || "";
@@ -51,22 +74,135 @@ export async function action({ request }: Route.ActionArgs) {
   return { ok: false, error: "Unknown intent" };
 }
 
-function statusColor(s: string) { const m: Record<string, "warning" | "info" | "success" | "error"> = { PENDING: "warning", SENDING: "info", ARRIVED: "success", CANCELLED: "error" }; return m[s] || "default"; }
+/* ------------------------------------------------------------------ */
+/*  Shared helpers                                                      */
+/* ------------------------------------------------------------------ */
+
+function statusColor(s: string) {
+  const m: Record<string, "warning" | "info" | "success" | "error"> = { PENDING: "warning", SENDING: "info", ARRIVED: "success", CANCELLED: "error", FAILED: "error" };
+  return m[s] || "default";
+}
+
+/* ------------------------------------------------------------------ */
+/*  Consumer table – links to sales-order, no Type column              */
+/* ------------------------------------------------------------------ */
+
+function ConsumerShipmentsTable({ shipments }: { shipments: Shipment[] }) {
+  return (
+    <TableContainer component={Paper}>
+      <Table size="small">
+        <TableHead>
+          <TableRow>
+            <TableCell>Order#</TableCell>
+            <TableCell>Carrier</TableCell>
+            <TableCell>Tracking</TableCell>
+            <TableCell>Status</TableCell>
+          </TableRow>
+        </TableHead>
+        <TableBody>
+          {shipments.length === 0 && (
+            <TableRow>
+              <TableCell colSpan={4} align="center">
+                <Typography color="text.secondary" sx={{ py: 2 }}>No shipments found.</Typography>
+              </TableCell>
+            </TableRow>
+          )}
+          {shipments.map((s) => (
+            <TableRow key={s.id} hover>
+              <TableCell sx={{ fontFamily: "monospace", fontSize: "0.75rem" }}>
+                <Link to={`/dashboard/sales-orders/${s.orderId}`} style={{ textDecoration: "none", color: "inherit" }}>
+                  SO-{s.orderId?.substring(0, 8) || "—"}
+                </Link>
+              </TableCell>
+              <TableCell>{s.carrier || "—"}</TableCell>
+              <TableCell sx={{ fontFamily: "monospace", fontSize: "0.75rem" }}>{s.trackingNumber || "—"}</TableCell>
+              <TableCell><Chip label={s.status} size="small" color={statusColor(s.status)} /></TableCell>
+            </TableRow>
+          ))}
+        </TableBody>
+      </Table>
+    </TableContainer>
+  );
+}
+
+/* ------------------------------------------------------------------ */
+/*  Admin/Employee table – full columns, edit action, detail link      */
+/* ------------------------------------------------------------------ */
+
+function AdminShipmentsTable({
+  shipments,
+  canMutate,
+  onEdit,
+}: {
+  shipments: Shipment[];
+  canMutate: boolean;
+  onEdit: (s: Shipment) => void;
+}) {
+  return (
+    <TableContainer component={Paper}>
+      <Table size="small">
+        <TableHead>
+          <TableRow>
+            <TableCell>Shipment#</TableCell>
+            <TableCell>Type</TableCell>
+            <TableCell>Order#</TableCell>
+            <TableCell>Carrier</TableCell>
+            <TableCell>Tracking</TableCell>
+            <TableCell>Status</TableCell>
+            {canMutate && <TableCell align="right">Actions</TableCell>}
+          </TableRow>
+        </TableHead>
+        <TableBody>
+          {shipments.length === 0 && (
+            <TableRow>
+              <TableCell colSpan={canMutate ? 7 : 6} align="center">
+                <Typography color="text.secondary" sx={{ py: 2 }}>No shipments found.</Typography>
+              </TableCell>
+            </TableRow>
+          )}
+          {shipments.map((s) => (
+            <TableRow key={s.id} hover>
+              <TableCell sx={{ fontFamily: "monospace", fontSize: "0.75rem" }}>
+                <Link to={`/dashboard/shipments/${s.id}`} style={{ textDecoration: "none", color: "inherit" }}>{s.id.substring(0, 8)}</Link>
+              </TableCell>
+              <TableCell><Chip label={s.orderType} size="small" variant="outlined" /></TableCell>
+              <TableCell sx={{ fontFamily: "monospace", fontSize: "0.75rem" }}>{s.orderId?.substring(0, 8) || "—"}</TableCell>
+              <TableCell>{s.carrier || "—"}</TableCell>
+              <TableCell sx={{ fontFamily: "monospace", fontSize: "0.75rem" }}>{s.trackingNumber || "—"}</TableCell>
+              <TableCell><Chip label={s.status} size="small" color={statusColor(s.status)} /></TableCell>
+              {canMutate && (
+                <TableCell align="right">
+                  <IconButton size="small" onClick={() => onEdit(s)}><EditIcon fontSize="small" /></IconButton>
+                </TableCell>
+              )}
+            </TableRow>
+          ))}
+        </TableBody>
+      </Table>
+    </TableContainer>
+  );
+}
+
+/* ------------------------------------------------------------------ */
+/*  Main component – role-based rendering                              */
+/* ------------------------------------------------------------------ */
 
 export default function ShipmentsSection({ loaderData, actionData }: Route.ComponentProps) {
-  const role = useRole();
-  const shipments = loaderData?.shipments ?? [];
-  const poOptions = (loaderData?.poOptions as any[]) ?? [];
-  const soOptions = (loaderData?.soOptions as any[]) ?? [];
+  const shipments: Shipment[] = loaderData?.shipments ?? [];
+  const poOptions: OrderOption[] = loaderData?.poOptions ?? [];
+  const soOptions: OrderOption[] = loaderData?.soOptions ?? [];
+  const userRole = loaderData?.userRole ?? "Consumer";
+
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editId, setEditId] = useState<string | null>(null);
-  const [orderType, setOrderType] = useState("PURCHASE");
+  const [orderType, setOrderType] = useState<"PURCHASE" | "SALES">("PURCHASE");
   const [form, setForm] = useState({ orderId: "", carrier: "", trackingNumber: "", status: "PENDING" });
   const fetcher = useFetcher();
-  const canMutate = role === "Admin" || role === "Employee";
+  const canMutate = userRole === "Admin" || userRole === "Employee";
 
   function openCreate() { setEditId(null); setOrderType("PURCHASE"); setForm({ orderId: "", carrier: "", trackingNumber: "", status: "PENDING" }); setDialogOpen(true); }
-  function openEdit(s: any) { setEditId(s.id); setOrderType(s.orderType || "PURCHASE"); setForm({ orderId: s.orderId || "", carrier: s.carrier || "", trackingNumber: s.trackingNumber || "", status: s.status || "PENDING" }); setDialogOpen(true); }
+  function openEdit(s: Shipment) { setEditId(s.id); setOrderType(s.orderType as "PURCHASE" | "SALES"); setForm({ orderId: s.orderId || "", carrier: s.carrier || "", trackingNumber: s.trackingNumber || "", status: s.status || "PENDING" }); setDialogOpen(true); }
+
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     const fd = new FormData(e.target as HTMLFormElement);
@@ -82,78 +218,56 @@ export default function ShipmentsSection({ loaderData, actionData }: Route.Compo
   return (
     <Box>
       <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", mb: 3 }}>
-        <Typography variant="h5" sx={{ fontWeight: 700 }}>Shipments</Typography>
+        <Typography variant="h5" sx={{ fontWeight: 700 }}>
+          {userRole === "Consumer" ? "My Shipments" : "Shipments"}
+        </Typography>
         {canMutate && <Button variant="contained" startIcon={<AddIcon />} onClick={openCreate}>New Shipment</Button>}
       </Box>
       {actionData?.error && <Typography color="error" sx={{ mb: 2 }}>{actionData.error}</Typography>}
-      <TableContainer component={Paper}>
-        <Table size="small">
-          <TableHead>
-            <TableRow>
-              <TableCell>Shipment#</TableCell><TableCell>Type</TableCell><TableCell>Order#</TableCell>
-              <TableCell>Carrier</TableCell><TableCell>Tracking</TableCell><TableCell>Status</TableCell>
-              {canMutate && <TableCell align="right">Actions</TableCell>}
-            </TableRow>
-          </TableHead>
-          <TableBody>
-            {shipments.length === 0 && (
-              <TableRow><TableCell colSpan={canMutate ? 7 : 6} align="center">
-                <Typography color="text.secondary" sx={{ py: 2 }}>No shipments found.</Typography>
-              </TableCell></TableRow>
-            )}
-            {shipments.map((s: any) => (
-              <TableRow key={s.id} hover>
-                <TableCell sx={{ fontFamily: "monospace", fontSize: "0.75rem" }}>
-                  <Link to={`/dashboard/shipments/${s.id}`} style={{ textDecoration: "none", color: "inherit" }}>{s.id.substring(0, 8)}</Link>
-                </TableCell>
-                <TableCell><Chip label={s.orderType} size="small" variant="outlined" /></TableCell>
-                <TableCell sx={{ fontFamily: "monospace", fontSize: "0.75rem" }}>{s.orderId?.substring(0, 8) || "—"}</TableCell>
-                <TableCell>{s.carrier || "—"}</TableCell>
-                <TableCell sx={{ fontFamily: "monospace", fontSize: "0.75rem" }}>{s.trackingNumber || "—"}</TableCell>
-                <TableCell><Chip label={s.status} size="small" color={statusColor(s.status)} /></TableCell>
-                {canMutate && (
-                  <TableCell align="right">
-                    <IconButton size="small" onClick={() => openEdit(s)}><EditIcon fontSize="small" /></IconButton>
-                  </TableCell>
-                )}
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
-      </TableContainer>
-      <Dialog open={dialogOpen} onClose={() => setDialogOpen(false)} maxWidth="sm" fullWidth>
-        <form onSubmit={handleSubmit}>
-          <DialogTitle>{editId ? "Edit Shipment" : "New Shipment"}</DialogTitle>
-          <DialogContent sx={{ display: "flex", flexDirection: "column", gap: 2, pt: "8px !important" }}>
-            <TextField name="orderType" label="Order Type" select value={orderType}
-              onChange={(e) => { setOrderType(e.target.value); setForm({ ...form, orderId: "" }); }} required fullWidth>
-              <MenuItem value="PURCHASE">Purchase Order</MenuItem>
-              <MenuItem value="SALES">Sales Order</MenuItem>
-            </TextField>
-            <TextField name="orderId" label="Order" select value={form.orderId}
-              onChange={(e) => setForm({ ...form, orderId: e.target.value })} required fullWidth>
-              <MenuItem value="">Select order...</MenuItem>
-              {currentOrderOptions.map((o: any) => (
-                <MenuItem key={o.id} value={o.id}>{o.id.substring(0, 8)}</MenuItem>
-              ))}
-            </TextField>
-            <TextField name="carrier" label="Carrier" value={form.carrier}
-              onChange={(e) => setForm({ ...form, carrier: e.target.value })} fullWidth />
-            <TextField name="trackingNumber" label="Tracking Number" value={form.trackingNumber}
-              onChange={(e) => setForm({ ...form, trackingNumber: e.target.value })} fullWidth />
-            <TextField name="status" label="Status" select value={form.status}
-              onChange={(e) => setForm({ ...form, status: e.target.value })} fullWidth>
-              <MenuItem value="PENDING">Pending</MenuItem>
-              <MenuItem value="SENDING">Sending</MenuItem>
-              <MenuItem value="ARRIVED">Arrived</MenuItem>
-            </TextField>
-          </DialogContent>
-          <DialogActions>
-            <Button variant="outlined" onClick={() => setDialogOpen(false)}>Cancel</Button>
-            <Button type="submit" variant="contained">{editId ? "Update" : "Create"}</Button>
-          </DialogActions>
-        </form>
-      </Dialog>
+
+      {userRole === "Consumer" ? (
+        <ConsumerShipmentsTable shipments={shipments} />
+      ) : (
+        <AdminShipmentsTable shipments={shipments} canMutate={canMutate} onEdit={openEdit} />
+      )}
+
+      {canMutate && (
+        <Dialog open={dialogOpen} onClose={() => setDialogOpen(false)} maxWidth="sm" fullWidth>
+          <form onSubmit={handleSubmit}>
+            <DialogTitle>{editId ? "Edit Shipment" : "New Shipment"}</DialogTitle>
+            <DialogContent sx={{ display: "flex", flexDirection: "column", gap: 2, pt: "8px !important" }}>
+              <TextField name="orderType" label="Order Type" select value={orderType}
+                onChange={(e) => { setOrderType(e.target.value as "PURCHASE" | "SALES"); setForm({ ...form, orderId: "" }); }} required fullWidth>
+                <MenuItem value="PURCHASE">Purchase Order</MenuItem>
+                <MenuItem value="SALES">Sales Order</MenuItem>
+              </TextField>
+              <TextField name="orderId" label="Order" select value={form.orderId}
+                onChange={(e) => setForm({ ...form, orderId: e.target.value })} required fullWidth>
+                <MenuItem value="">Select order...</MenuItem>
+                {currentOrderOptions.map((o) => (
+                  <MenuItem key={o.orderId} value={o.orderId}>
+                    {`${orderType === "PURCHASE" ? "PO" : "SO"}-${o.orderId.substring(0, 8)}`}
+                  </MenuItem>
+                ))}
+              </TextField>
+              <TextField name="carrier" label="Carrier" value={form.carrier}
+                onChange={(e) => setForm({ ...form, carrier: e.target.value })} fullWidth />
+              <TextField name="trackingNumber" label="Tracking Number" value={form.trackingNumber}
+                onChange={(e) => setForm({ ...form, trackingNumber: e.target.value })} fullWidth />
+              <TextField name="status" label="Status" select value={form.status}
+                onChange={(e) => setForm({ ...form, status: e.target.value })} fullWidth>
+                <MenuItem value="PENDING">Pending</MenuItem>
+                <MenuItem value="SENDING">Sending</MenuItem>
+                <MenuItem value="ARRIVED">Arrived</MenuItem>
+              </TextField>
+            </DialogContent>
+            <DialogActions>
+              <Button variant="outlined" onClick={() => setDialogOpen(false)}>Cancel</Button>
+              <Button type="submit" variant="contained">{editId ? "Update" : "Create"}</Button>
+            </DialogActions>
+          </form>
+        </Dialog>
+      )}
     </Box>
   );
 }

@@ -3,7 +3,7 @@ import { getAccessToken } from "~/services/auth-helper.server";
 import { useState } from "react";
 import { Link, useFetcher, useRouteLoaderData } from "react-router";
 import type { Route } from "./+types/inventory";
-import type { Inventory } from "~/services/types";
+import type { Inventory } from "~/types";
 import {
   Box, Button, Dialog, DialogTitle, DialogContent, DialogActions,
   TextField, Table, TableBody, TableCell, TableContainer, TableHead,
@@ -37,7 +37,7 @@ export async function action({ request }: Route.ActionArgs) {
   const intent = formData.get("intent") as string;
 
   if (intent === "create-inventory" || intent === "update-inventory") {
-    const body = { warehouseId: formData.get("warehouseId"), productId: formData.get("productId"), quantityOnHand: Number(formData.get("quantityOnHand")), reservedQuantity: Number(formData.get("reservedQuantity")), reorderLevel: Number(formData.get("reorderLevel")) };
+    const body = { warehouseId: formData.get("warehouseId"), itemId: formData.get("itemId"), quantityOnHand: Number(formData.get("quantityOnHand")), reservedQuantity: Number(formData.get("reservedQuantity")), reorderLevel: Number(formData.get("reorderLevel")) };
     if (intent === "create-inventory") await post("/inventory", body, token, cookie);
     else await patch(`/inventory/${formData.get("id")}`, body, token, cookie);
     return { ok: true };
@@ -56,15 +56,15 @@ export default function InventorySection({ loaderData, actionData }: Route.Compo
   const warehouseOptions = (loaderData?.warehouseOptions as any[]) ?? [];
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editId, setEditId] = useState<string | null>(null);
-  const [form, setForm] = useState<Record<string, string>>({ productId: "", warehouseId: "", quantityOnHand: "", reservedQuantity: "", reorderLevel: "" });
+  const [form, setForm] = useState<Record<string, string>>({ itemId: "", warehouseId: "", quantityOnHand: "", reservedQuantity: "", reorderLevel: "" });
   const fetcher = useFetcher();
   const restockFetcher = useFetcher();
   const canMutate = role === "Admin" || role === "Employee";
 
-  function openCreate() { setEditId(null); setForm({ productId: "", warehouseId: "", quantityOnHand: "", reservedQuantity: "", reorderLevel: "" }); setDialogOpen(true); }
-  function openEdit(inv: any) {
+  function openCreate() { setEditId(null); setForm({ itemId: "", warehouseId: "", quantityOnHand: "", reservedQuantity: "", reorderLevel: "" }); setDialogOpen(true); }
+  function openEdit(inv: { id: string; warehouseId: string; itemId: string; quantityOnHand: number; reservedQuantity: number; reorderLevel: number; product?: { id: string; name: string; sku: string }; warehouse?: { id: string; name: string; code: string }; item?: { id: string; name: string; sku: string } }) {
     setEditId(inv.id);
-    setForm({ productId: inv.productId || "", warehouseId: inv.warehouseId || "", quantityOnHand: String(inv.quantityOnHand), reservedQuantity: String(inv.reservedQuantity), reorderLevel: String(inv.reorderLevel) });
+    setForm({ itemId: inv.itemId || "", warehouseId: inv.warehouseId || "", quantityOnHand: String(inv.quantityOnHand), reservedQuantity: String(inv.reservedQuantity), reorderLevel: String(inv.reorderLevel) });
     setDialogOpen(true);
   }
   function handleSubmit(e: React.FormEvent) {
@@ -80,7 +80,7 @@ export default function InventorySection({ loaderData, actionData }: Route.Compo
     <Box>
       <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", mb: 3 }}>
         <Typography variant="h5" sx={{ fontWeight: 700 }}>Inventory</Typography>
-        {canMutate && <Button variant="contained" startIcon={<AddIcon />} onClick={openCreate}>New Inventory</Button>}
+        {/*{canMutate && <Button variant="contained" startIcon={<AddIcon />} onClick={openCreate}>New Inventory</Button>}*/}
       </Box>
       {actionData?.error && <Typography color="error" sx={{ mb: 2 }}>{actionData.error}</Typography>}
       <TableContainer component={Paper}>
@@ -98,10 +98,10 @@ export default function InventorySection({ loaderData, actionData }: Route.Compo
                 <Typography color="text.secondary" sx={{ py: 2 }}>No inventory records found.</Typography>
               </TableCell></TableRow>
             )}
-            {inventory.map((inv: any) => (
+            {inventory.map((inv: { id: string; warehouseId: string; itemId: string; quantityOnHand: number; reservedQuantity: number; reorderLevel: number; product?: { id: string; name: string; sku: string }; warehouse?: { id: string; name: string; code: string }; item?: { id: string; name: string; sku: string } }) => (
               <TableRow key={inv.id} hover>
-                <TableCell><Link to={`/dashboard/inventory/${inv.id}`} style={{ textDecoration: "none", fontWeight: 500, color: "inherit" }}>{inv.product?.name ?? inv.productId}</Link></TableCell>
-                <TableCell>{inv.warehouse?.name ?? inv.warehouseId}</TableCell>
+                <TableCell><Link to={`/dashboard/inventory/${inv.id}`} style={{ textDecoration: "none", fontWeight: 500, color: "inherit" }}>{inv.item?.name ?? inv.itemId}</Link></TableCell>
+                                <TableCell>{inv.warehouse?.name ?? inv.warehouseId}</TableCell>
                 <TableCell>{inv.quantityOnHand}</TableCell>
                 <TableCell>{inv.reservedQuantity}</TableCell>
                 <TableCell>
@@ -129,13 +129,13 @@ export default function InventorySection({ loaderData, actionData }: Route.Compo
         <form onSubmit={handleSubmit}>
           <DialogTitle>{editId ? "Edit Inventory" : "New Inventory"}</DialogTitle>
           <DialogContent sx={{ display: "flex", flexDirection: "column", gap: 2, pt: "8px !important" }}>
-            <TextField name="productId" label="Product" select value={form.productId} onChange={(e) => setForm({ ...form, productId: e.target.value })} required fullWidth>
-              <MenuItem value="">Select product...</MenuItem>
-              {productOptions.map((p: any) => <MenuItem key={p.id} value={p.id}>{p.name} ({p.sku})</MenuItem>)}
+            <TextField name="itemId" label="Product" select value={form.itemId} onChange={(e) => setForm({ ...form, itemId: e.target.value })} required fullWidth>
+              <MenuItem value="">Select item...</MenuItem>
+              {productOptions.map((p: { id: string; name: string; sku: string; unitPrice: number }) => <MenuItem key={p.id} value={p.id}>{p.name} ({p.sku})</MenuItem>)}
             </TextField>
             <TextField name="warehouseId" label="Warehouse" select value={form.warehouseId} onChange={(e) => setForm({ ...form, warehouseId: e.target.value })} required fullWidth>
               <MenuItem value="">Select warehouse...</MenuItem>
-              {warehouseOptions.map((w: any) => <MenuItem key={w.id} value={w.id}>{w.name} ({w.code})</MenuItem>)}
+              {warehouseOptions.map((w: { id: string; name: string; code: string }) => <MenuItem key={w.id} value={w.id}>{w.name} ({w.code})</MenuItem>)}
             </TextField>
             <TextField name="quantityOnHand" label="Qty On Hand" type="number" value={form.quantityOnHand} onChange={(e) => setForm({ ...form, quantityOnHand: e.target.value })} required fullWidth />
             <TextField name="reservedQuantity" label="Reserved Qty" type="number" value={form.reservedQuantity} onChange={(e) => setForm({ ...form, reservedQuantity: e.target.value })} required fullWidth />

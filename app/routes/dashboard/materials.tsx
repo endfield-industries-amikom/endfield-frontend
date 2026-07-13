@@ -3,7 +3,7 @@ import { getAccessToken } from "~/services/auth-helper.server";
 import { useState } from "react";
 import { Link, useFetcher, useRouteLoaderData } from "react-router";
 import type { Route } from "./+types/materials";
-import type { Material } from "~/services/types";
+import type { Material } from "~/types";
 import {
   Box, Button, Dialog, DialogTitle, DialogContent, DialogActions,
   TextField, Table, TableBody, TableCell, TableContainer, TableHead,
@@ -41,7 +41,7 @@ export async function action({ request }: Route.ActionArgs) {
       sku: formData.get("sku"),
       description: formData.get("description") || undefined,
       category: formData.get("category") || undefined,
-      unit: formData.get("unit") || undefined,
+      capacityUsage: Number(formData.get("capacityUsage")) || undefined,
       unitPrice: Number(formData.get("unitPrice")),
       isSellable: formData.get("isSellable") === "on",
       isPurchaseable: formData.get("isPurchaseable") === "on",
@@ -57,7 +57,7 @@ export async function action({ request }: Route.ActionArgs) {
   return { ok: false, error: "Unknown intent" };
 }
 
-const emptyForm = { name: "", sku: "", description: "", category: "", unit: "", unitPrice: "", isSellable: true, isPurchaseable: true };
+const emptyForm = { name: "", sku: "", description: "", category: "", capacityUsage: "", unitPrice: "", isSellable: true, isPurchaseable: true };
 
 export default function MaterialsSection({ loaderData, actionData }: Route.ComponentProps) {
   const role = useRole();
@@ -69,7 +69,7 @@ export default function MaterialsSection({ loaderData, actionData }: Route.Compo
   const canMutate = role === "Admin" || role === "Employee";
 
   function openCreate() { setEditId(null); setForm(emptyForm); setDialogOpen(true); }
-  function openEdit(m: Material) { setEditId(m.id); setForm({ name: m.item?.name || "", sku: m.item?.sku || "", description: m.item?.description || "", category: m.item?.category || "", unit: m.unit || "", unitPrice: String(m.item?.unitPrice || ""), isSellable: m.item?.isSellable ?? true, isPurchaseable: m.item?.isPurchaseable ?? true }); setDialogOpen(true); }
+  function openEdit(m: Material) { setEditId(m.id); setForm({ name: m.item?.name || "", sku: m.item?.sku || "", description: m.item?.description || "", category: m.item?.category || "", capacityUsage: String(m.item?.capacityUsage ?? ""), unitPrice: String(m.item?.unitPrice || ""), isSellable: m.item?.isSellable ?? true, isPurchaseable: m.item?.isPurchaseable ?? true }); setDialogOpen(true); }
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     const fd = new FormData(e.target as HTMLFormElement);
@@ -106,7 +106,7 @@ export default function MaterialsSection({ loaderData, actionData }: Route.Compo
                 <TableCell><Link to={`/dashboard/materials/${m.id}`} style={{ textDecoration: "none", fontWeight: 500, color: "inherit" }}>{m.item?.name}</Link></TableCell>
                                 <TableCell sx={{ fontFamily: "monospace", fontSize: "0.8rem" }}>{m.item?.sku}</TableCell>
                                 <TableCell>{m.item?.category || "—"}</TableCell>
-                                <TableCell>{m.unit || "—"}</TableCell>
+                                                <TableCell>{m.item?.capacityUsage ?? "—"}</TableCell>
                                 <TableCell>{(Number(m.item?.unitPrice) || 0).toLocaleString("en-US", { style: "currency", currency: "USD" })}</TableCell>
                 {canMutate && (
                   <TableCell align="right">
@@ -131,8 +131,8 @@ export default function MaterialsSection({ loaderData, actionData }: Route.Compo
             <TextField name="sku" label="SKU" value={form.sku} onChange={(e) => setForm({ ...form, sku: e.target.value })} required fullWidth />
             <TextField name="description" label="Description" value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} fullWidth multiline rows={2} />
             <Box sx={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 2 }}>
-              <TextField name="category" label="Category" value={form.category} onChange={(e) => setForm({ ...form, category: e.target.value })} fullWidth />
-              <TextField name="unit" label="Unit" value={form.unit} onChange={(e) => setForm({ ...form, unit: e.target.value })} fullWidth />
+                          <TextField name="category" label="Category" value={form.category} onChange={(e) => setForm({ ...form, category: e.target.value })} fullWidth />
+                          <TextField name="capacityUsage" label="Capacity Usage" type="number" value={form.capacityUsage} onChange={(e) => setForm({ ...form, capacityUsage: e.target.value })} fullWidth slotProps={{ htmlInput: { step: "0.01", min: "0" } }} />
             </Box>
             <TextField name="unitPrice" label="Unit Price" type="number" value={form.unitPrice} onChange={(e) => setForm({ ...form, unitPrice: e.target.value })} required fullWidth slotProps={{ htmlInput: { step: "0.01" } }} />
 
