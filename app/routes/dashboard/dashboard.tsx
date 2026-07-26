@@ -4,6 +4,7 @@ import { Box, Drawer, AppBar, Toolbar, Typography, List, ListItemButton, ListIte
 import MenuIcon from "@mui/icons-material/Menu";
 import LogoutIcon from "@mui/icons-material/Logout";
 import { getMenu } from "./menu-items";
+import Error from "~/components/error";
 
 const DRAWER_WIDTH = 260;
 

@@ -1,7 +1,7 @@
 import { get } from "~/services/api.server";
 import { getAccessToken } from "~/services/auth-helper.server";
 import { Link } from "react-router";
-import type { Route } from "./+types/warehouse-detail";
+import type { Route } from "../+types/warehouse-detail";
 import type { Warehouse, Inventory } from "~/types";
 import {
   Box, Paper, Typography, Button, Divider, Grid, LinearProgress,

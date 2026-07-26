@@ -1,5 +1,5 @@
 import { Link } from "react-router";
-import type { Route } from "./+types/sales-order-detail";
+import type { Route } from "../+types/sales-order-detail";
 import { get } from "~/services/api.server";
 import { getAccessToken } from "~/services/auth-helper.server";
 import type { SalesOrder, OrderItem } from "~/types";

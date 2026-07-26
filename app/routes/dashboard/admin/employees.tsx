@@ -60,8 +60,13 @@ export default function EmployeesSection({ loaderData, actionData }: Route.Compo
   const loadError = (loaderData as any)?.error as string | undefined;
   const [dialogOpen, setDialogOpen] = useState(false);
   const [form, setForm] = useState({ username: "", email: "", password: "", roleName: "Employee" });
+  const [testCrash, setTestCrash] = useState(false);
   const fetcher = useFetcher();
   const isAdmin = role === "Admin";
+
+  if (testCrash) {
+    throw new Error("This is a test crash — the ErrorFallback component should render now.");
+  }
 
   function openCreate() { setForm({ username: "", email: "", password: "", roleName: "Employee" }); setDialogOpen(true); }
   function handleSubmit(e: React.FormEvent) {
@@ -77,6 +82,9 @@ export default function EmployeesSection({ loaderData, actionData }: Route.Compo
       <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", mb: 3 }}>
         <Typography variant="h5" sx={{ fontWeight: 700 }}>Employees</Typography>
         {isAdmin && <Button variant="contained" startIcon={<AddIcon />} onClick={openCreate}>New Employee</Button>}
+        <Button variant="outlined" color="error" size="small" onClick={() => setTestCrash(true)} sx={{ ml: 1 }}>
+          Test Error Boundary
+        </Button>
       </Box>
 
       {!isAdmin && <Alert severity="warning" sx={{ mb: 2 }}>Only Admin users can manage employee accounts.</Alert>}
@@ -130,7 +138,8 @@ export default function EmployeesSection({ loaderData, actionData }: Route.Compo
             <TextField name="password" label="Password" type="password" value={form.password} onChange={(e) => setForm({ ...form, password: e.target.value })} required fullWidth helperText="Minimum 8 characters" />
             <TextField name="roleName" label="Role" select value={form.roleName} onChange={(e) => setForm({ ...form, roleName: e.target.value })} required fullWidth>
               <MenuItem value="Admin">Admin</MenuItem>
-                            <MenuItem value="Employee">Employee</MenuItem>
+              <MenuItem value="Employee">Employee</MenuItem>
+              <MenuItem value="Worker">Editor</MenuItem>
             </TextField>
           </DialogContent>
           <DialogActions>

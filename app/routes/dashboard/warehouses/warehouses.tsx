@@ -2,7 +2,7 @@ import { get, patch, post, del } from "~/services/api.server";
 import { getAccessToken } from "~/services/auth-helper.server";
 import { useState } from "react";
 import { Link, useFetcher, useNavigate, useRouteLoaderData } from "react-router";
-import type { Route } from "./+types/warehouses";
+import type { Route } from "../+types/warehouses";
 import type { Warehouse } from "~/types";
 import {
   Box, Button, Dialog, DialogTitle, DialogContent, DialogActions,

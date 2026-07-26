@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Link, useFetcher, useRouteLoaderData } from "react-router";
-import type { Route } from "./+types/shipments";
+import type { Route } from "../+types/shipments";
 import { get, patch, post } from "~/services/api.server";
 import { getAccessToken } from "~/services/auth-helper.server";
 import type { Shipment } from "~/types";

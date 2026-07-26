@@ -2,7 +2,7 @@ import { get, patch, post } from "~/services/api.server";
 import { getAccessToken } from "~/services/auth-helper.server";
 import { useState } from "react";
 import { Link, useFetcher, useRouteLoaderData } from "react-router";
-import type { Route } from "./+types/inventory";
+import type { Route } from "../+types/inventory";
 import type { Inventory } from "~/types";
 import {
   Box, Button, Dialog, DialogTitle, DialogContent, DialogActions,

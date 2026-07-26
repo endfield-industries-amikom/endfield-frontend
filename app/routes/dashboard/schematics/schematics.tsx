@@ -2,7 +2,7 @@ import { get, patch, post } from "~/services/api.server";
 import { getAccessToken } from "~/services/auth-helper.server";
 import { useState } from "react";
 import { Link, useFetcher, useRouteLoaderData } from "react-router";
-import type { Route } from "./+types/schematics";
+import type { Route } from "../+types/schematics";
 import type { ProductionSchematic, Item } from "~/types";
 import { Box, Button, Dialog, DialogTitle, DialogContent, DialogActions, TextField, Typography, IconButton, Chip, Card, CardContent, CardActions, MenuItem, Select, InputLabel, FormControl, Grid, Autocomplete, Checkbox, FormControlLabel } from "@mui/material";
 import AddIcon from "@mui/icons-material/Add";
