@@ -2,13 +2,14 @@ import { get, patch, post, del } from "~/services/api.server";
 import { getAccessToken } from "~/services/auth-helper.server";
 import { useState } from "react";
 import { Link, useFetcher, useRouteLoaderData } from "react-router";
-import type { Route } from "../+types/regions";
+import type { Route } from "./+types/regions";
 import type { Region } from "~/types";
 import {
   Box, Button, Dialog, DialogTitle, DialogContent, DialogActions,
   TextField, Table, TableBody, TableCell, TableContainer, TableHead,
   TableRow, Paper, Typography, IconButton,
 } from "@mui/material";
+import ErrorPopup from "~/components/error";
 import AddIcon from "@mui/icons-material/Add";
 import EditIcon from "@mui/icons-material/Edit";
 import DeleteIcon from "@mui/icons-material/Delete";
@@ -35,17 +36,26 @@ export async function action({ request }: Route.ActionArgs) {
   const formData = await request.formData();
   const intent = formData.get("intent") as string;
 
-  if (intent === "create-region" || intent === "update-region") {
-    const body = { name: formData.get("name"), code: formData.get("code"), description: formData.get("description") || undefined };
-    if (intent === "create-region") await post("/region", body, token, cookie);
-    else await patch(`/region/${formData.get("id")}`, body, token, cookie);
-    return { ok: true };
+  try {
+    if (intent === "create-region" || intent === "update-region") {
+      const body = { name: formData.get("name"), code: formData.get("code"), description: formData.get("description") || undefined };
+      if (intent === "create-region") await post("/region", body, token, cookie);
+      else await patch(`/region/${formData.get("id")}`, body, token, cookie);
+      return { ok: true };
+    }
+    if (intent === "delete-region") {
+      await del(`/region/${formData.get("id")}`, token, cookie);
+      return { ok: true };
+    }
+    return { ok: false, error: "Unknown intent" };
+  } catch (err) {
+    const message =
+      (err as any)?.response?.message ||
+      (err as any)?.data?.message ||
+      (err as Error)?.message ||
+      "Action failed. Please try again.";
+    return { ok: false, error: message, errorRaw: err as Error | undefined };
   }
-  if (intent === "delete-region") {
-    await del(`/region/${formData.get("id")}`, token, cookie);
-    return { ok: true };
-  }
-  return { ok: false, error: "Unknown intent" };
 }
 
 const emptyForm = { name: "", code: "", description: "" };
@@ -57,6 +67,13 @@ export default function RegionsSection({ loaderData, actionData }: Route.Compone
   const [editId, setEditId] = useState<string | null>(null);
   const [form, setForm] = useState(emptyForm);
   const fetcher = useFetcher();
+  const fetcherData = fetcher.data as { ok?: boolean; error?: string; errorRaw?: Error } | undefined;
+  const actionError =
+    fetcherData?.ok === false
+      ? fetcherData
+      : actionData?.ok === false
+        ? actionData
+        : null;
   const canMutate = role === "Admin";
 
   function openCreate() { setEditId(null); setForm(emptyForm); setDialogOpen(true); }
@@ -76,7 +93,12 @@ export default function RegionsSection({ loaderData, actionData }: Route.Compone
         <Typography variant="h5" sx={{ fontWeight: 700 }}>Regions</Typography>
         {canMutate && <Button variant="contained" startIcon={<AddIcon />} onClick={openCreate}>New Region</Button>}
       </Box>
-      {actionData?.error && <Typography color="error" sx={{ mb: 2 }}>{actionData.error}</Typography>}
+      {actionError && (
+        <ErrorPopup
+          message={actionError.error as string}
+          error={(actionError as any).errorRaw}
+        />
+      )}
       <TableContainer component={Paper}>
         <Table size="small">
           <TableHead>

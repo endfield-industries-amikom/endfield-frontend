@@ -101,6 +101,6 @@ export default function DashboardLayout() {
   );
 }
 
-export function ErrorBoundary({ error }: Route.ErrorBoundaryProps) {
+export function ErrorBoundary({ error }: any) {
   return <ErrorFallback error={error} path="/dashboard"/>;
 }

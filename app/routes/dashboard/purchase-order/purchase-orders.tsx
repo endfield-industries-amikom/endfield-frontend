@@ -1,10 +1,11 @@
 import { useState } from "react";
 import { Link, useFetcher, useRouteLoaderData } from "react-router";
-import type { Route } from "../+types/purchase-orders";
+import type { Route } from "./+types/purchase-orders";
 import { get, patch, post } from "~/services/api.server";
 import { getAccessToken } from "~/services/auth-helper.server";
 import type { PurchaseOrder } from "~/types";
 import { Box, Button, Dialog, DialogTitle, DialogContent, DialogActions, TextField, Typography, IconButton, MenuItem, Chip, Card, CardContent, CardActions, Grid, Divider, Autocomplete } from "@mui/material";
+import ErrorPopup from "~/components/error";
 import AddIcon from "@mui/icons-material/Add";
 import EditIcon from "@mui/icons-material/Edit";
 import CheckIcon from "@mui/icons-material/Check";
@@ -40,24 +41,33 @@ export async function action({ request }: Route.ActionArgs) {
   const formData = await request.formData();
   const intent = formData.get("intent") as string;
 
-  if (intent === "create-purchase-order" || intent === "update-purchase-order") {
-    const itemsJson = formData.get("items") as string;
-    const rawItems: LineItem[] = itemsJson ? JSON.parse(itemsJson) : [];
-    const items = rawItems.map((item) => ({ orderType: "PURCHASE", itemId: item.itemId, quantity: item.quantity, unitPrice: Number(item.unitPrice) }));
-    const body = { supplierId: formData.get("supplierId"), warehouseId: formData.get("warehouseId"), notes: formData.get("notes") || undefined, items };
-    if (intent === "create-purchase-order") await post("/purchase-order", body, token, cookie);
-    else await patch(`/purchase-order/${formData.get("id")}`, body, token, cookie);
-    return { ok: true };
-  }
-  if (intent === "approve-po") {
-    try {
-      await post(`/purchase-order/${formData.get("id")}/approve`, {}, token, cookie);
+  try {
+    if (intent === "create-purchase-order" || intent === "update-purchase-order") {
+      const itemsJson = formData.get("items") as string;
+      const rawItems: LineItem[] = itemsJson ? JSON.parse(itemsJson) : [];
+      const items = rawItems.map((item) => ({ orderType: "PURCHASE", itemId: item.itemId, quantity: item.quantity, unitPrice: Number(item.unitPrice) }));
+      const body = { supplierId: formData.get("supplierId"), warehouseId: formData.get("warehouseId"), notes: formData.get("notes") || undefined, items };
+      if (intent === "create-purchase-order") await post("/purchase-order", body, token, cookie);
+      else await patch(`/purchase-order/${formData.get("id")}`, body, token, cookie);
       return { ok: true };
-    } catch (err) {
-      return { ok: false, error: err instanceof Error ? err.message : "Approval failed" };
     }
+    if (intent === "approve-po") {
+      try {
+        await post(`/purchase-order/${formData.get("id")}/approve`, {}, token, cookie);
+        return { ok: true };
+      } catch (err) {
+        return { ok: false, error: err instanceof Error ? err.message : "Approval failed" };
+      }
+    }
+    return { ok: false, error: "Unknown intent" };
+  } catch (err) {
+    const message =
+      (err as any)?.response?.message ||
+      (err as any)?.data?.message ||
+      (err as Error)?.message ||
+      "Action failed. Please try again.";
+    return { ok: false, error: message, errorRaw: err as Error | undefined };
   }
-  return { ok: false, error: "Unknown intent" };
 }
 
 function statusColor(s: string | undefined) {
@@ -76,6 +86,13 @@ export default function PurchaseOrdersSection({ loaderData, actionData }: Route.
   const [form, setForm] = useState({ supplierId: "", warehouseId: "", notes: "" });
   const [lineItems, setLineItems] = useState<LineItem[]>([{ ...emptyLine }]);
   const fetcher = useFetcher();
+  const fetcherData = fetcher.data as { ok?: boolean; error?: string; errorRaw?: Error } | undefined;
+  const actionError =
+    fetcherData?.ok === false
+      ? fetcherData
+      : actionData?.ok === false
+        ? actionData
+        : null;
   const approveFetcher = useFetcher();
   const canMutate = role === "Admin" || role === "Employee";
   const isAdmin = role === "Admin";
@@ -113,7 +130,12 @@ export default function PurchaseOrdersSection({ loaderData, actionData }: Route.
         <Typography variant="h5" sx={{ fontWeight: 700 }}>Purchase Orders</Typography>
         {canMutate && <Button variant="contained" startIcon={<AddIcon />} onClick={openCreate}>New Purchase Order</Button>}
       </Box>
-      {actionData?.error && <Typography color="error" sx={{ mb: 2 }}>{actionData.error}</Typography>}
+      {actionError && (
+        <ErrorPopup
+          message={actionError.error as string}
+          error={(actionError as any).errorRaw}
+        />
+      )}
       {purchaseOrders.length === 0 ? (
         <Card sx={{ p: 4, textAlign: "center" }}><Typography color="text.secondary">No purchase orders found.</Typography></Card>
       ) : (

@@ -106,9 +106,9 @@ export default function EmployeesSection({ loaderData, actionData }: Route.Compo
       <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", mb: 3 }}>
         <Typography variant="h5" sx={{ fontWeight: 700 }}>Employees</Typography>
         {isAdmin && <Button variant="contained" startIcon={<AddIcon />} onClick={openCreate}>New Employee</Button>}
-        <Button variant="outlined" color="error" size="small" onClick={() => setTestCrash(true)} sx={{ ml: 1 }}>
+        {/*<Button variant="outlined" color="error" size="small" onClick={() => setTestCrash(true)} sx={{ ml: 1 }}>
           Test Error Boundary
-        </Button>
+        </Button>*/}
       </Box>
 
       {!isAdmin && <Alert severity="warning" sx={{ mb: 2 }}>Only Admin users can manage employee accounts.</Alert>}
@@ -172,7 +172,7 @@ export default function EmployeesSection({ loaderData, actionData }: Route.Compo
             <TextField name="roleName" label="Role" select value={form.roleName} onChange={(e) => setForm({ ...form, roleName: e.target.value })} required fullWidth>
               <MenuItem value="Admin">Admin</MenuItem>
               <MenuItem value="Employee">Employee</MenuItem>
-              <MenuItem value="Worker">Editor</MenuItem>
+              <MenuItem value="Editor">Editor</MenuItem>
             </TextField>
           </DialogContent>
           <DialogActions>
