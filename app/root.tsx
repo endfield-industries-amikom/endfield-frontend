@@ -138,6 +138,6 @@ export default function App() {
   );
 }
 
-export function ErrorBoundary({ error }: any) {
+export function ErrorBoundary({ error }: Route.ErrorBoundaryProps) {
   return <ErrorFallback error={error} />;
 }
