@@ -16,6 +16,7 @@ import ProductsGrid from "~/components/products/ProductsGrid";
 import { get } from "~/services/api.server";
 import type { Route } from "./+types/home-content";
 import type { IProduct } from "~/interfaces/IProduct";
+import { normalizeImageUrl } from "~/utils/image";
 
 /* ------------------------------------------------------------------ */
 /*  Loader – fetch top 10 products from API                            */
@@ -33,7 +34,7 @@ export async function loader({ request }: Route.LoaderArgs) {
           description: p.description,
           category: p.category,
           unitPrice: Number(p.unitPrice || 0),
-          imageUri: p.imageUri,
+          imageUri: normalizeImageUrl(p.imageUri),
       isBest: false,
     }));
     return { products };

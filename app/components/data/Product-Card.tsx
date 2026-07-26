@@ -20,8 +20,6 @@ export default function ProductCard({
 }: ProductCardProps) {
   const isGrid = layout === "grid";
 
-  const imageUrl = data.imageUri;
-
   const cardSx = {
     width: isGrid ? "100%" : { xs: 220, sm: 240, md: 260 },
     minWidth: isGrid ? "100%" : { xs: 220, sm: 240, md: 260 },
@@ -101,7 +99,7 @@ export default function ProductCard({
                 ) : (
                   <CardMedia
                     component="img"
-                    image={imageUrl}
+                    image={data.imageUri}
                     alt={data.name}
             sx={{ width: "100%", height: mediaHeight, objectFit: "cover" }}
           />

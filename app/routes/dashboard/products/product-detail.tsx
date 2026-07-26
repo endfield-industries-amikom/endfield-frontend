@@ -5,6 +5,7 @@ import { getAccessToken } from "~/services/auth-helper.server";
 import type { Product } from "~/types";
 import { Box, Paper, Typography, Button, Divider, Grid } from "@mui/material";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
+import { normalizeImageUrl } from "~/utils/image";
 
 export async function loader({ request, params }: Route.LoaderArgs) {
   const cookie = request.headers.get("Cookie") || "";
@@ -27,7 +28,7 @@ export default function ProductDetail({ loaderData }: Route.ComponentProps) {
         <Grid container spacing={4}>
           <Grid size={{ xs: 12, md: 4 }}>
             {item?.imageUri ? (
-              <Box component="img" src={item.imageUri} alt={item.name}
+              <Box component="img" src={normalizeImageUrl(item.imageUri)} alt={item.name}
                 sx={{ width: "100%", borderRadius: 2, objectFit: "cover", maxHeight: 300 }} />
             ) : (
               <Box sx={{ width: "100%", height: 250, bgcolor: "grey.200", borderRadius: 2, display: "flex", alignItems: "center", justifyContent: "center" }}>

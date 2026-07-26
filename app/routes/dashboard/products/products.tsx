@@ -13,6 +13,7 @@ import DeleteIcon from "@mui/icons-material/Delete";
 import CloudUploadIcon from "@mui/icons-material/CloudUpload";
 import { get, post, patch, del, apiRequest } from "~/services/api.server";
 import { getAccessToken } from "~/services/auth-helper.server";
+import { normalizeImageUrl } from "~/utils/image";
 
 function useRole() {
   const parent = useRouteLoaderData<{ accessToken: string }>("routes/dashboard/auth-guard");
@@ -158,8 +159,7 @@ export default function ProductsSection({ loaderData, actionData }: Route.Compon
   }
 
   function getImageSrc(p: Product): string | undefined {
-      if (!p.item?.imageUri) return undefined;
-      return p.item.imageUri;
+      return normalizeImageUrl(p.item?.imageUri);
     }
 
   return (
