@@ -13,6 +13,7 @@ export default [
     route("products", "routes/home/products/products.tsx"),
     route("products/:id", "routes/home/products/productId.tsx"),
     route("contact", "routes/home/contact.tsx"),
+    route("blog", "routes/home/blog.tsx"),
   ]),
   route("dashboard", "routes/dashboard/auth-guard.tsx", [
     route("auth/login", "routes/dashboard/auth/login.tsx"),
