@@ -207,7 +207,7 @@ export default function ProductsSection({ loaderData, actionData }: Route.Compon
               </TableCell></TableRow>
             )}
             {products.map((p) => (
-              <TableRow key={p.id} hover>
+              <TableRow key={p.id} hover sx={{cursor: "pointer"}} component={Link} to={`/dashboard/products/${p.id}`}>
                 <TableCell>
                   {p.item?.imageUri ? (
                     <Box component="img" src={getImageSrc(p)} alt={p.item?.name}
@@ -216,7 +216,7 @@ export default function ProductsSection({ loaderData, actionData }: Route.Compon
                     <Box sx={{ width: 40, height: 40, bgcolor: "grey.200", borderRadius: 1 }} />
                   )}
                 </TableCell>
-                <TableCell><Link to={`/dashboard/products/${p.id}`} style={{ textDecoration: "none", fontWeight: 500, color: "inherit" }}>{p.item?.name}</Link></TableCell>
+                <TableCell>{p.item?.name}</TableCell>
                 <TableCell sx={{ fontFamily: "monospace", fontSize: "0.8rem" }}>{p.item?.sku}</TableCell>
                 <TableCell>{p.item?.category || "—"}</TableCell>
                 <TableCell>{p.item?.capacityUsage ?? "—"}</TableCell>

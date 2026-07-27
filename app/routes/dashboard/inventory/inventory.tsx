@@ -10,7 +10,6 @@ import {
   TableRow, Paper, Typography, IconButton, MenuItem, Chip,
 } from "@mui/material";
 import ErrorPopup from "~/components/error";
-import AddIcon from "@mui/icons-material/Add";
 import EditIcon from "@mui/icons-material/Edit";
 
 function useRole() {
@@ -120,10 +119,10 @@ export default function InventorySection({ loaderData, actionData }: Route.Compo
                 <Typography color="text.secondary" sx={{ py: 2 }}>No inventory records found.</Typography>
               </TableCell></TableRow>
             )}
-            {inventory.map((inv: { id: string; warehouseId: string; itemId: string; quantityOnHand: number; reservedQuantity: number; reorderLevel: number; product?: { id: string; name: string; sku: string }; warehouse?: { id: string; name: string; code: string }; item?: { id: string; name: string; sku: string } }) => (
-              <TableRow key={inv.id} hover>
-                <TableCell><Link to={`/dashboard/inventory/${inv.id}`} style={{ textDecoration: "none", fontWeight: 500, color: "inherit" }}>{inv.item?.name ?? inv.itemId}</Link></TableCell>
-                                <TableCell>{inv.warehouse?.name ?? inv.warehouseId}</TableCell>
+            {inventory.map((inv) => (
+              <TableRow key={inv.id} hover sx={{cursor: "pointer"}} component={Link} to={`/dashboard/inventory/${inv.id}`}>
+                <TableCell>{inv.item?.name ?? inv.itemId}</TableCell>
+                <TableCell>{inv.warehouse?.name ?? inv.warehouseId}</TableCell>
                 <TableCell>{inv.quantityOnHand}</TableCell>
                 <TableCell>{inv.reservedQuantity}</TableCell>
                 <TableCell>

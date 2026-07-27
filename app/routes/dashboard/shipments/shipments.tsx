@@ -118,11 +118,9 @@ function ConsumerShipmentsTable({ shipments }: { shipments: Shipment[] }) {
             </TableRow>
           )}
           {shipments.map((s) => (
-            <TableRow key={s.id} hover>
+            <TableRow key={s.id} hover component={Link} to={`/dashboard/sales-orders/${s.orderId}`}>
               <TableCell sx={{ fontFamily: "monospace", fontSize: "0.75rem" }}>
-                <Link to={`/dashboard/sales-orders/${s.orderId}`} style={{ textDecoration: "none", color: "inherit" }}>
-                  SO-{s.orderId?.substring(0, 8) || "—"}
-                </Link>
+                SO-{s.orderId?.substring(0, 8) || "—"}
               </TableCell>
               <TableCell>{s.carrier || "—"}</TableCell>
               <TableCell sx={{ fontFamily: "monospace", fontSize: "0.75rem" }}>{s.trackingNumber || "—"}</TableCell>
@@ -171,10 +169,8 @@ function AdminShipmentsTable({
             </TableRow>
           )}
           {shipments.map((s) => (
-            <TableRow key={s.id} hover>
-              <TableCell sx={{ fontFamily: "monospace", fontSize: "0.75rem" }}>
-                <Link to={`/dashboard/shipments/${s.id}`} style={{ textDecoration: "none", color: "inherit" }}>{s.id.substring(0, 8)}</Link>
-              </TableCell>
+            <TableRow key={s.id} hover component={Link} to={`/dashboard/shipments/${s.id}`}>
+              <TableCell sx={{ fontFamily: "monospace", fontSize: "0.75rem" }}>{s.id.substring(0, 8)}</TableCell>
               <TableCell><Chip label={s.orderType} size="small" variant="outlined" /></TableCell>
               <TableCell sx={{ fontFamily: "monospace", fontSize: "0.75rem" }}>{s.orderId?.substring(0, 8) || "—"}</TableCell>
               <TableCell>{s.carrier || "—"}</TableCell>

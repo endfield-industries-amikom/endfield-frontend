@@ -124,12 +124,12 @@ export default function MaterialsSection({ loaderData, actionData }: Route.Compo
               </TableCell></TableRow>
             )}
             {materials.map((m) => (
-              <TableRow key={m.id} hover>
-                <TableCell><Link to={`/dashboard/materials/${m.id}`} style={{ textDecoration: "none", fontWeight: 500, color: "inherit" }}>{m.item?.name}</Link></TableCell>
-                                <TableCell sx={{ fontFamily: "monospace", fontSize: "0.8rem" }}>{m.item?.sku}</TableCell>
-                                <TableCell>{m.item?.category || "—"}</TableCell>
-                                                <TableCell>{m.item?.capacityUsage ?? "—"}</TableCell>
-                                <TableCell>{(Number(m.item?.unitPrice) || 0).toLocaleString("en-US", { style: "currency", currency: "USD" })}</TableCell>
+              <TableRow key={m.id} hover sx={{cursor: "pointer"}} component={Link} to={`/dashboard/materials/${m.id}`}>
+                <TableCell>{m.item?.name}</TableCell>
+                <TableCell sx={{ fontFamily: "monospace", fontSize: "0.8rem" }}>{m.item?.sku}</TableCell>
+                <TableCell>{m.item?.category || "—"}</TableCell>
+                <TableCell>{m.item?.capacityUsage ?? "—"}</TableCell>
+                <TableCell>{(Number(m.item?.unitPrice) || 0).toLocaleString("en-US", { style: "currency", currency: "USD" })}</TableCell>
                 {canMutate && (
                   <TableCell align="right">
                     <IconButton size="small" onClick={() => openEdit(m)}><EditIcon fontSize="small" /></IconButton>

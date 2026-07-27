@@ -1,7 +1,7 @@
 import { get, patch, post, del } from "~/services/api.server";
 import { getAccessToken } from "~/services/auth-helper.server";
 import { useState } from "react";
-import { Link, useFetcher, useRouteLoaderData } from "react-router";
+import { Link, useFetcher, useNavigate, useRouteLoaderData } from "react-router";
 import type { Route } from "./+types/suppliers";
 import type { Supplier } from "~/types";
 import {
@@ -74,6 +74,7 @@ export default function SuppliersSection({ loaderData, actionData }: Route.Compo
   const [form, setForm] = useState(emptyForm);
   const fetcher = useFetcher();
   const fetcherData = fetcher.data as { ok?: boolean; error?: string; errorRaw?: Error } | undefined;
+  const navigate = useNavigate();
   const actionError =
     fetcherData?.ok === false
       ? fetcherData
@@ -124,8 +125,8 @@ export default function SuppliersSection({ loaderData, actionData }: Route.Compo
               </TableCell></TableRow>
             )}
             {suppliers.map((s) => (
-              <TableRow key={s.id} hover>
-                <TableCell><Link to={`/dashboard/suppliers/${s.id}`} style={{ textDecoration: "none", fontWeight: 500, color: "inherit" }}>{s.name}</Link></TableCell>
+              <TableRow key={s.id} hover sx={{ cursor: "pointer" }} onClick={() => navigate(`/dashboard/suppliers/${s.id}`)}>
+                <TableCell>{s.name}</TableCell>
                 <TableCell sx={{ fontFamily: "monospace", fontSize: "0.8rem" }}>{s.code}</TableCell>
                 <TableCell>{s.contactPerson || "—"}</TableCell>
                 <TableCell>{s.email || "—"}</TableCell>

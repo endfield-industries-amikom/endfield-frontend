@@ -114,8 +114,8 @@ export default function RegionsSection({ loaderData, actionData }: Route.Compone
               </TableCell></TableRow>
             )}
             {regions.map((r) => (
-              <TableRow key={r.id} hover>
-                <TableCell><Link to={`/dashboard/regions/${r.id}`} style={{ textDecoration: "none", fontWeight: 500, color: "inherit" }}>{r.name}</Link></TableCell>
+              <TableRow key={r.id} hover sx={{ cursor: "pointer" }} component={Link} to={`/dashboard/regions/${r.id}`}>
+                <TableCell>{r.name}</TableCell>
                 <TableCell sx={{ fontFamily: "monospace", fontSize: "0.8rem" }}>{r.code}</TableCell>
                 <TableCell>{r.description || "—"}</TableCell>
                 {canMutate && (

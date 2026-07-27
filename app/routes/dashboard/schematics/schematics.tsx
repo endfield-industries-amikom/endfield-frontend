@@ -9,6 +9,7 @@ import ErrorPopup from "~/components/error";
 import AddIcon from "@mui/icons-material/Add";
 import EditIcon from "@mui/icons-material/Edit";
 import FactoryIcon from "@mui/icons-material/Factory";
+import { Article } from "@mui/icons-material";
 
 interface ItemOption { id: string; name: string; sku: string; unitPrice: number; isManufactureable?: boolean; }
 interface MaterialInput { productId: string; quantity: number; }
@@ -184,7 +185,7 @@ export default function SchematicsSection({ loaderData, actionData }: Route.Comp
       ) : (
         <Grid container spacing={2}>
           {schematics.map((s) => (
-            <Grid key={s.id} size={{ xs: 12, sm: 6, md: 4 }}>
+            <Grid key={s.id} size={{ xs: 12, sm: 6, md: 4 }} >
               <Card sx={{ bgcolor: "#fffbeb", border: "1px solid", borderColor: "#fde68a", position: "relative", overflow: "visible" }}>
                 <CardContent>
                   <Box sx={{ display: "flex", justifyContent: "space-between", mb: 1 }}>
@@ -205,8 +206,9 @@ export default function SchematicsSection({ loaderData, actionData }: Route.Comp
                   </Box>
                 </CardContent>
               {canMutate && (
-                <CardActions sx={{ borderTop: "1px solid", borderColor: "#fde68a", px: 2, py: 1 }}>
+                <CardActions sx={{ borderTop: "1px solid", borderColor: "#fde68a", px: 2, py: 1, justifyContent: "space-between" }}>
                   <Button size="small" onClick={() => openEdit(s)} startIcon={<EditIcon fontSize="small" />} sx={{ color: "text.secondary" }}>Edit</Button>
+                  <Button size="small" LinkComponent={Link} to={`/dashboard/schematics/${s.id}`} startIcon={<Article fontSize="small" />} sx={{ color: "text.secondary", fontWeight: 600 }}>View</Button>
                   <Button
                     size="small"
                     onClick={() => handleProduce(s.id, s.warehouseIds?.[0] || "")}

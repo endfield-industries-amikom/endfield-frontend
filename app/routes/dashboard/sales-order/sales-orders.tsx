@@ -159,11 +159,11 @@ export default function SalesOrdersSection({ loaderData, actionData }: Route.Com
       ) : (
         <Grid container spacing={2}>
           {salesOrders.map((order) => (
-            <Grid key={order.orderId} size={{ xs: 12, sm: 6 }}>
+            <Grid key={order.orderId} size={{ xs: 12, sm: 6 }} component={Link} to={`/dashboard/sales-orders/${order.orderId}`}>
               <Card variant="outlined">
                 <Box sx={{ p: 2, bgcolor: "grey.50", borderBottom: "1px dashed", borderColor: "divider", display: "flex", justifyContent: "space-between" }}>
                   <Box>
-                    <Typography variant="subtitle2" component={Link} to={`/dashboard/sales-orders/${order.orderId}`} sx={{ fontWeight: 700, textDecoration: "none", color: "inherit", fontFamily: "monospace" }}>SO-{order.orderId.substring(0, 8)}</Typography>
+                    <Typography variant="subtitle2"  sx={{ fontWeight: 700, textDecoration: "none", color: "inherit", fontFamily: "monospace" }}>SO-{order.orderId.substring(0, 8)}</Typography>
                     <Typography variant="caption" color="text.secondary">{new Date(order.order.orderDate).toLocaleDateString()}</Typography>
                   </Box>
                   <Chip label={order.order.status} size="small" color={statusColor(order.order.status)} />

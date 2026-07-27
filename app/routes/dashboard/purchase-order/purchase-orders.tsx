@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Link, useFetcher, useRouteLoaderData } from "react-router";
+import { Link, useFetcher, useNavigate, useRouteLoaderData } from "react-router";
 import type { Route } from "./+types/purchase-orders";
 import { get, patch, post } from "~/services/api.server";
 import { getAccessToken } from "~/services/auth-helper.server";
@@ -86,6 +86,7 @@ export default function PurchaseOrdersSection({ loaderData, actionData }: Route.
   const [form, setForm] = useState({ supplierId: "", warehouseId: "", notes: "" });
   const [lineItems, setLineItems] = useState<LineItem[]>([{ ...emptyLine }]);
   const fetcher = useFetcher();
+  const navigate = useNavigate();
   const fetcherData = fetcher.data as { ok?: boolean; error?: string; errorRaw?: Error } | undefined;
   const actionError =
     fetcherData?.ok === false
@@ -141,11 +142,11 @@ export default function PurchaseOrdersSection({ loaderData, actionData }: Route.
       ) : (
         <Grid container spacing={2}>
           {purchaseOrders.map((order) => (
-                      <Grid key={order.orderId} size={{ xs: 12, sm: 6 }}>
+                      <Grid key={order.orderId} component={Link} size={{ xs: 12, sm: 6}} to={`/dashboard/purchase-orders/${order.orderId}`}>
                         <Card variant="outlined">
                           <Box sx={{ p: 2, bgcolor: "grey.50", borderBottom: "1px dashed", borderColor: "divider", display: "flex", justifyContent: "space-between" }}>
                             <Box>
-                              <Typography variant="subtitle2" component={Link} to={`/dashboard/purchase-orders/${order.orderId}`} sx={{ fontWeight: 700, textDecoration: "none", color: "inherit", fontFamily: "monospace" }}>
+                              <Typography variant="subtitle2" sx={{ fontWeight: 700, textDecoration: "none", color: "inherit", fontFamily: "monospace" }}>
                                 PO-{order.orderId.substring(0, 8)}
                               </Typography>
                               <Typography variant="caption" color="text.secondary">{new Date(order.order.orderDate).toLocaleDateString()}</Typography>
