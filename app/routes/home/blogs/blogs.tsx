@@ -53,7 +53,7 @@ console.log(blogs);
             </Typography>
 
             <Typography>
-              Membangun Kepercayaan Masyarakat kepada Telkom melalui Transparansi
+              Membangun Kepercayaan Masyarakat kepada Endfield Industries melalui Transparansi
               dan Keterbukaan Informasi.
             </Typography>
           </Box>
