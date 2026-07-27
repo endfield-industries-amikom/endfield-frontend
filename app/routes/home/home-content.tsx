@@ -17,6 +17,8 @@ import { get } from "~/services/api.server";
 import type { Route } from "./+types/home-content";
 import type { IProduct } from "~/interfaces/IProduct";
 import { normalizeImageUrl } from "~/utils/image";
+import { cdnUrl } from "~/utils/cdn";
+
 
 /* ------------------------------------------------------------------ */
 /*  Loader – fetch top 10 products from API                            */
@@ -35,9 +37,9 @@ export async function loader({ request }: Route.LoaderArgs) {
           category: p.category,
           unitPrice: Number(p.unitPrice || 0),
           imageUri: normalizeImageUrl(p.imageUri),
-      isBest: false,
-    }));
-    return { products };
+          isBest: false,
+        }));
+    return { products, heroLink: normalizeImageUrl(cdnUrl("images/HeroSection.webp")) };
   } catch {
     return { products: [] as IProduct[] };
   }
@@ -53,10 +55,14 @@ const images = [
 
 export default function HomeContent({ loaderData }: Route.ComponentProps) {
   const products = loaderData?.products ?? [];
+  const HeroLink = loaderData?.heroLink ?? images[0];
 
   return (
     <Box className="scroll-smooth overflow-x-hidden">
-      <div className="relative bg-[url('/HeroSection.png')] bg-cover bg-center flex items-center justify-center no-repeat lg:h-[100vh] xs:h-[50vh] md:h-[50vh]">
+      <div
+        className="relative bg-cover bg-center flex items-center justify-center no-repeat lg:h-[100vh] xs:h-[50vh] md:h-[50vh]"
+        style={{ backgroundImage: `url(${HeroLink})` }}
+      >
         <Box
           sx={{
             display: "grid",

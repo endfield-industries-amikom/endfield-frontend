@@ -2,13 +2,14 @@ import { get, patch, post } from "~/services/api.server";
 import { getAccessToken } from "~/services/auth-helper.server";
 import { useState } from "react";
 import { Link, useFetcher, useRouteLoaderData } from "react-router";
-import type { Route } from "../+types/inventory";
+import type { Route } from "./+types/inventory";
 import type { Inventory } from "~/types";
 import {
   Box, Button, Dialog, DialogTitle, DialogContent, DialogActions,
   TextField, Table, TableBody, TableCell, TableContainer, TableHead,
   TableRow, Paper, Typography, IconButton, MenuItem, Chip,
 } from "@mui/material";
+import ErrorPopup from "~/components/error";
 import AddIcon from "@mui/icons-material/Add";
 import EditIcon from "@mui/icons-material/Edit";
 
@@ -36,17 +37,26 @@ export async function action({ request }: Route.ActionArgs) {
   const formData = await request.formData();
   const intent = formData.get("intent") as string;
 
-  if (intent === "create-inventory" || intent === "update-inventory") {
-    const body = { warehouseId: formData.get("warehouseId"), itemId: formData.get("itemId"), quantityOnHand: Number(formData.get("quantityOnHand")), reservedQuantity: Number(formData.get("reservedQuantity")), reorderLevel: Number(formData.get("reorderLevel")) };
-    if (intent === "create-inventory") await post("/inventory", body, token, cookie);
-    else await patch(`/inventory/${formData.get("id")}`, body, token, cookie);
-    return { ok: true };
+  try {
+    if (intent === "create-inventory" || intent === "update-inventory") {
+      const body = { warehouseId: formData.get("warehouseId"), itemId: formData.get("itemId"), quantityOnHand: Number(formData.get("quantityOnHand")), reservedQuantity: Number(formData.get("reservedQuantity")), reorderLevel: Number(formData.get("reorderLevel")) };
+      if (intent === "create-inventory") await post("/inventory", body, token, cookie);
+      else await patch(`/inventory/${formData.get("id")}`, body, token, cookie);
+      return { ok: true };
+    }
+    if (intent === "restock-inventory") {
+      await post(`/inventory/${formData.get("id")}/restock`, { quantity: Number(formData.get("quantity")) }, token, cookie);
+      return { ok: true };
+    }
+    return { ok: false, error: "Unknown intent" };
+  } catch (err) {
+    const message =
+      (err as any)?.response?.message ||
+      (err as any)?.data?.message ||
+      (err as Error)?.message ||
+      "Action failed. Please try again.";
+    return { ok: false, error: message, errorRaw: err as Error | undefined };
   }
-  if (intent === "restock-inventory") {
-    await post(`/inventory/${formData.get("id")}/restock`, { quantity: Number(formData.get("quantity")) }, token, cookie);
-    return { ok: true };
-  }
-  return { ok: false, error: "Unknown intent" };
 }
 
 export default function InventorySection({ loaderData, actionData }: Route.ComponentProps) {
@@ -58,6 +68,13 @@ export default function InventorySection({ loaderData, actionData }: Route.Compo
   const [editId, setEditId] = useState<string | null>(null);
   const [form, setForm] = useState<Record<string, string>>({ itemId: "", warehouseId: "", quantityOnHand: "", reservedQuantity: "", reorderLevel: "" });
   const fetcher = useFetcher();
+  const fetcherData = fetcher.data as { ok?: boolean; error?: string; errorRaw?: Error } | undefined;
+  const actionError =
+    fetcherData?.ok === false
+      ? fetcherData
+      : actionData?.ok === false
+        ? actionData
+        : null;
   const restockFetcher = useFetcher();
   const canMutate = role === "Admin" || role === "Employee";
 
@@ -82,7 +99,12 @@ export default function InventorySection({ loaderData, actionData }: Route.Compo
         <Typography variant="h5" sx={{ fontWeight: 700 }}>Inventory</Typography>
         {/*{canMutate && <Button variant="contained" startIcon={<AddIcon />} onClick={openCreate}>New Inventory</Button>}*/}
       </Box>
-      {actionData?.error && <Typography color="error" sx={{ mb: 2 }}>{actionData.error}</Typography>}
+      {actionError && (
+        <ErrorPopup
+          message={actionError.error as string}
+          error={(actionError as any).errorRaw}
+        />
+      )}
       <TableContainer component={Paper}>
         <Table size="small">
           <TableHead>

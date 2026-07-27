@@ -4,7 +4,7 @@ import { Box, Drawer, AppBar, Toolbar, Typography, List, ListItemButton, ListIte
 import MenuIcon from "@mui/icons-material/Menu";
 import LogoutIcon from "@mui/icons-material/Logout";
 import { getMenu } from "./menu-items";
-import Error from "~/components/error";
+import ErrorFallback from "~/components/error-fallback";
 
 const DRAWER_WIDTH = 260;
 
@@ -99,4 +99,8 @@ export default function DashboardLayout() {
       </Box>
     </Box>
   );
+}
+
+export function ErrorBoundary({ error }: any) {
+  return <ErrorFallback error={error} path="/dashboard"/>;
 }

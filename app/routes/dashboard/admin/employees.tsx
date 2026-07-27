@@ -10,6 +10,7 @@ import {
 } from "@mui/material";
 import AddIcon from "@mui/icons-material/Add";
 import DeleteIcon from "@mui/icons-material/Delete";
+import ErrorPopup from "~/components/error";
 
 interface AdminUser {
   id: string; username: string; email: string; role: string; createdAt: string; updatedAt: string;
@@ -30,8 +31,13 @@ export async function loader({ request }: Route.LoaderArgs) {
       "/admin/users?page=1&limit=50", token, cookie,
     );
     return { users: response.data.data };
-  } catch {
-    return { users: [], error: "Failed to load users." as const };
+  } catch (err:any) {
+    const message =
+      err.message[0] ||
+      err.message ||
+      "Failed to load users.";
+    console.log(err.message[0] || message)
+    return { users: [], error: message as string, errorRaw: err as Error | undefined };
   }
 }
 
@@ -41,15 +47,23 @@ export async function action({ request }: Route.ActionArgs) {
   const formData = await request.formData();
   const intent = formData.get("intent") as string;
 
-  if (intent === "create-user") {
-    await post("/admin/users", { username: formData.get("username"), email: formData.get("email"), password: formData.get("password"), roleName: formData.get("roleName") }, token, cookie);
-    return { ok: true };
+  try {
+    if (intent === "create-user") {
+      await post("/admin/users", { username: formData.get("username"), email: formData.get("email"), password: formData.get("password"), roleName: formData.get("roleName") }, token, cookie);
+      return { ok: true };
+    }
+    if (intent === "delete-user") {
+      await del(`/admin/users/${formData.get("id")}`, token, cookie);
+      return { ok: true };
+    }
+    return { ok: false, error: "Unknown intent" };
+  } catch (err:any) {
+    const message =
+      err.message[0] ||
+      err.message ||
+      "Action failed. Please try again.";
+    return { ok: false, error: message, errorRaw: err as Error | undefined };
   }
-  if (intent === "delete-user") {
-    await del(`/admin/users/${formData.get("id")}`, token, cookie);
-    return { ok: true };
-  }
-  return { ok: false, error: "Unknown intent" };
 }
 
 function roleBadgeColor(role: string) { const m: Record<string, "secondary" | "primary" | "default"> = { Admin: "secondary", Employee: "primary", Consumer: "default" }; return m[role] || "default"; }
@@ -58,11 +72,21 @@ export default function EmployeesSection({ loaderData, actionData }: Route.Compo
   const role = useRole();
   const users = (loaderData?.users as AdminUser[]) ?? [];
   const loadError = (loaderData as any)?.error as string | undefined;
+  const loadErrorRaw = (loaderData as any)?.errorRaw as Error | undefined;
   const [dialogOpen, setDialogOpen] = useState(false);
   const [form, setForm] = useState({ username: "", email: "", password: "", roleName: "Employee" });
   const [testCrash, setTestCrash] = useState(false);
   const fetcher = useFetcher();
   const isAdmin = role === "Admin";
+
+  // Fetcher-based actions (create/delete) return data here, not in actionData
+  const fetcherData = fetcher.data as { ok?: boolean; error?: string; errorRaw?: Error } | undefined;
+  const actionError =
+    fetcherData?.ok === false
+      ? fetcherData
+      : actionData?.ok === false
+        ? actionData
+        : null;
 
   if (testCrash) {
     throw new Error("This is a test crash — the ErrorFallback component should render now.");
@@ -82,14 +106,23 @@ export default function EmployeesSection({ loaderData, actionData }: Route.Compo
       <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", mb: 3 }}>
         <Typography variant="h5" sx={{ fontWeight: 700 }}>Employees</Typography>
         {isAdmin && <Button variant="contained" startIcon={<AddIcon />} onClick={openCreate}>New Employee</Button>}
-        <Button variant="outlined" color="error" size="small" onClick={() => setTestCrash(true)} sx={{ ml: 1 }}>
+        {/*<Button variant="outlined" color="error" size="small" onClick={() => setTestCrash(true)} sx={{ ml: 1 }}>
           Test Error Boundary
-        </Button>
+        </Button>*/}
       </Box>
 
       {!isAdmin && <Alert severity="warning" sx={{ mb: 2 }}>Only Admin users can manage employee accounts.</Alert>}
-      {loadError && <Alert severity="error" sx={{ mb: 2 }}>{loadError}</Alert>}
-      {actionData?.error && <Typography color="error" sx={{ mb: 2 }}>{actionData.error}</Typography>}
+
+      {/* ----- API / loader error → popup overlay ----- */}
+      {loadError && <ErrorPopup message={loadError} error={loadErrorRaw} />}
+
+      {/* ----- Action error → popup overlay ----- */}
+      {actionError && (
+        <ErrorPopup
+          message={actionError.error as string}
+          error={(actionError as any).errorRaw}
+        />
+      )}
 
       <TableContainer component={Paper}>
         <Table size="small">
@@ -139,7 +172,7 @@ export default function EmployeesSection({ loaderData, actionData }: Route.Compo
             <TextField name="roleName" label="Role" select value={form.roleName} onChange={(e) => setForm({ ...form, roleName: e.target.value })} required fullWidth>
               <MenuItem value="Admin">Admin</MenuItem>
               <MenuItem value="Employee">Employee</MenuItem>
-              <MenuItem value="Worker">Editor</MenuItem>
+              <MenuItem value="Editor">Editor</MenuItem>
             </TextField>
           </DialogContent>
           <DialogActions>

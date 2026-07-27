@@ -1,9 +1,10 @@
 import { useState } from "react";
 import { Link, useFetcher, useRouteLoaderData } from "react-router";
-import type { Route } from "../+types/sales-orders";
+import type { Route } from "./+types/sales-orders";
 import { get, patch, post } from "~/services/api.server";
 import { getAccessToken } from "~/services/auth-helper.server";
 import { Box, Button, Dialog, DialogTitle, DialogContent, DialogActions, TextField, Typography, MenuItem, Chip, Card, CardContent, CardActions, Grid, Divider, Autocomplete, IconButton } from "@mui/material";
+import ErrorPopup from "~/components/error";
 import AddIcon from "@mui/icons-material/Add";
 import EditIcon from "@mui/icons-material/Edit";
 import LocalShippingIcon from "@mui/icons-material/LocalShipping";
@@ -51,36 +52,45 @@ export async function action({ request }: Route.ActionArgs) {
   const formData = await request.formData();
   const intent = formData.get("intent") as string;
 
-  if (intent === "create-sales-order" || intent === "update-sales-order") {
-    const itemsJson = formData.get("items") as string;
-    const rawItems: LineItem[] = itemsJson ? JSON.parse(itemsJson) : [];
-    const items = rawItems.map((item) => ({ orderType: "SALES", itemId: item.itemId, quantity: item.quantity, unitPrice: Number(item.unitPrice) }));
-    const body: Record<string, unknown> = { notes: formData.get("notes") || undefined, items };
-    const customerId = formData.get("customerId") as string;
-    if (customerId) body.customerId = customerId;
-    const regionId = formData.get("regionId") as string;
-    if (regionId) body.regionId = regionId;
-    if (intent === "create-sales-order") await post("/sales-order", body, token, cookie);
-    else await patch(`/sales-order/${formData.get("id")}`, body, token, cookie);
-    return { ok: true };
-  }
-  if (intent === "ship-order") {
-    try {
-      await post(`/sales-order/${formData.get("id")}/ship`, {}, token, cookie);
+  try {
+    if (intent === "create-sales-order" || intent === "update-sales-order") {
+      const itemsJson = formData.get("items") as string;
+      const rawItems: LineItem[] = itemsJson ? JSON.parse(itemsJson) : [];
+      const items = rawItems.map((item) => ({ orderType: "SALES", itemId: item.itemId, quantity: item.quantity, unitPrice: Number(item.unitPrice) }));
+      const body: Record<string, unknown> = { notes: formData.get("notes") || undefined, items };
+      const customerId = formData.get("customerId") as string;
+      if (customerId) body.customerId = customerId;
+      const regionId = formData.get("regionId") as string;
+      if (regionId) body.regionId = regionId;
+      if (intent === "create-sales-order") await post("/sales-order", body, token, cookie);
+      else await patch(`/sales-order/${formData.get("id")}`, body, token, cookie);
       return { ok: true };
-    } catch (err) {
-      return { ok: false, error: err instanceof Error ? err.message : "Shipment failed — check inventory" };
     }
-  }
-  if (intent === "confirm-order") {
-    try {
-      await post(`/sales-order/${formData.get("id")}/confirm`, {}, token, cookie);
-      return { ok: true };
-    } catch (err) {
-      return { ok: false, error: err instanceof Error ? err.message : "Confirmation failed" };
+    if (intent === "ship-order") {
+      try {
+        await post(`/sales-order/${formData.get("id")}/ship`, {}, token, cookie);
+        return { ok: true };
+      } catch (err) {
+        return { ok: false, error: err instanceof Error ? err.message : "Shipment failed — check inventory" };
+      }
     }
+    if (intent === "confirm-order") {
+      try {
+        await post(`/sales-order/${formData.get("id")}/confirm`, {}, token, cookie);
+        return { ok: true };
+      } catch (err) {
+        return { ok: false, error: err instanceof Error ? err.message : "Confirmation failed" };
+      }
+    }
+    return { ok: false, error: "Unknown intent" };
+  } catch (err) {
+    const message =
+      (err as any)?.response?.message ||
+      (err as any)?.data?.message ||
+      (err as Error)?.message ||
+      "Action failed. Please try again.";
+    return { ok: false, error: message, errorRaw: err as Error | undefined };
   }
-  return { ok: false, error: "Unknown intent" };
 }
 
 function statusColor(s: string | undefined) { const m: Record<string, "warning" | "info" | "success" | "error"> = { PENDING: "warning", CONFIRMED: "info", SHIPPED: "success", CANCELLED: "error", DELIVERED: "success", FAILED: "error" }; return m[s || ""] || "default"; }
@@ -98,6 +108,13 @@ export default function SalesOrdersSection({ loaderData, actionData }: Route.Com
   const fetcher = useFetcher();
   const shipFetcher = useFetcher();
   const confirmFetcher = useFetcher();
+  const fetcherData = fetcher.data as { ok?: boolean; error?: string; errorRaw?: Error } | undefined;
+  const actionError =
+    fetcherData?.ok === false
+      ? fetcherData
+      : actionData?.ok === false
+        ? actionData
+        : null;
   const isAdmin = role === "Admin"; const isEmployee = role === "Employee"; const isConsumer = role === "Consumer";
 
   function openCreate() { setEditId(null); setForm({ customerId: "", regionId: "", notes: "" }); setLineItems([{ ...emptyLine }]); setDialogOpen(true); }
@@ -129,7 +146,12 @@ export default function SalesOrdersSection({ loaderData, actionData }: Route.Com
         <Typography variant="h5" sx={{ fontWeight: 700 }}>Sales Orders</Typography>
         {isConsumer && <Button variant="contained" startIcon={<AddIcon />} onClick={openCreate}>New Order</Button>}
       </Box>
-      {actionData?.error && <Typography color="error" sx={{ mb: 2 }}>{actionData.error}</Typography>}
+      {actionError && (
+        <ErrorPopup
+          message={actionError.error as string}
+          error={(actionError as any).errorRaw}
+        />
+      )}
       {shipFetcher.data?.error && <Typography color="error" sx={{ mb: 2 }}>{(shipFetcher.data as { error?: string }).error}</Typography>}
       {confirmFetcher.data?.error && <Typography color="error" sx={{ mb: 2 }}>{(confirmFetcher.data as { error?: string }).error}</Typography>}
       {salesOrders.length === 0 ? (

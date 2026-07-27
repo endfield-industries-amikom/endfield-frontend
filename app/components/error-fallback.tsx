@@ -3,13 +3,16 @@ import SentimentVeryDissatisfiedIcon from "@mui/icons-material/SentimentVeryDiss
 import { useNavigate } from "react-router";
 
 export default function ErrorFallback({
-  error,
+  error, path = "/"
 }: {
-  error: Error | undefined;
+  error: Error | undefined | unknown;
+  path?: string;
 }) {
   const navigate = useNavigate();
   const isDev = import.meta.env.DEV;
-
+  const errorMessage = error instanceof Error ? error.message : String(error);
+  const errorStack = error instanceof Error ? error.stack : undefined;
+  const sanitizedError = error as Error;
   return (
     <Box
       sx={{
@@ -44,12 +47,12 @@ export default function ErrorFallback({
         <Button variant="contained" onClick={() => window.location.reload()}>
           Try Again
         </Button>
-        <Button variant="outlined" onClick={() => navigate("/")}>
+        <Button variant="outlined" onClick={() => navigate(path)}>
           Go Home
         </Button>
       </Stack>
 
-      {isDev && error && (
+      {isDev && sanitizedError && (
         <Box
           component="pre"
           sx={{
@@ -65,7 +68,7 @@ export default function ErrorFallback({
             lineHeight: 1.4,
           }}
         >
-          {error.stack || error.message}
+          {errorMessage || errorStack}
         </Box>
       )}
     </Box>
