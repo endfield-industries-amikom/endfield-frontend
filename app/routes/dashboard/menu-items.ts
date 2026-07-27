@@ -1,4 +1,4 @@
-import type { SvgIconComponent } from "@mui/icons-material";
+import { Home, type SvgIconComponent } from "@mui/icons-material";
 import PeopleIcon from "@mui/icons-material/People";
 import Inventory2Icon from "@mui/icons-material/Inventory2";
 import PersonIcon from "@mui/icons-material/Person";
@@ -19,6 +19,11 @@ export interface MenuItem {
 }
 
 const baseEndfieldMenu: MenuItem[] = [
+  { id: "home", label: "Home", path: "/dashboard", icon: Home }
+];
+
+export const employeeMenu: MenuItem[] = [
+  ...baseEndfieldMenu,
   { id: "customers", label: "Customers", path: "/dashboard/customer", icon: PersonIcon },
   { id: "inventory", label: "Inventory", path: "/dashboard/inventory", icon: InventoryIcon },
   { id: "products", label: "Products", path: "/dashboard/products", icon: Inventory2Icon },
@@ -33,13 +38,13 @@ const baseEndfieldMenu: MenuItem[] = [
 ];
 
 export const adminMenu: MenuItem[] = [
-  { id: "employees", label: "Employees", path: "/dashboard/admin/employees", icon: PeopleIcon },
   ...baseEndfieldMenu,
+  { id: "employees", label: "Employees", path: "/dashboard/admin/employees", icon: PeopleIcon },
+  ...employeeMenu.slice(1),
 ];
 
-export const employeeMenu: MenuItem[] = baseEndfieldMenu;
-
 export const consumerMenu: MenuItem[] = [
+  ...baseEndfieldMenu,
   { id: "products", label: "Products", path: "/dashboard/products", icon: Inventory2Icon },
   { id: "sales-orders", label: "My Orders", path: "/dashboard/sales-orders", icon: ReceiptIcon },
   { id: "shipments", label: "Shipments", path: "/dashboard/shipments", icon: LocalShippingIcon },
@@ -49,6 +54,7 @@ export function getMenu(role: string): MenuItem[] {
   switch (role) {
     case "Admin": return adminMenu;
     case "Employee": return employeeMenu;
-    default: return consumerMenu;
+    case "Consumer": return consumerMenu;
+    default: return baseEndfieldMenu;
   }
 }

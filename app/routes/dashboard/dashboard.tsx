@@ -47,7 +47,7 @@ export default function DashboardLayout() {
       <Toolbar>
         <Box>
           <Typography variant="h6" sx={{ fontWeight: 700 }} color="primary.main">Endfield ERP</Typography>
-          <Typography variant="caption" color="text.secondary">Logistics Intelligence Platform</Typography>
+          <Typography variant="caption" color="text.secondary">Logistics Platform</Typography>
         </Box>
       </Toolbar>
       <Divider />
@@ -55,7 +55,7 @@ export default function DashboardLayout() {
         {menu.map((item) => {
           const Icon = item.icon;
           return (
-            <ListItemButton key={item.id} component={NavLink} to={item.path} onClick={() => setMobileOpen(false)}
+            <ListItemButton key={item.id} component={NavLink} to={item.path} end={item.id === "home"} onClick={() => setMobileOpen(false)}
               sx={{ borderRadius: 2, mb: 0.5, "&.active": { bgcolor: "primary.main", color: "primary.contrastText", fontWeight: 600, "&:hover": { bgcolor: "primary.main" } } }}>
               <ListItemIcon sx={{ minWidth: 36 }}><Icon fontSize="small" /></ListItemIcon>
               <ListItemText primary={item.label} />
