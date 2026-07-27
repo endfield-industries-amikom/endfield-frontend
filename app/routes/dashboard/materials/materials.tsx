@@ -9,6 +9,7 @@ import {
   TextField, Table, TableBody, TableCell, TableContainer, TableHead,
   TableRow, Paper, Typography, IconButton, Checkbox, FormControlLabel,
 } from "@mui/material";
+import ErrorPopup from "~/components/error";
 import AddIcon from "@mui/icons-material/Add";
 import EditIcon from "@mui/icons-material/Edit";
 import DeleteIcon from "@mui/icons-material/Delete";
@@ -35,26 +36,35 @@ export async function action({ request }: Route.ActionArgs) {
   const formData = await request.formData();
   const intent = formData.get("intent") as string;
 
-  if (intent === "create-material" || intent === "update-material") {
-    const body: Record<string, unknown> = {
-      name: formData.get("name"),
-      sku: formData.get("sku"),
-      description: formData.get("description") || undefined,
-      category: formData.get("category") || undefined,
-      capacityUsage: Number(formData.get("capacityUsage")) || undefined,
-      unitPrice: Number(formData.get("unitPrice")),
-      isSellable: formData.get("isSellable") === "on",
-      isPurchaseable: formData.get("isPurchaseable") === "on",
-    };
-    if (intent === "create-material") await post("/material", body, token, cookie);
-    else await patch(`/material/${formData.get("id")}`, body, token, cookie);
-    return { ok: true };
+  try {
+    if (intent === "create-material" || intent === "update-material") {
+      const body: Record<string, unknown> = {
+        name: formData.get("name"),
+        sku: formData.get("sku"),
+        description: formData.get("description") || undefined,
+        category: formData.get("category") || undefined,
+        capacityUsage: Number(formData.get("capacityUsage")) || undefined,
+        unitPrice: Number(formData.get("unitPrice")),
+        isSellable: formData.get("isSellable") === "on",
+        isPurchaseable: formData.get("isPurchaseable") === "on",
+      };
+      if (intent === "create-material") await post("/material", body, token, cookie);
+      else await patch(`/material/${formData.get("id")}`, body, token, cookie);
+      return { ok: true };
+    }
+    if (intent === "delete-material") {
+      await del(`/material/${formData.get("id")}`, token, cookie);
+      return { ok: true };
+    }
+    return { ok: false, error: "Unknown intent" };
+  } catch (err) {
+    const message =
+      (err as any)?.response?.message ||
+      (err as any)?.data?.message ||
+      (err as Error)?.message ||
+      "Action failed. Please try again.";
+    return { ok: false, error: message, errorRaw: err as Error | undefined };
   }
-  if (intent === "delete-material") {
-    await del(`/material/${formData.get("id")}`, token, cookie);
-    return { ok: true };
-  }
-  return { ok: false, error: "Unknown intent" };
 }
 
 const emptyForm = { name: "", sku: "", description: "", category: "", capacityUsage: "", unitPrice: "", isSellable: true, isPurchaseable: true };
@@ -66,6 +76,13 @@ export default function MaterialsSection({ loaderData, actionData }: Route.Compo
   const [editId, setEditId] = useState<string | null>(null);
   const [form, setForm] = useState(emptyForm);
   const fetcher = useFetcher();
+  const fetcherData = fetcher.data as { ok?: boolean; error?: string; errorRaw?: Error } | undefined;
+  const actionError =
+    fetcherData?.ok === false
+      ? fetcherData
+      : actionData?.ok === false
+        ? actionData
+        : null;
   const canMutate = role === "Admin" || role === "Employee";
 
   function openCreate() { setEditId(null); setForm(emptyForm); setDialogOpen(true); }
@@ -85,7 +102,12 @@ export default function MaterialsSection({ loaderData, actionData }: Route.Compo
         <Typography variant="h5" sx={{ fontWeight: 700 }}>Materials</Typography>
         {canMutate && <Button variant="contained" startIcon={<AddIcon />} onClick={openCreate}>New Material</Button>}
       </Box>
-      {actionData?.error && <Typography color="error" sx={{ mb: 2 }}>{actionData.error}</Typography>}
+      {actionError && (
+        <ErrorPopup
+          message={actionError.error as string}
+          error={(actionError as any).errorRaw}
+        />
+      )}
       <TableContainer component={Paper}>
         <Table size="small">
           <TableHead>
@@ -102,12 +124,12 @@ export default function MaterialsSection({ loaderData, actionData }: Route.Compo
               </TableCell></TableRow>
             )}
             {materials.map((m) => (
-              <TableRow key={m.id} hover>
-                <TableCell><Link to={`/dashboard/materials/${m.id}`} style={{ textDecoration: "none", fontWeight: 500, color: "inherit" }}>{m.item?.name}</Link></TableCell>
-                                <TableCell sx={{ fontFamily: "monospace", fontSize: "0.8rem" }}>{m.item?.sku}</TableCell>
-                                <TableCell>{m.item?.category || "—"}</TableCell>
-                                                <TableCell>{m.item?.capacityUsage ?? "—"}</TableCell>
-                                <TableCell>{(Number(m.item?.unitPrice) || 0).toLocaleString("en-US", { style: "currency", currency: "USD" })}</TableCell>
+              <TableRow key={m.id} hover sx={{cursor: "pointer"}} component={Link} to={`/dashboard/materials/${m.id}`}>
+                <TableCell>{m.item?.name}</TableCell>
+                <TableCell sx={{ fontFamily: "monospace", fontSize: "0.8rem" }}>{m.item?.sku}</TableCell>
+                <TableCell>{m.item?.category || "—"}</TableCell>
+                <TableCell>{m.item?.capacityUsage ?? "—"}</TableCell>
+                <TableCell>{(Number(m.item?.unitPrice) || 0).toLocaleString("en-US", { style: "currency", currency: "USD" })}</TableCell>
                 {canMutate && (
                   <TableCell align="right">
                     <IconButton size="small" onClick={() => openEdit(m)}><EditIcon fontSize="small" /></IconButton>

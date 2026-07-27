@@ -3,8 +3,8 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "build": "DEPLOY_TARGET=netlify react-router build",
-    "build-local": "react-router build",
+    "build": "react-router build --mode production",
+    "build-local": "react-router build --mode development",
     "dev": "react-router dev --host",
     "start": "react-router-serve ./build/server/index.js",
     "typecheck": "react-router typegen && tsc"
@@ -16,7 +16,7 @@
     "@mui/material": "^9.0.1",
     "@netlify/vite-plugin-react-router": "^3.1.1",
     "@react-router/node": "7.14.0",
-    "@react-router/serve": "7.14.0",
+    "@react-router/serve": "^7.18.1",
     "isbot": "^5.1.36",
     "react": "^19.2.5",
     "react-dom": "^19.2.5",
@@ -26,7 +26,7 @@
     "tailwind-scrollbar-hide": "^4.0.0"
   },
   "devDependencies": {
-    "@react-router/dev": "7.14.0",
+    "@react-router/dev": "^7.18.1",
     "@tailwindcss/vite": "^4.2.2",
     "@types/node": "^22",
     "@types/react": "^19.2.14",

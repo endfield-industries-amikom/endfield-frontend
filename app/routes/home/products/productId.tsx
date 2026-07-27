@@ -2,6 +2,7 @@ import type { Route } from "./+types/productId";
 import { get } from "~/services/api.server";
 import type { Product } from "~/types";
 import { Box, Paper, Typography, Grid, Divider, Container } from "@mui/material";
+import { normalizeImageUrl } from "~/utils/image";
 
 export async function loader({ params }: Route.LoaderArgs) {
   try {
@@ -31,7 +32,7 @@ export default function Product({ loaderData }: Route.ComponentProps) {
           <Grid container spacing={4}>
             <Grid size={{ xs: 12, md: 5 }}>
               {item?.imageUri ? (
-                <Box component="img" src={item.imageUri} alt={item.name}
+                <Box component="img" src={normalizeImageUrl(item.imageUri)} alt={item.name}
                   sx={{ width: "100%", borderRadius: 2, objectFit: "cover", maxHeight: 350 }} />
               ) : (
                 <Box sx={{ width: "100%", height: 300, bgcolor: "grey.200", borderRadius: 2, display: "flex", alignItems: "center", justifyContent: "center" }}>

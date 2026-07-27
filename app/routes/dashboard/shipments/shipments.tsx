@@ -5,6 +5,7 @@ import { get, patch, post } from "~/services/api.server";
 import { getAccessToken } from "~/services/auth-helper.server";
 import type { Shipment } from "~/types";
 import { Box, Button, Dialog, DialogTitle, DialogContent, DialogActions, TextField, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper, Typography, IconButton, MenuItem, Chip } from "@mui/material";
+import ErrorPopup from "~/components/error";
 import AddIcon from "@mui/icons-material/Add";
 import EditIcon from "@mui/icons-material/Edit";
 
@@ -59,19 +60,28 @@ export async function action({ request }: Route.ActionArgs) {
   const formData = await request.formData();
   const intent = formData.get("intent") as string;
 
-  if (intent === "create-shipment" || intent === "update-shipment") {
-    const body: Record<string, unknown> = {
-      orderType: formData.get("orderType"),
-      orderId: formData.get("orderId"),
-      carrier: formData.get("carrier") || undefined,
-      trackingNumber: formData.get("trackingNumber") || undefined,
-      status: formData.get("status") || "PENDING",
-    };
-    if (intent === "create-shipment") await post("/shipment", body, token, cookie);
-    else await patch(`/shipment/${formData.get("id")}`, body, token, cookie);
-    return { ok: true };
+  try {
+    if (intent === "create-shipment" || intent === "update-shipment") {
+      const body: Record<string, unknown> = {
+        orderType: formData.get("orderType"),
+        orderId: formData.get("orderId"),
+        carrier: formData.get("carrier") || undefined,
+        trackingNumber: formData.get("trackingNumber") || undefined,
+        status: formData.get("status") || "PENDING",
+      };
+      if (intent === "create-shipment") await post("/shipment", body, token, cookie);
+      else await patch(`/shipment/${formData.get("id")}`, body, token, cookie);
+      return { ok: true };
+    }
+    return { ok: false, error: "Unknown intent" };
+  } catch (err) {
+    const message =
+      (err as any)?.response?.message ||
+      (err as any)?.data?.message ||
+      (err as Error)?.message ||
+      "Action failed. Please try again.";
+    return { ok: false, error: message, errorRaw: err as Error | undefined };
   }
-  return { ok: false, error: "Unknown intent" };
 }
 
 /* ------------------------------------------------------------------ */
@@ -108,11 +118,9 @@ function ConsumerShipmentsTable({ shipments }: { shipments: Shipment[] }) {
             </TableRow>
           )}
           {shipments.map((s) => (
-            <TableRow key={s.id} hover>
+            <TableRow key={s.id} hover component={Link} to={`/dashboard/sales-orders/${s.orderId}`}>
               <TableCell sx={{ fontFamily: "monospace", fontSize: "0.75rem" }}>
-                <Link to={`/dashboard/sales-orders/${s.orderId}`} style={{ textDecoration: "none", color: "inherit" }}>
-                  SO-{s.orderId?.substring(0, 8) || "—"}
-                </Link>
+                SO-{s.orderId?.substring(0, 8) || "—"}
               </TableCell>
               <TableCell>{s.carrier || "—"}</TableCell>
               <TableCell sx={{ fontFamily: "monospace", fontSize: "0.75rem" }}>{s.trackingNumber || "—"}</TableCell>
@@ -161,10 +169,8 @@ function AdminShipmentsTable({
             </TableRow>
           )}
           {shipments.map((s) => (
-            <TableRow key={s.id} hover>
-              <TableCell sx={{ fontFamily: "monospace", fontSize: "0.75rem" }}>
-                <Link to={`/dashboard/shipments/${s.id}`} style={{ textDecoration: "none", color: "inherit" }}>{s.id.substring(0, 8)}</Link>
-              </TableCell>
+            <TableRow key={s.id} hover component={Link} to={`/dashboard/shipments/${s.id}`}>
+              <TableCell sx={{ fontFamily: "monospace", fontSize: "0.75rem" }}>{s.id.substring(0, 8)}</TableCell>
               <TableCell><Chip label={s.orderType} size="small" variant="outlined" /></TableCell>
               <TableCell sx={{ fontFamily: "monospace", fontSize: "0.75rem" }}>{s.orderId?.substring(0, 8) || "—"}</TableCell>
               <TableCell>{s.carrier || "—"}</TableCell>
@@ -198,6 +204,13 @@ export default function ShipmentsSection({ loaderData, actionData }: Route.Compo
   const [orderType, setOrderType] = useState<"PURCHASE" | "SALES">("PURCHASE");
   const [form, setForm] = useState({ orderId: "", carrier: "", trackingNumber: "", status: "PENDING" });
   const fetcher = useFetcher();
+  const fetcherData = fetcher.data as { ok?: boolean; error?: string; errorRaw?: Error } | undefined;
+  const actionError =
+    fetcherData?.ok === false
+      ? fetcherData
+      : actionData?.ok === false
+        ? actionData
+        : null;
   const canMutate = userRole === "Admin" || userRole === "Employee";
 
   function openCreate() { setEditId(null); setOrderType("PURCHASE"); setForm({ orderId: "", carrier: "", trackingNumber: "", status: "PENDING" }); setDialogOpen(true); }
@@ -223,7 +236,12 @@ export default function ShipmentsSection({ loaderData, actionData }: Route.Compo
         </Typography>
         {canMutate && <Button variant="contained" startIcon={<AddIcon />} onClick={openCreate}>New Shipment</Button>}
       </Box>
-      {actionData?.error && <Typography color="error" sx={{ mb: 2 }}>{actionData.error}</Typography>}
+      {actionError && (
+        <ErrorPopup
+          message={actionError.error as string}
+          error={(actionError as any).errorRaw}
+        />
+      )}
 
       {userRole === "Consumer" ? (
         <ConsumerShipmentsTable shipments={shipments} />

@@ -4,6 +4,7 @@ import type { Route } from "./+types/sales-orders";
 import { get, patch, post } from "~/services/api.server";
 import { getAccessToken } from "~/services/auth-helper.server";
 import { Box, Button, Dialog, DialogTitle, DialogContent, DialogActions, TextField, Typography, MenuItem, Chip, Card, CardContent, CardActions, Grid, Divider, Autocomplete, IconButton } from "@mui/material";
+import ErrorPopup from "~/components/error";
 import AddIcon from "@mui/icons-material/Add";
 import EditIcon from "@mui/icons-material/Edit";
 import LocalShippingIcon from "@mui/icons-material/LocalShipping";
@@ -51,39 +52,48 @@ export async function action({ request }: Route.ActionArgs) {
   const formData = await request.formData();
   const intent = formData.get("intent") as string;
 
-  if (intent === "create-sales-order" || intent === "update-sales-order") {
-    const itemsJson = formData.get("items") as string;
-    const rawItems: LineItem[] = itemsJson ? JSON.parse(itemsJson) : [];
-    const items = rawItems.map((item) => ({ orderType: "SALES", itemId: item.itemId, quantity: item.quantity, unitPrice: Number(item.unitPrice) }));
-    const body: Record<string, unknown> = { notes: formData.get("notes") || undefined, items };
-    const customerId = formData.get("customerId") as string;
-    if (customerId) body.customerId = customerId;
-    const regionId = formData.get("regionId") as string;
-    if (regionId) body.regionId = regionId;
-    if (intent === "create-sales-order") await post("/sales-order", body, token, cookie);
-    else await patch(`/sales-order/${formData.get("id")}`, body, token, cookie);
-    return { ok: true };
-  }
-  if (intent === "ship-order") {
-    try {
-      await post(`/sales-order/${formData.get("id")}/ship`, {}, token, cookie);
+  try {
+    if (intent === "create-sales-order" || intent === "update-sales-order") {
+      const itemsJson = formData.get("items") as string;
+      const rawItems: LineItem[] = itemsJson ? JSON.parse(itemsJson) : [];
+      const items = rawItems.map((item) => ({ orderType: "SALES", itemId: item.itemId, quantity: item.quantity, unitPrice: Number(item.unitPrice) }));
+      const body: Record<string, unknown> = { notes: formData.get("notes") || undefined, items };
+      const customerId = formData.get("customerId") as string;
+      if (customerId) body.customerId = customerId;
+      const regionId = formData.get("regionId") as string;
+      if (regionId) body.regionId = regionId;
+      if (intent === "create-sales-order") await post("/sales-order", body, token, cookie);
+      else await patch(`/sales-order/${formData.get("id")}`, body, token, cookie);
       return { ok: true };
-    } catch (err) {
-      return { ok: false, error: err instanceof Error ? err.message : "Shipment failed — check inventory" };
     }
-  }
-  if (intent === "confirm-order") {
-    try {
-      await post(`/sales-order/${formData.get("id")}/confirm`, {}, token, cookie);
-      return { ok: true };
-    } catch (err) {
-      return { ok: false, error: err instanceof Error ? err.message : "Confirmation failed" };
+    if (intent === "ship-order") {
+      try {
+        await post(`/sales-order/${formData.get("id")}/ship`, {}, token, cookie);
+        return { ok: true };
+      } catch (err) {
+        return { ok: false, error: err instanceof Error ? err.message : "Shipment failed — check inventory" };
+      }
     }
+    if (intent === "confirm-order") {
+      try {
+        await post(`/sales-order/${formData.get("id")}/confirm`, {}, token, cookie);
+        return { ok: true };
+      } catch (err) {
+        return { ok: false, error: err instanceof Error ? err.message : "Confirmation failed" };
+      }
+    }
+    return { ok: false, error: "Unknown intent" };
+  } catch (err) {
+    const message =
+      (err as any)?.response?.message ||
+      (err as any)?.data?.message ||
+      (err as Error)?.message ||
+      "Action failed. Please try again.";
+    return { ok: false, error: message, errorRaw: err as Error | undefined };
   }
-  return { ok: false, error: "Unknown intent" };
 }
 
-function statusColor(s: string | undefined) { const m: Record<string, "warning" | "info" | "success" | "error"> = { PENDING: "warning", CONFIRMED: "info", SHIPPED: "success", CANCELLED: "error", DELIVERED: "success", FAILED: "error" }; return m[s || ""] || "default"; }
+function statusColor(s: string | undefined) { const m: Record<string, "warning" | "info" | "success" | "error"> = { PENDING: "warning", CONFIRMED: "info", SHIPPED: "info", CANCELLED: "error", ARRIVED: "success", FAILED: "error" }; return m[s || ""] || "default"; }
 
 export default function SalesOrdersSection({ loaderData, actionData }: Route.ComponentProps) {
   const role = useRole();
@@ -98,6 +108,13 @@ export default function SalesOrdersSection({ loaderData, actionData }: Route.Com
   const fetcher = useFetcher();
   const shipFetcher = useFetcher();
   const confirmFetcher = useFetcher();
+  const fetcherData = fetcher.data as { ok?: boolean; error?: string; errorRaw?: Error } | undefined;
+  const actionError =
+    fetcherData?.ok === false
+      ? fetcherData
+      : actionData?.ok === false
+        ? actionData
+        : null;
   const isAdmin = role === "Admin"; const isEmployee = role === "Employee"; const isConsumer = role === "Consumer";
 
   function openCreate() { setEditId(null); setForm({ customerId: "", regionId: "", notes: "" }); setLineItems([{ ...emptyLine }]); setDialogOpen(true); }
@@ -129,7 +146,12 @@ export default function SalesOrdersSection({ loaderData, actionData }: Route.Com
         <Typography variant="h5" sx={{ fontWeight: 700 }}>Sales Orders</Typography>
         {isConsumer && <Button variant="contained" startIcon={<AddIcon />} onClick={openCreate}>New Order</Button>}
       </Box>
-      {actionData?.error && <Typography color="error" sx={{ mb: 2 }}>{actionData.error}</Typography>}
+      {actionError && (
+        <ErrorPopup
+          message={actionError.error as string}
+          error={(actionError as any).errorRaw}
+        />
+      )}
       {shipFetcher.data?.error && <Typography color="error" sx={{ mb: 2 }}>{(shipFetcher.data as { error?: string }).error}</Typography>}
       {confirmFetcher.data?.error && <Typography color="error" sx={{ mb: 2 }}>{(confirmFetcher.data as { error?: string }).error}</Typography>}
       {salesOrders.length === 0 ? (
@@ -137,11 +159,11 @@ export default function SalesOrdersSection({ loaderData, actionData }: Route.Com
       ) : (
         <Grid container spacing={2}>
           {salesOrders.map((order) => (
-            <Grid key={order.orderId} size={{ xs: 12, sm: 6 }}>
+            <Grid key={order.orderId} size={{ xs: 12, sm: 6 }} component={Link} to={`/dashboard/sales-orders/${order.orderId}`}>
               <Card variant="outlined">
                 <Box sx={{ p: 2, bgcolor: "grey.50", borderBottom: "1px dashed", borderColor: "divider", display: "flex", justifyContent: "space-between" }}>
                   <Box>
-                    <Typography variant="subtitle2" component={Link} to={`/dashboard/sales-orders/${order.orderId}`} sx={{ fontWeight: 700, textDecoration: "none", color: "inherit", fontFamily: "monospace" }}>SO-{order.orderId.substring(0, 8)}</Typography>
+                    <Typography variant="subtitle2"  sx={{ fontWeight: 700, textDecoration: "none", color: "inherit", fontFamily: "monospace" }}>SO-{order.orderId.substring(0, 8)}</Typography>
                     <Typography variant="caption" color="text.secondary">{new Date(order.order.orderDate).toLocaleDateString()}</Typography>
                   </Box>
                   <Chip label={order.order.status} size="small" color={statusColor(order.order.status)} />
@@ -153,22 +175,23 @@ export default function SalesOrdersSection({ loaderData, actionData }: Route.Com
                   <Box sx={{ display: "flex", justifyContent: "space-between" }}><Typography sx={{ fontWeight: 600 }}>Total:</Typography><Typography sx={{ fontWeight: 600 }}>${Number(order.order.totalAmount).toLocaleString()}</Typography></Box>
                 </CardContent>
                 {isConsumer && order.order.status === "PENDING" && (
-                  <CardActions sx={{ borderTop: "1px solid", borderColor: "divider", px: 2, py: 1, bgcolor: "grey.50" }}>
+                  <CardActions sx={{ borderTop: "1px solid", borderColor: "divider", flexDirection: "row", justifyContent: "space-between", px: 2, py: 1, bgcolor: "grey.50" }}>
+                    <Button size="small" startIcon={<EditIcon fontSize="small" />} onClick={() => openEdit(order)} sx={{ color: "text.secondary" }}>Edit</Button>
                     <confirmFetcher.Form method="post">
                       <input type="hidden" name="intent" value="confirm-order" />
                       <input type="hidden" name="id" value={order.orderId} />
-                      <Button size="small" type="submit" startIcon={<LocalShippingIcon fontSize="small" />} color="secondary">Confirm</Button>
+                      <Button size="small" type="submit" startIcon={<LocalShippingIcon fontSize="small" />} color="success">Confirm Order</Button>
                     </confirmFetcher.Form>
                   </CardActions>
                 )}
-                {((isAdmin || isEmployee) && order.order.status === "PENDING") && (
-                  <CardActions sx={{ borderTop: "1px solid", borderColor: "divider", px: 2, py: 1, bgcolor: "grey.50" }}>
-                    <Button size="small" startIcon={<EditIcon fontSize="small" />} onClick={() => openEdit(order)} sx={{ color: "text.secondary" }}>Edit</Button>
+                {(isAdmin || isEmployee) && order.order.status === "CONFIRMED" && (
+                  <CardActions sx={{ borderTop: "1px solid", borderColor: "divider", justifyContent: "end", px: 2, py: 1, bgcolor: "grey.50" }}>
+                    <shipFetcher.Form method="post"><input type="hidden" name="intent" value="ship-order" /><input type="hidden" name="id" value={order.orderId} /><Button size="small" type="submit" startIcon={<LocalShippingIcon fontSize="small" />} color="success">Ship</Button></shipFetcher.Form>
                   </CardActions>
                 )}
-                {(isAdmin || isEmployee) && order.order.status === "CONFIRMED" && (
-                  <CardActions sx={{ borderTop: "1px solid", borderColor: "divider", px: 2, py: 1, bgcolor: "grey.50" }}>
-                    <shipFetcher.Form method="post"><input type="hidden" name="intent" value="ship-order" /><input type="hidden" name="id" value={order.orderId} /><Button size="small" type="submit" startIcon={<LocalShippingIcon fontSize="small" />} color="success">Ship</Button></shipFetcher.Form>
+                {order.order.status === "SHIPPED" && (
+                  <CardActions sx={{ borderTop: "1px solid", borderColor: "divider", justifyContent: "end", px: 2, py: 1, bgcolor: "grey.50" }}>
+                    <Typography variant="caption" color="text.secondary">Order awaiting shipment</Typography>
                   </CardActions>
                 )}
               </Card>

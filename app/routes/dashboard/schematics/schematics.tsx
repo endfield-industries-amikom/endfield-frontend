@@ -5,9 +5,11 @@ import { Link, useFetcher, useRouteLoaderData } from "react-router";
 import type { Route } from "./+types/schematics";
 import type { ProductionSchematic, Item } from "~/types";
 import { Box, Button, Dialog, DialogTitle, DialogContent, DialogActions, TextField, Typography, IconButton, Chip, Card, CardContent, CardActions, MenuItem, Select, InputLabel, FormControl, Grid, Autocomplete, Checkbox, FormControlLabel } from "@mui/material";
+import ErrorPopup from "~/components/error";
 import AddIcon from "@mui/icons-material/Add";
 import EditIcon from "@mui/icons-material/Edit";
 import FactoryIcon from "@mui/icons-material/Factory";
+import { Article } from "@mui/icons-material";
 
 interface ItemOption { id: string; name: string; sku: string; unitPrice: number; isManufactureable?: boolean; }
 interface MaterialInput { productId: string; quantity: number; }
@@ -43,47 +45,57 @@ export async function action({ request }: Route.ActionArgs) {
   const formData = await request.formData();
   const intent = formData.get("intent") as string;
 
-  if (intent === "create-schematic" || intent === "update-schematic") {
-    const materialsStr = (formData.get("materials") as string) || "";
-    const materialPairs = materialsStr.split(",").map((s) => s.trim()).filter(Boolean);
-    const inputs: string[] = [];
-    const inputQty: number[] = [];
-    for (const pair of materialPairs) {
-      const [pid, qtyStr] = pair.split(":");
-      const cleanId = pid?.trim();
-      const qty = Number(qtyStr);
-      if (cleanId && !isNaN(qty) && qty > 0) { inputs.push(cleanId); inputQty.push(qty); }
-    }
-    const warehouseIdsStr = (formData.get("warehouseIds") as string) || "";
-    const warehouseIds = warehouseIdsStr ? warehouseIdsStr.split(",").filter(Boolean) : [];
+  try {
+    if (intent === "create-schematic" || intent === "update-schematic") {
+      const materialsStr = (formData.get("materials") as string) || "";
+      const materialPairs = materialsStr.split(",").map((s) => s.trim()).filter(Boolean);
+      const inputs: string[] = [];
+      const inputQty: number[] = [];
+      for (const pair of materialPairs) {
+        const [pid, qtyStr] = pair.split(":");
+        const cleanId = pid?.trim();
+        const qty = Number(qtyStr);
+        if (cleanId && !isNaN(qty) && qty > 0) { inputs.push(cleanId); inputQty.push(qty); }
+      }
+      const warehouseIdsStr = (formData.get("warehouseIds") as string) || "";
+      const warehouseIds = warehouseIdsStr ? warehouseIdsStr.split(",").filter(Boolean) : [];
 
-    const body = {
-      name: formData.get("name"),
-      type: formData.get("type"),
-      inputs,
-      inputQty,
-      duration: Number(formData.get("duration")),
-      outputQty: Number(formData.get("outputQty")),
-      outputItemId: formData.get("outputItemId"),
-      active: formData.get("active") === "on",
-      warehouseIds,
-    };
+      const body = {
+        name: formData.get("name"),
+        type: formData.get("type"),
+        inputs,
+        inputQty,
+        duration: Number(formData.get("duration")),
+        outputQty: Number(formData.get("outputQty")),
+        outputItemId: formData.get("outputItemId"),
+        active: formData.get("active") === "on",
+        warehouseIds,
+      };
 
-    if (intent === "create-schematic") await post("/production-schematic", body, token, cookie);
-    else await patch(`/production-schematic/${formData.get("id")}`, body, token, cookie);
-    return { ok: true };
-  }
-  if (intent === "produce-schematic") {
-    const id = formData.get("id") as string;
-    const warehouseId = formData.get("warehouseId") as string;
-    try {
-      await post(`/production-schematic/${id}/produce`, { warehouseId }, token, cookie);
+      if (intent === "create-schematic") await post("/production-schematic", body, token, cookie);
+      else await patch(`/production-schematic/${formData.get("id")}`, body, token, cookie);
       return { ok: true };
-    } catch (err) {
-      return { ok: false, error: err instanceof Error ? err.message : "Production failed — check warehouse inventory" };
     }
+    if (intent === "produce-schematic") {
+      const id = formData.get("id") as string;
+      const warehouseId = formData.get("warehouseId") as string;
+      const schematicId = formData.get("schematicId") as string;
+      try {
+        await post(`/production-schematic/${schematicId}/produce`, { warehouseId, schematicId }, token, cookie);
+        return { ok: true };
+      } catch (err) {
+        return { ok: false, error: err instanceof Error ? err.message : "Production failed — check warehouse inventory" };
+      }
+    }
+    return { ok: false, error: "Unknown intent" };
+  } catch (err) {
+    const message =
+      (err as any)?.response?.message ||
+      (err as any)?.data?.message ||
+      (err as Error)?.message ||
+      "Action failed. Please try again.";
+    return { ok: false, error: message, errorRaw: err as Error | undefined };
   }
-  return { ok: false, error: "Unknown intent" };
 }
 
 export default function SchematicsSection({ loaderData, actionData }: Route.ComponentProps) {
@@ -98,13 +110,20 @@ export default function SchematicsSection({ loaderData, actionData }: Route.Comp
   const [selectedWarehouseIds, setSelectedWarehouseIds] = useState<string[]>([]);
   const [materialInputs, setMaterialInputs] = useState<MaterialInput[]>([{ productId: "", quantity: 1 }]);
   const fetcher = useFetcher();
+  const fetcherData = fetcher.data as { ok?: boolean; error?: string; errorRaw?: Error } | undefined;
+  const actionError =
+    fetcherData?.ok === false
+      ? fetcherData
+      : actionData?.ok === false
+        ? actionData
+        : null;
   const produceFetcher = useFetcher();
   const canMutate = role === "Admin" || role === "Employee";
 
   function handleProduce(schematicId: string, warehouseId: string) {
     const fd = new FormData();
     fd.set("intent", "produce-schematic");
-    fd.set("id", schematicId);
+    fd.set("schematicId", schematicId);
     fd.set("warehouseId", warehouseId);
     produceFetcher.submit(fd, { method: "post" });
   }
@@ -152,8 +171,11 @@ export default function SchematicsSection({ loaderData, actionData }: Route.Comp
         <Typography variant="h5" sx={{ fontWeight: 700 }}>Production Schematics</Typography>
         {canMutate && <Button variant="contained" sx={{ bgcolor: "#f59e0b", "&:hover": { bgcolor: "#d97706" } }} startIcon={<AddIcon />} onClick={openCreate}>New Schematic</Button>}
       </Box>
-      {(actionData?.error || produceFetcher.data?.error) && (
-        <Typography color="error" sx={{ mb: 2 }}>{actionData?.error || (produceFetcher.data as { error?: string })?.error}</Typography>
+      {actionError && (
+        <ErrorPopup
+          message={actionError.error as string}
+          error={(actionError as any).errorRaw}
+        />
       )}
       {produceFetcher.data?.ok && (
         <Typography color="success.main" sx={{ mb: 2 }}>Production started successfully.</Typography>
@@ -163,14 +185,13 @@ export default function SchematicsSection({ loaderData, actionData }: Route.Comp
       ) : (
         <Grid container spacing={2}>
           {schematics.map((s) => (
-            <Grid key={s.id} size={{ xs: 12, sm: 6, md: 4 }}>
+            <Grid key={s.id} size={{ xs: 12, sm: 6, md: 4 }} >
               <Card sx={{ bgcolor: "#fffbeb", border: "1px solid", borderColor: "#fde68a", position: "relative", overflow: "visible" }}>
-                <Box sx={{ position: "absolute", top: 0, right: 0, width: 32, height: 32, bgcolor: "#fde68a", borderBottomLeftRadius: 8 }} />
                 <CardContent>
                   <Box sx={{ display: "flex", justifyContent: "space-between", mb: 1 }}>
                     <Box>
                       <Typography variant="subtitle1" component={Link} to={`/dashboard/schematics/${s.id}`} sx={{ fontWeight: 700, color: "#92400e", textDecoration: "none", "&:hover": { textDecoration: "underline" } }}>{s.name}</Typography>
-                      <Typography variant="caption" color="#b45309" sx={{ textTransform: "uppercase" }}>{s.type}</Typography>
+                      <Typography variant="caption" color="#b45309" sx={{ textTransform: "uppercase", p: 2 }}>{s.type}</Typography>
                     </Box>
                     <Chip label={s.active ? "Active" : "Inactive"} size="small" color={s.active ? "success" : "default"} />
                   </Box>
@@ -185,8 +206,9 @@ export default function SchematicsSection({ loaderData, actionData }: Route.Comp
                   </Box>
                 </CardContent>
               {canMutate && (
-                <CardActions sx={{ borderTop: "1px solid", borderColor: "#fde68a", px: 2, py: 1 }}>
+                <CardActions sx={{ borderTop: "1px solid", borderColor: "#fde68a", px: 2, py: 1, justifyContent: "space-between" }}>
                   <Button size="small" onClick={() => openEdit(s)} startIcon={<EditIcon fontSize="small" />} sx={{ color: "text.secondary" }}>Edit</Button>
+                  <Button size="small" LinkComponent={Link} to={`/dashboard/schematics/${s.id}`} startIcon={<Article fontSize="small" />} sx={{ color: "text.secondary", fontWeight: 600 }}>View</Button>
                   <Button
                     size="small"
                     onClick={() => handleProduce(s.id, s.warehouseIds?.[0] || "")}

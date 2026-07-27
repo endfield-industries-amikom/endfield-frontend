@@ -9,6 +9,7 @@ import {
   TextField, Table, TableBody, TableCell, TableContainer, TableHead,
   TableRow, Paper, Typography, IconButton,
 } from "@mui/material";
+import ErrorPopup from "~/components/error";
 import AddIcon from "@mui/icons-material/Add";
 import EditIcon from "@mui/icons-material/Edit";
 import DeleteIcon from "@mui/icons-material/Delete";
@@ -28,6 +29,7 @@ export async function action({ request }: Route.ActionArgs) {
   const formData = await request.formData();
   const intent = formData.get("intent") as string;
 
+  try {
   if (intent === "create-customer" || intent === "update-customer") {
     const body = {
       name: formData.get("name"),
@@ -45,6 +47,14 @@ export async function action({ request }: Route.ActionArgs) {
     return { ok: true };
   }
   return { ok: false, error: "Unknown intent" };
+  } catch (err) {
+    const message =
+      (err as any)?.response?.message ||
+      (err as any)?.data?.message ||
+      (err as Error)?.message ||
+      "Action failed. Please try again.";
+    return { ok: false, error: message, errorRaw: err as Error | undefined };
+  }
 }
 
 const emptyForm = { name: "", code: "", email: "", phone: "", address: "" };
@@ -55,6 +65,13 @@ export default function CustomersSection({ loaderData, actionData }: Route.Compo
   const [editId, setEditId] = useState<string | null>(null);
   const [form, setForm] = useState(emptyForm);
   const fetcher = useFetcher();
+  const fetcherData = fetcher.data as { ok?: boolean; error?: string; errorRaw?: Error } | undefined;
+  const actionError =
+    fetcherData?.ok === false
+      ? fetcherData
+      : actionData?.ok === false
+        ? actionData
+        : null;
   const canMutate = false; // Customers auto-created on registration, read-only
 
   function openCreate() { setEditId(null); setForm(emptyForm); setDialogOpen(true); }
@@ -78,7 +95,12 @@ export default function CustomersSection({ loaderData, actionData }: Route.Compo
         <Typography variant="h5" sx={{ fontWeight: 700 }}>Customers</Typography>
         {canMutate && <Button variant="contained" startIcon={<AddIcon />} onClick={openCreate}>New Customer</Button>}
       </Box>
-      {actionData?.error && <Typography color="error" sx={{ mb: 2 }}>{actionData.error}</Typography>}
+      {actionError && (
+        <ErrorPopup
+          message={actionError.error as string}
+          error={(actionError as any).errorRaw}
+        />
+      )}
       <TableContainer component={Paper}>
         <Table size="small">
           <TableHead>
@@ -94,8 +116,8 @@ export default function CustomersSection({ loaderData, actionData }: Route.Compo
               </TableCell></TableRow>
             )}
             {customers.map((c) => (
-              <TableRow key={c.id} hover>
-                <TableCell><Link to={`/dashboard/customer/${c.id}`} style={{ textDecoration: "none", fontWeight: 500, color: "inherit" }}>{c.name}</Link></TableCell>
+              <TableRow key={c.id} hover sx={{cursor: "pointer"}} component={Link} to={`/dashboard/customer/${c.id}`}>
+                <TableCell>{c.name}</TableCell>
                 <TableCell sx={{ fontFamily: "monospace", fontSize: "0.8rem" }}>{c.code}</TableCell>
                 <TableCell>{c.email || "—"}</TableCell>
                 <TableCell>{c.phone || "—"}</TableCell>

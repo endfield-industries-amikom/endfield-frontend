@@ -9,6 +9,7 @@ import {
   TextField, Table, TableBody, TableCell, TableContainer, TableHead,
   TableRow, Paper, Typography, IconButton, MenuItem,
 } from "@mui/material";
+import ErrorPopup from "~/components/error";
 import AddIcon from "@mui/icons-material/Add";
 import EditIcon from "@mui/icons-material/Edit";
 import DeleteIcon from "@mui/icons-material/Delete";
@@ -64,33 +65,42 @@ export async function action({ request }: Route.ActionArgs) {
   const formData = await request.formData();
   const intent = formData.get("intent") as string;
 
-  if (intent === "create-warehouse" || intent === "update-warehouse") {
-    const body: Record<string, unknown> = {
-      name: formData.get("name"),
-      code: formData.get("code"),
-      address: formData.get("address") || undefined,
-    };
-    const regionId = formData.get("regionId") as string;
-    if (regionId) body.regionId = regionId;
-    const maxCapacity = formData.get("maxCapacity") as string;
-    if (maxCapacity) body.maxCapacity = Number(maxCapacity);
+  try {
+    if (intent === "create-warehouse" || intent === "update-warehouse") {
+      const body: Record<string, unknown> = {
+        name: formData.get("name"),
+        code: formData.get("code"),
+        address: formData.get("address") || undefined,
+      };
+      const regionId = formData.get("regionId") as string;
+      if (regionId) body.regionId = regionId;
+      const maxCapacity = formData.get("maxCapacity") as string;
+      if (maxCapacity) body.maxCapacity = Number(maxCapacity);
 
-    if (intent === "create-warehouse") {
-      await post("/warehouses", body, token, cookie);
-    } else {
-      const id = formData.get("id") as string;
-      await patch(`/warehouses/${id}`, body, token, cookie);
+      if (intent === "create-warehouse") {
+        await post("/warehouses", body, token, cookie);
+      } else {
+        const id = formData.get("id") as string;
+        await patch(`/warehouses/${id}`, body, token, cookie);
+      }
+      return { ok: true };
     }
-    return { ok: true };
-  }
 
-  if (intent === "delete-warehouse") {
-    const id = formData.get("id") as string;
-    await del(`/warehouses/${id}`, token, cookie);
-    return { ok: true };
-  }
+    if (intent === "delete-warehouse") {
+      const id = formData.get("id") as string;
+      await del(`/warehouses/${id}`, token, cookie);
+      return { ok: true };
+    }
 
-  return { ok: false, error: "Unknown intent" };
+    return { ok: false, error: "Unknown intent" };
+  } catch (err) {
+    const message =
+      (err as any)?.response?.message ||
+      (err as any)?.data?.message ||
+      (err as Error)?.message ||
+      "Action failed. Please try again.";
+    return { ok: false, error: message, errorRaw: err as Error | undefined };
+  }
 }
 
 /* ------------------------------------------------------------------ */
@@ -112,6 +122,13 @@ export default function WarehousesSection({
   const [editId, setEditId] = useState<string | null>(null);
   const [form, setForm] = useState(emptyForm);
   const fetcher = useFetcher();
+  const fetcherData = fetcher.data as { ok?: boolean; error?: string; errorRaw?: Error } | undefined;
+  const actionError =
+    fetcherData?.ok === false
+      ? fetcherData
+      : actionData?.ok === false
+        ? actionData
+        : null;
   const navigate = useNavigate();
   const deleteFetcher = useFetcher();
 
@@ -155,8 +172,11 @@ export default function WarehousesSection({
         )}
       </Box>
 
-      {actionData?.error && (
-        <Typography color="error" sx={{ mb: 2 }}>{actionData.error}</Typography>
+      {actionError && (
+        <ErrorPopup
+          message={actionError.error as string}
+          error={(actionError as any).errorRaw}
+        />
       )}
 
       <TableContainer component={Paper}>

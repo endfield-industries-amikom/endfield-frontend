@@ -1,3 +1,5 @@
+import type { IResponse } from "~/types/IResponse";
+
 // SSR-safe API client for Mista API Gateway
 const API_BASE = process.env.API_GATEWAY_URL || "";
 const FETCH_TIMEOUT_MS = 8000;
@@ -47,10 +49,10 @@ export async function apiRequest<T = unknown>(
     });
 
     if (!response.ok) {
-      const error = await response
+      const error: IResponse = await response
         .json()
         .catch(() => ({ error: response.statusText }));
-      throw new Error(error.error || `API error: ${response.status}`);
+      throw error;
     }
 
     return response.json();

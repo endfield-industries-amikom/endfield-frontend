@@ -7,12 +7,14 @@ import {
   TextField, Table, TableBody, TableCell, TableContainer, TableHead,
   TableRow, Paper, Typography, IconButton, Checkbox, FormControlLabel,
 } from "@mui/material";
+import ErrorPopup from "~/components/error";
 import AddIcon from "@mui/icons-material/Add";
 import EditIcon from "@mui/icons-material/Edit";
 import DeleteIcon from "@mui/icons-material/Delete";
 import CloudUploadIcon from "@mui/icons-material/CloudUpload";
 import { get, post, patch, del, apiRequest } from "~/services/api.server";
 import { getAccessToken } from "~/services/auth-helper.server";
+import { normalizeImageUrl } from "~/utils/image";
 
 function useRole() {
   const parent = useRouteLoaderData<{ accessToken: string }>("routes/dashboard/auth-guard");
@@ -38,6 +40,7 @@ export async function action({ request }: Route.ActionArgs) {
   const formData = await request.formData();
   const intent = formData.get("intent") as string;
 
+  try {
   if (intent === "create-product") {
     const body: Record<string, unknown> = {
       name: formData.get("name"),
@@ -101,6 +104,14 @@ export async function action({ request }: Route.ActionArgs) {
   }
 
   return { ok: false, error: "Unknown intent" };
+  } catch (err) {
+    const message =
+      (err as any)?.response?.message ||
+      (err as any)?.data?.message ||
+      (err as Error)?.message ||
+      "Action failed. Please try again.";
+    return { ok: false, error: message, errorRaw: err as Error | undefined };
+  }
 }
 
 const emptyForm = { name: "", sku: "", description: "", category: "", unitPrice: "", capacityUsage: "", isSellable: true, isManufactureable: true };
@@ -115,6 +126,13 @@ export default function ProductsSection({ loaderData, actionData }: Route.Compon
   const [imagePreview, setImagePreview] = useState<string>("");
   const fileInputRef = useRef<HTMLInputElement>(null);
   const fetcher = useFetcher();
+  const fetcherData = fetcher.data as { ok?: boolean; error?: string; errorRaw?: Error } | undefined;
+  const actionError =
+    fetcherData?.ok === false
+      ? fetcherData
+      : actionData?.ok === false
+        ? actionData
+        : null;
   const deleteFetcher = useFetcher();
   const canMutate = role === "Admin" || role === "Employee";
 
@@ -158,8 +176,7 @@ export default function ProductsSection({ loaderData, actionData }: Route.Compon
   }
 
   function getImageSrc(p: Product): string | undefined {
-      if (!p.item?.imageUri) return undefined;
-      return p.item.imageUri;
+      return normalizeImageUrl(p.item?.imageUri);
     }
 
   return (
@@ -168,7 +185,12 @@ export default function ProductsSection({ loaderData, actionData }: Route.Compon
         <Typography variant="h5" sx={{ fontWeight: 700 }}>Products</Typography>
         {canMutate && <Button variant="contained" startIcon={<AddIcon />} onClick={openCreate}>New Product</Button>}
       </Box>
-      {actionData?.error && <Typography color="error" sx={{ mb: 2 }}>{actionData.error}</Typography>}
+      {actionError && (
+        <ErrorPopup
+          message={actionError.error as string}
+          error={(actionError as any).errorRaw}
+        />
+      )}
       <TableContainer component={Paper}>
         <Table size="small">
           <TableHead>
@@ -185,7 +207,7 @@ export default function ProductsSection({ loaderData, actionData }: Route.Compon
               </TableCell></TableRow>
             )}
             {products.map((p) => (
-              <TableRow key={p.id} hover>
+              <TableRow key={p.id} hover sx={{cursor: "pointer"}} component={Link} to={`/dashboard/products/${p.id}`}>
                 <TableCell>
                   {p.item?.imageUri ? (
                     <Box component="img" src={getImageSrc(p)} alt={p.item?.name}
@@ -194,7 +216,7 @@ export default function ProductsSection({ loaderData, actionData }: Route.Compon
                     <Box sx={{ width: 40, height: 40, bgcolor: "grey.200", borderRadius: 1 }} />
                   )}
                 </TableCell>
-                <TableCell><Link to={`/dashboard/products/${p.id}`} style={{ textDecoration: "none", fontWeight: 500, color: "inherit" }}>{p.item?.name}</Link></TableCell>
+                <TableCell>{p.item?.name}</TableCell>
                 <TableCell sx={{ fontFamily: "monospace", fontSize: "0.8rem" }}>{p.item?.sku}</TableCell>
                 <TableCell>{p.item?.category || "—"}</TableCell>
                 <TableCell>{p.item?.capacityUsage ?? "—"}</TableCell>

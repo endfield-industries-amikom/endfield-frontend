@@ -5,6 +5,7 @@ import ProductsHero from "~/components/products/ProductsHero";
 import ProductsSectionHeader from "~/components/products/ProductsSectionHeader";
 import { get } from "~/services/api.server";
 import type { IProduct } from "~/interfaces/IProduct";
+import { normalizeImageUrl } from "~/utils/image";
 
 export const meta: Route.MetaFunction = () => {
   return [
@@ -35,7 +36,7 @@ export async function loader() {
       description: p.description,
       category: p.category,
       unitPrice: Number(p.unitPrice || 0),
-      imageUri: p.imageUri,
+      imageUri: normalizeImageUrl(p.imageUri),
       isBest: false,
     }));
     return { products };

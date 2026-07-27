@@ -1,10 +1,11 @@
 import { useState } from "react";
-import { Link, useFetcher, useRouteLoaderData } from "react-router";
+import { Link, useFetcher, useNavigate, useRouteLoaderData } from "react-router";
 import type { Route } from "./+types/purchase-orders";
 import { get, patch, post } from "~/services/api.server";
 import { getAccessToken } from "~/services/auth-helper.server";
 import type { PurchaseOrder } from "~/types";
 import { Box, Button, Dialog, DialogTitle, DialogContent, DialogActions, TextField, Typography, IconButton, MenuItem, Chip, Card, CardContent, CardActions, Grid, Divider, Autocomplete } from "@mui/material";
+import ErrorPopup from "~/components/error";
 import AddIcon from "@mui/icons-material/Add";
 import EditIcon from "@mui/icons-material/Edit";
 import CheckIcon from "@mui/icons-material/Check";
@@ -40,24 +41,33 @@ export async function action({ request }: Route.ActionArgs) {
   const formData = await request.formData();
   const intent = formData.get("intent") as string;
 
-  if (intent === "create-purchase-order" || intent === "update-purchase-order") {
-    const itemsJson = formData.get("items") as string;
-    const rawItems: LineItem[] = itemsJson ? JSON.parse(itemsJson) : [];
-    const items = rawItems.map((item) => ({ orderType: "PURCHASE", itemId: item.itemId, quantity: item.quantity, unitPrice: Number(item.unitPrice) }));
-    const body = { supplierId: formData.get("supplierId"), warehouseId: formData.get("warehouseId"), notes: formData.get("notes") || undefined, items };
-    if (intent === "create-purchase-order") await post("/purchase-order", body, token, cookie);
-    else await patch(`/purchase-order/${formData.get("id")}`, body, token, cookie);
-    return { ok: true };
-  }
-  if (intent === "approve-po") {
-    try {
-      await post(`/purchase-order/${formData.get("id")}/approve`, {}, token, cookie);
+  try {
+    if (intent === "create-purchase-order" || intent === "update-purchase-order") {
+      const itemsJson = formData.get("items") as string;
+      const rawItems: LineItem[] = itemsJson ? JSON.parse(itemsJson) : [];
+      const items = rawItems.map((item) => ({ orderType: "PURCHASE", itemId: item.itemId, quantity: item.quantity, unitPrice: Number(item.unitPrice) }));
+      const body = { supplierId: formData.get("supplierId"), warehouseId: formData.get("warehouseId"), notes: formData.get("notes") || undefined, items };
+      if (intent === "create-purchase-order") await post("/purchase-order", body, token, cookie);
+      else await patch(`/purchase-order/${formData.get("id")}`, body, token, cookie);
       return { ok: true };
-    } catch (err) {
-      return { ok: false, error: err instanceof Error ? err.message : "Approval failed" };
     }
+    if (intent === "approve-po") {
+      try {
+        await post(`/purchase-order/${formData.get("id")}/approve`, {}, token, cookie);
+        return { ok: true };
+      } catch (err) {
+        return { ok: false, error: err instanceof Error ? err.message : "Approval failed" };
+      }
+    }
+    return { ok: false, error: "Unknown intent" };
+  } catch (err) {
+    const message =
+      (err as any)?.response?.message ||
+      (err as any)?.data?.message ||
+      (err as Error)?.message ||
+      "Action failed. Please try again.";
+    return { ok: false, error: message, errorRaw: err as Error | undefined };
   }
-  return { ok: false, error: "Unknown intent" };
 }
 
 function statusColor(s: string | undefined) {
@@ -76,6 +86,14 @@ export default function PurchaseOrdersSection({ loaderData, actionData }: Route.
   const [form, setForm] = useState({ supplierId: "", warehouseId: "", notes: "" });
   const [lineItems, setLineItems] = useState<LineItem[]>([{ ...emptyLine }]);
   const fetcher = useFetcher();
+  const navigate = useNavigate();
+  const fetcherData = fetcher.data as { ok?: boolean; error?: string; errorRaw?: Error } | undefined;
+  const actionError =
+    fetcherData?.ok === false
+      ? fetcherData
+      : actionData?.ok === false
+        ? actionData
+        : null;
   const approveFetcher = useFetcher();
   const canMutate = role === "Admin" || role === "Employee";
   const isAdmin = role === "Admin";
@@ -113,17 +131,22 @@ export default function PurchaseOrdersSection({ loaderData, actionData }: Route.
         <Typography variant="h5" sx={{ fontWeight: 700 }}>Purchase Orders</Typography>
         {canMutate && <Button variant="contained" startIcon={<AddIcon />} onClick={openCreate}>New Purchase Order</Button>}
       </Box>
-      {actionData?.error && <Typography color="error" sx={{ mb: 2 }}>{actionData.error}</Typography>}
+      {actionError && (
+        <ErrorPopup
+          message={actionError.error as string}
+          error={(actionError as any).errorRaw}
+        />
+      )}
       {purchaseOrders.length === 0 ? (
         <Card sx={{ p: 4, textAlign: "center" }}><Typography color="text.secondary">No purchase orders found.</Typography></Card>
       ) : (
         <Grid container spacing={2}>
           {purchaseOrders.map((order) => (
-                      <Grid key={order.orderId} size={{ xs: 12, sm: 6 }}>
+                      <Grid key={order.orderId} component={Link} size={{ xs: 12, sm: 6}} to={`/dashboard/purchase-orders/${order.orderId}`}>
                         <Card variant="outlined">
                           <Box sx={{ p: 2, bgcolor: "grey.50", borderBottom: "1px dashed", borderColor: "divider", display: "flex", justifyContent: "space-between" }}>
                             <Box>
-                              <Typography variant="subtitle2" component={Link} to={`/dashboard/purchase-orders/${order.orderId}`} sx={{ fontWeight: 700, textDecoration: "none", color: "inherit", fontFamily: "monospace" }}>
+                              <Typography variant="subtitle2" sx={{ fontWeight: 700, textDecoration: "none", color: "inherit", fontFamily: "monospace" }}>
                                 PO-{order.orderId.substring(0, 8)}
                               </Typography>
                               <Typography variant="caption" color="text.secondary">{new Date(order.order.orderDate).toLocaleDateString()}</Typography>
@@ -169,7 +192,7 @@ export default function PurchaseOrdersSection({ loaderData, actionData }: Route.
             <Divider />
             <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
               <Typography variant="subtitle2" sx={{ fontWeight: 600 }}>Line Items</Typography>
-              <Button size="small" startIcon={<AddIcon />} onClick={addLine}>Add Item</Button>
+              <Button size="small" variant="contained" startIcon={<AddIcon />} onClick={addLine}>Add Item</Button>
             </Box>
             {lineItems.map((item, idx) => (
               <Box key={idx} sx={{ display: "flex", gap: 1, alignItems: "center" }}>
