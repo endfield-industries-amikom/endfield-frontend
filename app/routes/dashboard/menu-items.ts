@@ -18,34 +18,26 @@ export interface MenuItem {
   icon: SvgIconComponent;
 }
 
-export const adminMenu: MenuItem[] = [
-  { id: "employees", label: "Employees", path: "/dashboard/admin/employees", icon: PeopleIcon },
+const baseEndfieldMenu: MenuItem[] = [
+  { id: "customers", label: "Customers", path: "/dashboard/customer", icon: PersonIcon },
+  { id: "inventory", label: "Inventory", path: "/dashboard/inventory", icon: InventoryIcon },
   { id: "products", label: "Products", path: "/dashboard/products", icon: Inventory2Icon },
   { id: "materials", label: "Materials", path: "/dashboard/materials", icon: CategoryIcon },
-  { id: "customers", label: "Customers", path: "/dashboard/customer", icon: PersonIcon },
-  { id: "suppliers", label: "Suppliers", path: "/dashboard/suppliers", icon: LocalShippingIcon },
-  { id: "warehouses", label: "Warehouses", path: "/dashboard/warehouses", icon: WarehouseIcon },
   { id: "regions", label: "Regions", path: "/dashboard/regions", icon: PublicIcon },
-  { id: "inventory", label: "Inventory", path: "/dashboard/inventory", icon: InventoryIcon },
   { id: "purchase-orders", label: "Purchase Orders", path: "/dashboard/purchase-orders", icon: ShoppingCartIcon },
-  { id: "sales-orders", label: "Sales Orders", path: "/dashboard/sales-orders", icon: ReceiptIcon },
+  { id: "suppliers", label: "Suppliers", path: "/dashboard/suppliers", icon: LocalShippingIcon },
   { id: "shipments", label: "Shipments", path: "/dashboard/shipments", icon: LocalShippingIcon },
+  { id: "warehouses", label: "Warehouses", path: "/dashboard/warehouses", icon: WarehouseIcon },
+  { id: "sales-orders", label: "Sales Orders", path: "/dashboard/sales-orders", icon: ReceiptIcon },
   { id: "schematics", label: "Schematics", path: "/dashboard/schematics", icon: PrecisionManufacturingIcon },
 ];
 
-export const employeeMenu: MenuItem[] = [
-  { id: "customers", label: "Customers", path: "/dashboard/customer", icon: PersonIcon },
-  { id: "inventory", label: "Inventory", path: "/dashboard/inventory", icon: InventoryIcon },
-  { id: "products", label: "Products", path: "/dashboard/products", icon: Inventory2Icon },
-  { id: "materials", label: "Materials", path: "/dashboard/materials", icon: CategoryIcon },
-  { id: "regions", label: "Regions", path: "/dashboard/regions", icon: PublicIcon },
-  { id: "purchase-orders", label: "Purchase Orders", path: "/dashboard/purchase-orders", icon: ShoppingCartIcon },
-  { id: "suppliers", label: "Suppliers", path: "/dashboard/suppliers", icon: LocalShippingIcon },
-  { id: "shipments", label: "Shipments", path: "/dashboard/shipments", icon: LocalShippingIcon },
-  { id: "warehouses", label: "Warehouses", path: "/dashboard/warehouses", icon: WarehouseIcon },
-  { id: "sales-orders", label: "Sales Orders", path: "/dashboard/sales-orders", icon: ReceiptIcon },
-  { id: "schematics", label: "Schematics", path: "/dashboard/schematics", icon: PrecisionManufacturingIcon },
+export const adminMenu: MenuItem[] = [
+  { id: "employees", label: "Employees", path: "/dashboard/admin/employees", icon: PeopleIcon },
+  ...baseEndfieldMenu,
 ];
+
+export const employeeMenu: MenuItem[] = baseEndfieldMenu;
 
 export const consumerMenu: MenuItem[] = [
   { id: "products", label: "Products", path: "/dashboard/products", icon: Inventory2Icon },
