@@ -191,7 +191,7 @@ export default function PurchaseOrdersSection({ loaderData, actionData }: Route.
             <Divider />
             <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
               <Typography variant="subtitle2" sx={{ fontWeight: 600 }}>Line Items</Typography>
-              <Button size="small" startIcon={<AddIcon />} onClick={addLine}>Add Item</Button>
+              <Button size="small" variant="contained" startIcon={<AddIcon />} onClick={addLine}>Add Item</Button>
             </Box>
             {lineItems.map((item, idx) => (
               <Box key={idx} sx={{ display: "flex", gap: 1, alignItems: "center" }}>

@@ -93,7 +93,7 @@ export async function action({ request }: Route.ActionArgs) {
   }
 }
 
-function statusColor(s: string | undefined) { const m: Record<string, "warning" | "info" | "success" | "error"> = { PENDING: "warning", CONFIRMED: "info", SHIPPED: "success", CANCELLED: "error", DELIVERED: "success", FAILED: "error" }; return m[s || ""] || "default"; }
+function statusColor(s: string | undefined) { const m: Record<string, "warning" | "info" | "success" | "error"> = { PENDING: "warning", CONFIRMED: "info", SHIPPED: "info", CANCELLED: "error", ARRIVED: "success", FAILED: "error" }; return m[s || ""] || "default"; }
 
 export default function SalesOrdersSection({ loaderData, actionData }: Route.ComponentProps) {
   const role = useRole();
@@ -175,22 +175,23 @@ export default function SalesOrdersSection({ loaderData, actionData }: Route.Com
                   <Box sx={{ display: "flex", justifyContent: "space-between" }}><Typography sx={{ fontWeight: 600 }}>Total:</Typography><Typography sx={{ fontWeight: 600 }}>${Number(order.order.totalAmount).toLocaleString()}</Typography></Box>
                 </CardContent>
                 {isConsumer && order.order.status === "PENDING" && (
-                  <CardActions sx={{ borderTop: "1px solid", borderColor: "divider", px: 2, py: 1, bgcolor: "grey.50" }}>
+                  <CardActions sx={{ borderTop: "1px solid", borderColor: "divider", flexDirection: "row", justifyContent: "space-between", px: 2, py: 1, bgcolor: "grey.50" }}>
+                    <Button size="small" startIcon={<EditIcon fontSize="small" />} onClick={() => openEdit(order)} sx={{ color: "text.secondary" }}>Edit</Button>
                     <confirmFetcher.Form method="post">
                       <input type="hidden" name="intent" value="confirm-order" />
                       <input type="hidden" name="id" value={order.orderId} />
-                      <Button size="small" type="submit" startIcon={<LocalShippingIcon fontSize="small" />} color="secondary">Confirm</Button>
+                      <Button size="small" type="submit" startIcon={<LocalShippingIcon fontSize="small" />} color="success">Confirm Order</Button>
                     </confirmFetcher.Form>
                   </CardActions>
                 )}
-                {((isAdmin || isEmployee) && order.order.status === "PENDING") && (
-                  <CardActions sx={{ borderTop: "1px solid", borderColor: "divider", px: 2, py: 1, bgcolor: "grey.50" }}>
-                    <Button size="small" startIcon={<EditIcon fontSize="small" />} onClick={() => openEdit(order)} sx={{ color: "text.secondary" }}>Edit</Button>
+                {(isAdmin || isEmployee) && order.order.status === "CONFIRMED" && (
+                  <CardActions sx={{ borderTop: "1px solid", borderColor: "divider", justifyContent: "end", px: 2, py: 1, bgcolor: "grey.50" }}>
+                    <shipFetcher.Form method="post"><input type="hidden" name="intent" value="ship-order" /><input type="hidden" name="id" value={order.orderId} /><Button size="small" type="submit" startIcon={<LocalShippingIcon fontSize="small" />} color="success">Ship</Button></shipFetcher.Form>
                   </CardActions>
                 )}
-                {(isAdmin || isEmployee) && order.order.status === "CONFIRMED" && (
-                  <CardActions sx={{ borderTop: "1px solid", borderColor: "divider", px: 2, py: 1, bgcolor: "grey.50" }}>
-                    <shipFetcher.Form method="post"><input type="hidden" name="intent" value="ship-order" /><input type="hidden" name="id" value={order.orderId} /><Button size="small" type="submit" startIcon={<LocalShippingIcon fontSize="small" />} color="success">Ship</Button></shipFetcher.Form>
+                {order.order.status === "SHIPPED" && (
+                  <CardActions sx={{ borderTop: "1px solid", borderColor: "divider", justifyContent: "end", px: 2, py: 1, bgcolor: "grey.50" }}>
+                    <Typography variant="caption" color="text.secondary">Order awaiting shipment</Typography>
                   </CardActions>
                 )}
               </Card>

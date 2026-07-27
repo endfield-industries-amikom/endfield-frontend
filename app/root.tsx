@@ -60,6 +60,7 @@ const theme = createTheme({
           textTransform: "none",
           borderRadius: 8,
           fontWeight: 500,
+          color: "#2A2A2A"
         },
         contained: {
           color: "#2A2A2A",

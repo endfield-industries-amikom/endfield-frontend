@@ -32,7 +32,7 @@ export default function PurchaseOrderDetail({ loaderData }: Route.ComponentProps
       <Paper sx={{ p: 4 }}>
         <Grid container spacing={2}>
           <Grid size={6}><Typography variant="caption" color="text.secondary">PO#</Typography><Typography sx={{ fontFamily: "monospace", fontSize: "0.85rem" }}>{po.orderId}</Typography></Grid>
-          <Grid size={6}><Typography variant="caption" color="text.secondary">Status</Typography><Chip label={order.status} size="small" color={statusColor(order.status)} /></Grid>
+          <Grid size={6}><Typography variant="caption" color="text.secondary">Status</Typography><Chip label={order.status} size="small" sx={{marginLeft: 2}} color={statusColor(order.status)} /></Grid>
         </Grid>
         <Divider sx={{ my: 2 }} />
         <Grid container spacing={2}>
