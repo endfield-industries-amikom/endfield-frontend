@@ -1,21 +1,20 @@
 import { useState } from "react";
+import BlogCard from "~/components/data/BlogCard";
+import { blogs } from "~/data/Blogs";
 import {
   Box,
   Container,
   Typography,
-  Tabs,
-  Tab,
   TextField,
   MenuItem,
-  Card,
-  CardMedia,
-  CardContent,
   InputAdornment,
 } from "@mui/material";
 import SearchIcon from "@mui/icons-material/Search";
 
-export default function Blog() {
-  const [activeTab, setTab] = useState(0);
+export default function Blogs() {
+
+console.log(BlogCard);
+console.log(blogs);
 
   return (
     <Box sx={{ bgcolor: "#f8f8f8", minHeight: "100vh", pb: 5 }}>
@@ -30,7 +29,7 @@ export default function Blog() {
           }}
         >
           <img
-            src="/HeroSection.png"
+            src="/HeroSection.webp"
             alt="Hero"
             style={{
               width: "100%",
@@ -54,24 +53,11 @@ export default function Blog() {
             </Typography>
 
             <Typography>
-              Membangun Kepercayaan Masyarakat kepada Telkom melalui Transparansi
+              Membangun Kepercayaan Masyarakat kepada Endfield Industries melalui Transparansi
               dan Keterbukaan Informasi.
             </Typography>
           </Box>
         </Box>
-
-
-        <Tabs
-          value={activeTab}
-          onChange={(e, v) => setTab(v)}
-          indicatorColor="primary"
-          textColor="primary"
-          sx={{ mb: 5 }}
-        >
-          <Tab label="Berita" />
-          <Tab label="Artikel" />
-          <Tab label="Panduan Logo" />
-        </Tabs>
 
         <Typography
           variant="h2"
@@ -135,29 +121,14 @@ export default function Blog() {
             display: "grid",
             gridTemplateColumns: {
               xs: "1fr",
+              sm: "repeat(2,1fr)",
               md: "repeat(3,1fr)",
             },
             gap: 3,
           }}
         >
-          {[1, 2, 3, 4, 5, 6].map((item) => (
-            <Card key={item} sx={{ borderRadius: 3 }}>
-              <CardMedia
-                component="img"
-                height="220"
-                image="/HeroSection.png"
-              />
-
-              <CardContent>
-                <Typography variant="h6" sx={{ fontWeight: 700 }}>
-                  Judul Berita
-                </Typography>
-
-                <Typography variant="body2" color="text.secondary">
-                  Ringkasan berita ditampilkan di sini...
-                </Typography>
-              </CardContent>
-            </Card>
+          {blogs.map((blog) => (
+            <BlogCard key={blog.id} blog={blog} />
           ))}
         </Box>
       </Container>

@@ -409,7 +409,10 @@ export default function HomeContent({ loaderData }: Route.ComponentProps) {
           </Box>
 
           <Box sx={{ mt: { xs: 3, md: 4 } }}>
-            <Button variant="outlined">
+            <Button 
+            variant="outlined"
+             component={NavLink}
+                to="/blogs">
                           More Information
                         </Button>
           </Box>
