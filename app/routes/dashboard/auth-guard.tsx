@@ -33,7 +33,8 @@ export async function loader({
       cookie,
     );
     return { accessToken: result.data.access_token };
-  } catch {
+  } catch (err) {
+    console.error("Auth guard — refresh token failed:", err);
     // Session expired or invalid — redirect to login
     return redirect("/dashboard/auth/login");
   }
