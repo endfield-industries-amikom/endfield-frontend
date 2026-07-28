@@ -1,4 +1,4 @@
-FROM node:20-alpine
+FROM node:23-alpine
 WORKDIR /app
 
 # Install ALL dependencies (including dev — @react-router/dev, vite, tailwind, etc.)

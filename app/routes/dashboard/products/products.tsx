@@ -1,5 +1,5 @@
 import { useState, useRef } from "react";
-import { Link, useFetcher, useRouteLoaderData } from "react-router";
+import { useNavigate, useFetcher, useRouteLoaderData } from "react-router";
 import type { Route } from "./+types/products";
 import type { Product } from "~/types";
 import {
@@ -126,6 +126,7 @@ export default function ProductsSection({ loaderData, actionData }: Route.Compon
   const [imagePreview, setImagePreview] = useState<string>("");
   const fileInputRef = useRef<HTMLInputElement>(null);
   const fetcher = useFetcher();
+  const navigate = useNavigate();
   const fetcherData = fetcher.data as { ok?: boolean; error?: string; errorRaw?: Error } | undefined;
   const actionError =
     fetcherData?.ok === false
@@ -207,7 +208,7 @@ export default function ProductsSection({ loaderData, actionData }: Route.Compon
               </TableCell></TableRow>
             )}
             {products.map((p) => (
-              <TableRow key={p.id} hover sx={{cursor: "pointer"}} component={Link} to={`/dashboard/products/${p.id}`}>
+              <TableRow key={p.id} hover sx={{cursor: "pointer"}} onClick={() => navigate(`/dashboard/products/${p.id}`)}>
                 <TableCell>
                   {p.item?.imageUri ? (
                     <Box component="img" src={getImageSrc(p)} alt={p.item?.name}

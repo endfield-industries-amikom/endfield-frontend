@@ -1,7 +1,7 @@
 import { get, patch, post, del } from "~/services/api.server";
 import { getAccessToken } from "~/services/auth-helper.server";
 import { useState } from "react";
-import { Link, useFetcher, useRouteLoaderData } from "react-router";
+import { useNavigate, useFetcher, useRouteLoaderData } from "react-router";
 import type { Route } from "./+types/materials";
 import type { Material } from "~/types";
 import {
@@ -76,6 +76,7 @@ export default function MaterialsSection({ loaderData, actionData }: Route.Compo
   const [editId, setEditId] = useState<string | null>(null);
   const [form, setForm] = useState(emptyForm);
   const fetcher = useFetcher();
+  const navigate = useNavigate();
   const fetcherData = fetcher.data as { ok?: boolean; error?: string; errorRaw?: Error } | undefined;
   const actionError =
     fetcherData?.ok === false
@@ -124,7 +125,7 @@ export default function MaterialsSection({ loaderData, actionData }: Route.Compo
               </TableCell></TableRow>
             )}
             {materials.map((m) => (
-              <TableRow key={m.id} hover sx={{cursor: "pointer"}} component={Link} to={`/dashboard/materials/${m.id}`}>
+              <TableRow key={m.id} hover sx={{cursor: "pointer"}} onClick={() => navigate(`/dashboard/materials/${m.id}`)}>
                 <TableCell>{m.item?.name}</TableCell>
                 <TableCell sx={{ fontFamily: "monospace", fontSize: "0.8rem" }}>{m.item?.sku}</TableCell>
                 <TableCell>{m.item?.category || "—"}</TableCell>
