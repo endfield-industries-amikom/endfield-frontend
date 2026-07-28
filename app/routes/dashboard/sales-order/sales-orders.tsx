@@ -1,5 +1,5 @@
 import { useRef, useState, Suspense } from "react";
-import { Link, Await, useFetcher, useRouteLoaderData } from "react-router";
+import { useNavigate, Await, useFetcher, useRouteLoaderData } from "react-router";
 import type { Route } from "./+types/sales-orders";
 import { get, patch, post } from "~/services/api.server";
 import { getAccessToken } from "~/services/auth-helper.server";
@@ -112,6 +112,7 @@ export default function SalesOrdersSection({ loaderData, actionData }: Route.Com
   const fetcher = useFetcher();
   const shipFetcher = useFetcher();
   const confirmFetcher = useFetcher();
+  const navigate = useNavigate();
   const productOptionsRef = useRef<ItemOption[]>([]);
   const fetcherData = fetcher.data as { ok?: boolean; error?: string; errorRaw?: Error } | undefined;
   const actionError =
@@ -147,9 +148,12 @@ export default function SalesOrdersSection({ loaderData, actionData }: Route.Com
 
   return (
     <Box>
-      <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", mb: 3 }}>
+      <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
         <Typography variant="h5" sx={{ fontWeight: 700 }}>Sales Orders</Typography>
         {isConsumer && <Button variant="contained" startIcon={<AddIcon />} onClick={openCreate}>New Order</Button>}
+      </Box>
+      <Box sx={{ mb: 3 }}>
+        <Typography variant="subtitle2" color="text.secondary">Click on a sales order id to view details.</Typography>
       </Box>
       {actionError && (
         <ErrorPopup
@@ -169,11 +173,11 @@ export default function SalesOrdersSection({ loaderData, actionData }: Route.Com
               ) : (
                 <Grid container spacing={2}>
                   {salesOrders.map((order) => (
-                    <Grid key={order.orderId} size={{ xs: 12, sm: 6 }} component={Link} to={`/dashboard/sales-orders/${order.orderId}`}>
-                      <Card variant="outlined">
+                    <Grid key={order.orderId} size={{ xs: 12, sm: 6 }} >
+                      <Card variant="outlined" sx={{cursor: "default"}}>
                         <Box sx={{ p: 2, bgcolor: "grey.50", borderBottom: "1px dashed", borderColor: "divider", display: "flex", justifyContent: "space-between" }}>
-                          <Box>
-                            <Typography variant="subtitle2"  sx={{ fontWeight: 700, textDecoration: "none", color: "inherit", fontFamily: "monospace" }}>SO-{order.orderId.substring(0, 8)}</Typography>
+                          <Box onClick={() => navigate(`/dashboard/sales-orders/${order.orderId}`)}>
+                            <Typography variant="subtitle2"  sx={{ fontWeight: 700, textDecoration: "none", color: "inherit", fontFamily: "monospace", ":hover": { textDecoration: "underline" }, cursor: "pointer" }}>SO-{order.orderId.substring(0, 8)}</Typography>
                             <Typography variant="caption" color="text.secondary">{new Date(order.order.orderDate).toLocaleDateString()}</Typography>
                           </Box>
                           <Chip label={order.order.status} size="small" color={statusColor(order.order.status)} />

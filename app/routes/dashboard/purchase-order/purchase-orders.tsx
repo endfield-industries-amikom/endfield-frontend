@@ -1,5 +1,5 @@
 import { Suspense, useRef, useState } from "react";
-import { Await, Link, useFetcher, useNavigate, useRouteLoaderData } from "react-router";
+import { Await, useFetcher, useNavigate, useRouteLoaderData } from "react-router";
 import type { Route } from "./+types/purchase-orders";
 import SkeletonCards from "~/components/SkeletonCards";
 import { get, patch, post } from "~/services/api.server";
@@ -130,9 +130,12 @@ export default function PurchaseOrdersSection({ loaderData, actionData }: Route.
 
   return (
     <Box>
-      <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", mb: 3 }}>
+      <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center"}}>
         <Typography variant="h5" sx={{ fontWeight: 700 }}>Purchase Orders</Typography>
         {canMutate && <Button variant="contained" startIcon={<AddIcon />} onClick={openCreate}>New Purchase Order</Button>}
+      </Box>
+      <Box sx={{ mb: 3 }}>
+        <Typography variant="subtitle2" color="text.secondary">Click on a purchase order id to view details.</Typography>
       </Box>
       {actionError && (
         <ErrorPopup
@@ -150,11 +153,11 @@ export default function PurchaseOrdersSection({ loaderData, actionData }: Route.
             ) : (
               <Grid container spacing={2}>
                 {purchaseOrders.map((order) => (
-                            <Grid key={order.orderId} component={Link} size={{ xs: 12, sm: 6}} to={`/dashboard/purchase-orders/${order.orderId}`}>
-                              <Card variant="outlined">
+                            <Grid key={order.orderId} size={{ xs: 12, sm: 6}}>
+                              <Card variant="outlined" sx={{cursor: "default"}}>
                                 <Box sx={{ p: 2, bgcolor: "grey.50", borderBottom: "1px dashed", borderColor: "divider", display: "flex", justifyContent: "space-between" }}>
-                                  <Box>
-                                    <Typography variant="subtitle2" sx={{ fontWeight: 700, textDecoration: "none", color: "inherit", fontFamily: "monospace" }}>
+                                  <Box onClick={() => navigate(`/dashboard/purchase-orders/${order.orderId}`)}>
+                                    <Typography variant="subtitle2" sx={{ fontWeight: 700, textDecoration: "none", color: "inherit", fontFamily: "monospace", ":hover": { textDecoration: "underline" }, cursor: "pointer" }}>
                                       PO-{order.orderId.substring(0, 8)}
                                     </Typography>
                                     <Typography variant="caption" color="text.secondary">{new Date(order.order.orderDate).toLocaleDateString()}</Typography>
