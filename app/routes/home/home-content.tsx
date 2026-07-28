@@ -27,7 +27,7 @@ import { cdnUrl } from "~/utils/cdn";
 /* ------------------------------------------------------------------ */
 
 export async function loader() {
-  const productsPromise = await get<{ data: { id: string; name: string; sku: string; unitPrice: number; imageUri?: string; description?: string; category?: string }[] }>(
+  const productsPromise = get<{ data: { id: string; name: string; sku: string; unitPrice: number; imageUri?: string; description?: string; category?: string }[] }>(
     "/product/top-selling",
   )
     .then((response) =>
