@@ -1,7 +1,7 @@
 import { get, patch, post } from "~/services/api.server";
 import { getAccessToken } from "~/services/auth-helper.server";
 import { Suspense, useState } from "react";
-import { Await, Link, useFetcher, useRouteLoaderData } from "react-router";
+import { Await, useNavigate, Link, useFetcher, useRouteLoaderData } from "react-router";
 import type { Route } from "./+types/schematics";
 import type { ProductionSchematic, Item } from "~/types";
 import { Box, Button, Dialog, DialogTitle, DialogContent, DialogActions, TextField, Typography, IconButton, Chip, Card, CardContent, CardActions, MenuItem, Select, InputLabel, FormControl, Grid, Autocomplete, Checkbox, FormControlLabel } from "@mui/material";
@@ -109,6 +109,7 @@ export default function SchematicsSection({ loaderData, actionData }: Route.Comp
   const [selectedWarehouseIds, setSelectedWarehouseIds] = useState<string[]>([]);
   const [materialInputs, setMaterialInputs] = useState<MaterialInput[]>([{ productId: "", quantity: 1 }]);
   const fetcher = useFetcher();
+  const navigate = useNavigate();
   const fetcherData = fetcher.data as { ok?: boolean; error?: string; errorRaw?: Error } | undefined;
   const actionError =
     fetcherData?.ok === false
@@ -210,7 +211,7 @@ export default function SchematicsSection({ loaderData, actionData }: Route.Comp
                       {canMutate && (
                         <CardActions sx={{ borderTop: "1px solid", borderColor: "#fde68a", px: 2, py: 1, justifyContent: "space-between" }}>
                           <Button size="small" onClick={() => openEdit(s)} startIcon={<EditIcon fontSize="small" />} sx={{ color: "text.secondary" }}>Edit</Button>
-                          <Button size="small" LinkComponent={Link} to={`/dashboard/schematics/${s.id}`} startIcon={<Article fontSize="small" />} sx={{ color: "text.secondary", fontWeight: 600 }}>View</Button>
+                          <Button size="small" onClick={() => navigate(`/dashboard/schematics/${s.id}`)} startIcon={<Article fontSize="small" />} sx={{ color: "text.secondary", fontWeight: 600 }}>View</Button>
                           <Button
                             size="small"
                             onClick={() => handleProduce(s.id, s.warehouseIds?.[0] || "")}
