@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Link, useFetcher, useRouteLoaderData } from "react-router";
+import { useFetcher, useNavigate, useRouteLoaderData } from "react-router";
 import type { Route } from "./+types/shipments";
 import { get, patch, post } from "~/services/api.server";
 import { getAccessToken } from "~/services/auth-helper.server";
@@ -98,6 +98,7 @@ function statusColor(s: string) {
 /* ------------------------------------------------------------------ */
 
 function ConsumerShipmentsTable({ shipments }: { shipments: Shipment[] }) {
+  const navigate = useNavigate();
   return (
     <TableContainer component={Paper}>
       <Table size="small">
@@ -118,7 +119,7 @@ function ConsumerShipmentsTable({ shipments }: { shipments: Shipment[] }) {
             </TableRow>
           )}
           {shipments.map((s) => (
-            <TableRow key={s.id} hover component={Link} to={`/dashboard/sales-orders/${s.orderId}`}>
+            <TableRow key={s.id} hover onClick={() => navigate(`/dashboard/sales-orders/${s.orderId}`)} sx={{ cursor: "pointer" }}>
               <TableCell sx={{ fontFamily: "monospace", fontSize: "0.75rem" }}>
                 SO-{s.orderId?.substring(0, 8) || "—"}
               </TableCell>
@@ -146,6 +147,7 @@ function AdminShipmentsTable({
   canMutate: boolean;
   onEdit: (s: Shipment) => void;
 }) {
+  const navigate = useNavigate();
   return (
     <TableContainer component={Paper}>
       <Table size="small">
@@ -169,7 +171,7 @@ function AdminShipmentsTable({
             </TableRow>
           )}
           {shipments.map((s) => (
-            <TableRow key={s.id} hover component={Link} to={`/dashboard/shipments/${s.id}`}>
+            <TableRow key={s.id} hover onClick={() => navigate(`/dashboard/shipments/${s.id}`)} sx={{ cursor: "pointer" }}>
               <TableCell sx={{ fontFamily: "monospace", fontSize: "0.75rem" }}>{s.id.substring(0, 8)}</TableCell>
               <TableCell><Chip label={s.orderType} size="small" variant="outlined" /></TableCell>
               <TableCell sx={{ fontFamily: "monospace", fontSize: "0.75rem" }}>{s.orderId?.substring(0, 8) || "—"}</TableCell>

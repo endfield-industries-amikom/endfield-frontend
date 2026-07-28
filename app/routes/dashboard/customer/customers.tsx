@@ -1,7 +1,7 @@
 import { get, patch, post, del } from "~/services/api.server";
 import { getAccessToken } from "~/services/auth-helper.server";
 import { useState } from "react";
-import { Link, useFetcher } from "react-router";
+import { useNavigate, useFetcher } from "react-router";
 import type { Route } from "./+types/customers";
 import type { Customer } from "~/types";
 import {
@@ -65,6 +65,7 @@ export default function CustomersSection({ loaderData, actionData }: Route.Compo
   const [editId, setEditId] = useState<string | null>(null);
   const [form, setForm] = useState(emptyForm);
   const fetcher = useFetcher();
+  const navigate = useNavigate();
   const fetcherData = fetcher.data as { ok?: boolean; error?: string; errorRaw?: Error } | undefined;
   const actionError =
     fetcherData?.ok === false
@@ -116,7 +117,7 @@ export default function CustomersSection({ loaderData, actionData }: Route.Compo
               </TableCell></TableRow>
             )}
             {customers.map((c) => (
-              <TableRow key={c.id} hover sx={{cursor: "pointer"}} component={Link} to={`/dashboard/customer/${c.id}`}>
+              <TableRow key={c.id} hover sx={{cursor: "pointer"}} onClick={() => navigate(`/dashboard/customer/${c.id}`)}>
                 <TableCell>{c.name}</TableCell>
                 <TableCell sx={{ fontFamily: "monospace", fontSize: "0.8rem" }}>{c.code}</TableCell>
                 <TableCell>{c.email || "—"}</TableCell>

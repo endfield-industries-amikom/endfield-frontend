@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Outlet, NavLink, useFetcher, useRouteLoaderData } from "react-router";
 import { Box, Drawer, AppBar, Toolbar, Typography, List, ListItemButton, ListItemText, ListItemIcon, Button, Chip, IconButton, Divider } from "@mui/material";
 import MenuIcon from "@mui/icons-material/Menu";
@@ -22,6 +22,18 @@ export default function DashboardLayout() {
   const [mobileOpen, setMobileOpen] = useState(false);
   const logoutFetcher = useFetcher();
   const isLoggingOut = logoutFetcher.state !== "idle";
+  const wasLoggingOut = useRef(false);
+
+  // useFetcher doesn't follow redirects — force full navigation
+  // once the logout action completes so Set-Cookie headers take effect.
+  useEffect(() => {
+    if (isLoggingOut) {
+      wasLoggingOut.current = true;
+    } else if (wasLoggingOut.current) {
+      wasLoggingOut.current = false;
+      window.location.href = "/dashboard/auth/login";
+    }
+  }, [isLoggingOut]);
 
   const parentData = useRouteLoaderData<{ accessToken: string }>("routes/dashboard/auth-guard");
   const accessToken = parentData?.accessToken || "";

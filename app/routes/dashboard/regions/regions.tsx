@@ -1,7 +1,7 @@
 import { get, patch, post, del } from "~/services/api.server";
 import { getAccessToken } from "~/services/auth-helper.server";
 import { useState } from "react";
-import { Link, useFetcher, useRouteLoaderData } from "react-router";
+import { useFetcher, useNavigate, useRouteLoaderData } from "react-router";
 import type { Route } from "./+types/regions";
 import type { Region } from "~/types";
 import {
@@ -68,6 +68,7 @@ export default function RegionsSection({ loaderData, actionData }: Route.Compone
   const [form, setForm] = useState(emptyForm);
   const fetcher = useFetcher();
   const fetcherData = fetcher.data as { ok?: boolean; error?: string; errorRaw?: Error } | undefined;
+  const navigate = useNavigate();
   const actionError =
     fetcherData?.ok === false
       ? fetcherData
@@ -114,7 +115,7 @@ export default function RegionsSection({ loaderData, actionData }: Route.Compone
               </TableCell></TableRow>
             )}
             {regions.map((r) => (
-              <TableRow key={r.id} hover sx={{ cursor: "pointer" }} component={Link} to={`/dashboard/regions/${r.id}`}>
+              <TableRow key={r.id} hover sx={{ cursor: "pointer" }} onClick={() => navigate(`/dashboard/regions/${r.id}`)}>
                 <TableCell>{r.name}</TableCell>
                 <TableCell sx={{ fontFamily: "monospace", fontSize: "0.8rem" }}>{r.code}</TableCell>
                 <TableCell>{r.description || "—"}</TableCell>

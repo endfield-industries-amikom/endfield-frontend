@@ -1,7 +1,7 @@
 import { get, patch, post } from "~/services/api.server";
 import { getAccessToken } from "~/services/auth-helper.server";
 import { useState } from "react";
-import { Link, useFetcher, useRouteLoaderData } from "react-router";
+import { useNavigate, useFetcher, useRouteLoaderData } from "react-router";
 import type { Route } from "./+types/inventory";
 import type { Inventory } from "~/types";
 import {
@@ -67,6 +67,7 @@ export default function InventorySection({ loaderData, actionData }: Route.Compo
   const [editId, setEditId] = useState<string | null>(null);
   const [form, setForm] = useState<Record<string, string>>({ itemId: "", warehouseId: "", quantityOnHand: "", reservedQuantity: "", reorderLevel: "" });
   const fetcher = useFetcher();
+  const navigate = useNavigate();
   const fetcherData = fetcher.data as { ok?: boolean; error?: string; errorRaw?: Error } | undefined;
   const actionError =
     fetcherData?.ok === false
@@ -120,7 +121,7 @@ export default function InventorySection({ loaderData, actionData }: Route.Compo
               </TableCell></TableRow>
             )}
             {inventory.map((inv) => (
-              <TableRow key={inv.id} hover sx={{cursor: "pointer"}} component={Link} to={`/dashboard/inventory/${inv.id}`}>
+              <TableRow key={inv.id} hover sx={{cursor: "pointer"}} onClick={() => navigate(`/dashboard/inventory/${inv.id}`)}>
                 <TableCell>{inv.item?.name ?? inv.itemId}</TableCell>
                 <TableCell>{inv.warehouse?.name ?? inv.warehouseId}</TableCell>
                 <TableCell>{inv.quantityOnHand}</TableCell>

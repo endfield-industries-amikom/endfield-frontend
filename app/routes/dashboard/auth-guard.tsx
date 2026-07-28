@@ -8,11 +8,13 @@ interface LoaderData {
 
 export async function loader({
   request,
-}: Route.LoaderArgs): Promise<LoaderData | Response> {
+}: Route.LoaderArgs): Promise<LoaderData> {
   const url = new URL(request.url);
 
-  // Allow unauthenticated access to the login page itself
-  if (url.pathname === "/dashboard/auth/login") {
+  // Allow unauthenticated access to the login page itself.
+  // Must use startsWith — client-side .data requests append `.data`
+  // to the URL path (e.g. /dashboard/auth/login.data).
+  if (url.pathname.startsWith("/dashboard/auth/login")) {
     return { accessToken: "" };
   }
 
@@ -20,7 +22,7 @@ export async function loader({
 
   // No session cookie at all — definitely not logged in
   if (!cookie) {
-    return redirect("/dashboard/auth/login");
+    throw redirect("/dashboard/auth/login");
   }
 
   try {
@@ -36,7 +38,7 @@ export async function loader({
   } catch (err) {
     console.error("Auth guard — refresh token failed:", err);
     // Session expired or invalid — redirect to login
-    return redirect("/dashboard/auth/login");
+    throw redirect("/dashboard/auth/login");
   }
 }
 

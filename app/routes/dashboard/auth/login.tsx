@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Form, redirect, useNavigation } from "react-router";
+import { Form, redirect, data, useNavigation } from "react-router";
 import type { Route } from "./+types/login";
 import {
   Button,
@@ -23,7 +23,7 @@ export async function loader() {
 }
 
 /* ------------------------------------------------------------------ */
-/*  Server‑side action – login / register / logout (all private API)  */
+/* Server‑side action – login / register / logout */
 /* ------------------------------------------------------------------ */
 
 export async function action({ request }: Route.ActionArgs) {
@@ -40,18 +40,16 @@ export async function action({ request }: Route.ActionArgs) {
         body: {},
         cookie,
       });
-      // Forward any Set‑Cookie the backend sends (clearing sessionId)
       const setCookie = logoutRes.headers.get("set-cookie");
       if (setCookie) headers.set("Set-Cookie", setCookie);
     } catch {
       // Still clear on our side even if backend call fails
     }
-    // Fallback: clear sessionId cookie ourselves
     headers.set(
       "Set-Cookie",
       "sessionId=; Path=/; HttpOnly; Max-Age=0",
     );
-    return redirect("/dashboard/auth/login", { headers });
+    return data({ success: true }, { headers });
   }
 
   /* ---- register / login ---- */
@@ -110,7 +108,7 @@ export default function Login({
   const [showPassword, setShowPassword] = useState(false);
   const navigation = useNavigation();
   const isSubmitting = navigation.state === "submitting";
-  const error = actionData?.error;
+  const error = actionData?.error || "";
 
   return (
     <div className="min-h-screen relative overflow-hidden">
