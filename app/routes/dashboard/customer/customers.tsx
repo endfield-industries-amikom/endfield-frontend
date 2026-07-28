@@ -1,26 +1,27 @@
 import { get, patch, post, del } from "~/services/api.server";
 import { getAccessToken } from "~/services/auth-helper.server";
-import { useState } from "react";
-import { useNavigate, useFetcher } from "react-router";
+import { Suspense, useEffect, useRef, useState } from "react";
+import { useNavigate, useFetcher, Await } from "react-router";
 import type { Route } from "./+types/customers";
 import type { Customer } from "~/types";
 import {
-  Box, Button, Dialog, DialogTitle, DialogContent, DialogActions,
-  TextField, Table, TableBody, TableCell, TableContainer, TableHead,
+  Alert, Box, Button, Dialog, DialogTitle, DialogContent, DialogActions,
+  Snackbar, TextField, Table, TableBody, TableCell, TableContainer, TableHead,
   TableRow, Paper, Typography, IconButton,
 } from "@mui/material";
 import ErrorPopup from "~/components/error";
 import AddIcon from "@mui/icons-material/Add";
 import EditIcon from "@mui/icons-material/Edit";
 import DeleteIcon from "@mui/icons-material/Delete";
+import SkeletonTable from "~/components/SkeletonTable";
 
 export async function loader({ request }: Route.LoaderArgs) {
   const cookie = request.headers.get("Cookie") || "";
   const token = await getAccessToken(cookie);
-  const response = await get<{ data: { data: Customer[]; total: number; page: number; limit: number } }>(
+  const customersPromise = get<{ data: { data: Customer[]; total: number; page: number; limit: number } }>(
     "/customers?page=1&limit=50", token, cookie,
-  );
-  return { customers: response.data.data };
+  ).then((r) => r.data.data);
+  return { customers: customersPromise };
 }
 
 export async function action({ request }: Route.ActionArgs) {
@@ -40,11 +41,11 @@ export async function action({ request }: Route.ActionArgs) {
     };
     if (intent === "create-customer") await post("/customers", body, token, cookie);
     else await patch(`/customers/${formData.get("id")}`, body, token, cookie);
-    return { ok: true };
+    return { ok: true, intent };
   }
   if (intent === "delete-customer") {
     await del(`/customers/${formData.get("id")}`, token, cookie);
-    return { ok: true };
+    return { ok: true, intent };
   }
   return { ok: false, error: "Unknown intent" };
   } catch (err) {
@@ -60,11 +61,24 @@ export async function action({ request }: Route.ActionArgs) {
 const emptyForm = { name: "", code: "", email: "", phone: "", address: "" };
 
 export default function CustomersSection({ loaderData, actionData }: Route.ComponentProps) {
-  const customers = loaderData?.customers ?? [];
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editId, setEditId] = useState<string | null>(null);
   const [form, setForm] = useState(emptyForm);
   const fetcher = useFetcher();
+  const [successMsg, setSuccessMsg] = useState<string | null>(null);
+  const prevFetcherState = useRef(fetcher.state);
+
+  useEffect(() => {
+    if (prevFetcherState.current === "loading" && fetcher.state === "idle" && fetcher.data?.ok) {
+      const messages: Record<string, string> = {
+        "create-customer": "Customer created successfully.",
+        "update-customer": "Customer updated successfully.",
+        "delete-customer": "Customer deleted successfully.",
+      };
+      setSuccessMsg(messages[(fetcher.data as any).intent] || "Operation completed.");
+    }
+    prevFetcherState.current = fetcher.state;
+  }, [fetcher.state, fetcher.data]);
   const navigate = useNavigate();
   const fetcherData = fetcher.data as { ok?: boolean; error?: string; errorRaw?: Error } | undefined;
   const actionError =
@@ -102,41 +116,53 @@ export default function CustomersSection({ loaderData, actionData }: Route.Compo
           error={(actionError as any).errorRaw}
         />
       )}
-      <TableContainer component={Paper}>
-        <Table size="small">
-          <TableHead>
-            <TableRow>
-              <TableCell>Name</TableCell><TableCell>Code</TableCell><TableCell>Email</TableCell>
-              <TableCell>Phone</TableCell>{canMutate && <TableCell align="right">Actions</TableCell>}
-            </TableRow>
-          </TableHead>
-          <TableBody>
-            {customers.length === 0 && (
-              <TableRow><TableCell colSpan={canMutate ? 5 : 4} align="center">
-                <Typography color="text.secondary" sx={{ py: 2 }}>No customers found.</Typography>
-              </TableCell></TableRow>
-            )}
-            {customers.map((c) => (
-              <TableRow key={c.id} hover sx={{cursor: "pointer"}} onClick={() => navigate(`/dashboard/customer/${c.id}`)}>
-                <TableCell>{c.name}</TableCell>
-                <TableCell sx={{ fontFamily: "monospace", fontSize: "0.8rem" }}>{c.code}</TableCell>
-                <TableCell>{c.email || "—"}</TableCell>
-                <TableCell>{c.phone || "—"}</TableCell>
-                {canMutate && (
-                  <TableCell align="right">
-                    <IconButton size="small" onClick={() => openEdit(c)}><EditIcon fontSize="small" /></IconButton>
-                    <fetcher.Form method="post" style={{ display: "inline" }}>
-                      <input type="hidden" name="intent" value="delete-customer" />
-                      <input type="hidden" name="id" value={c.id} />
-                      <IconButton size="small" type="submit" color="error"><DeleteIcon fontSize="small" /></IconButton>
-                    </fetcher.Form>
-                  </TableCell>
-                )}
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
-      </TableContainer>
+      <Snackbar open={!!successMsg} autoHideDuration={4000} onClose={() => setSuccessMsg(null)}
+        anchorOrigin={{ vertical: "bottom", horizontal: "right" }}>
+        <Alert severity="success" variant="filled" onClose={() => setSuccessMsg(null)} sx={{ width: "100%" }}>
+          {successMsg}
+        </Alert>
+      </Snackbar>
+      <Suspense fallback={<SkeletonTable columns={canMutate ? 5 : 4} />}>
+        <Await resolve={(loaderData as any).customers}>
+          {(customers: Customer[]) => (
+            <TableContainer component={Paper}>
+              <Table size="small">
+                <TableHead>
+                  <TableRow>
+                    <TableCell>Name</TableCell><TableCell>Code</TableCell><TableCell>Email</TableCell>
+                    <TableCell>Phone</TableCell>{canMutate && <TableCell align="right">Actions</TableCell>}
+                  </TableRow>
+                </TableHead>
+                <TableBody>
+                  {customers.length === 0 && (
+                    <TableRow><TableCell colSpan={canMutate ? 5 : 4} align="center">
+                      <Typography color="text.secondary" sx={{ py: 2 }}>No customers found.</Typography>
+                    </TableCell></TableRow>
+                  )}
+                  {customers.map((c) => (
+                    <TableRow key={c.id} hover sx={{cursor: "pointer"}} onClick={() => navigate(`/dashboard/customer/${c.id}`)}>
+                      <TableCell>{c.name}</TableCell>
+                      <TableCell sx={{ fontFamily: "monospace", fontSize: "0.8rem" }}>{c.code}</TableCell>
+                      <TableCell>{c.email || "\u2014"}</TableCell>
+                      <TableCell>{c.phone || "\u2014"}</TableCell>
+                      {canMutate && (
+                        <TableCell align="right">
+                          <IconButton size="small" onClick={() => openEdit(c)}><EditIcon fontSize="small" /></IconButton>
+                          <fetcher.Form method="post" style={{ display: "inline" }}>
+                            <input type="hidden" name="intent" value="delete-customer" />
+                            <input type="hidden" name="id" value={c.id} />
+                            <IconButton size="small" type="submit" color="error"><DeleteIcon fontSize="small" /></IconButton>
+                          </fetcher.Form>
+                        </TableCell>
+                      )}
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </TableContainer>
+          )}
+        </Await>
+      </Suspense>
       <Dialog open={dialogOpen} onClose={() => setDialogOpen(false)} maxWidth="sm" fullWidth>
         <form onSubmit={handleSubmit}>
           <DialogTitle>{editId ? "Edit Customer" : "New Customer"}</DialogTitle>

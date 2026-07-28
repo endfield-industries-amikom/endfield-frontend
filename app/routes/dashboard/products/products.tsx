@@ -1,11 +1,11 @@
-import { useState, useRef } from "react";
-import { useNavigate, useFetcher, useRouteLoaderData } from "react-router";
+import { Suspense, useEffect, useRef, useState } from "react";
+import { Await, useNavigate, useFetcher, useRouteLoaderData } from "react-router";
 import type { Route } from "./+types/products";
 import type { Product } from "~/types";
 import {
   Box, Button, Dialog, DialogTitle, DialogContent, DialogActions,
   TextField, Table, TableBody, TableCell, TableContainer, TableHead,
-  TableRow, Paper, Typography, IconButton, Checkbox, FormControlLabel,
+  TableRow, Paper, Typography, IconButton, Checkbox, FormControlLabel, Snackbar, Alert,
 } from "@mui/material";
 import ErrorPopup from "~/components/error";
 import AddIcon from "@mui/icons-material/Add";
@@ -15,6 +15,7 @@ import CloudUploadIcon from "@mui/icons-material/CloudUpload";
 import { get, post, patch, del, apiRequest } from "~/services/api.server";
 import { getAccessToken } from "~/services/auth-helper.server";
 import { normalizeImageUrl } from "~/utils/image";
+import SkeletonTable from "~/components/SkeletonTable";
 
 function useRole() {
   const parent = useRouteLoaderData<{ accessToken: string }>("routes/dashboard/auth-guard");
@@ -26,10 +27,10 @@ function useRole() {
 export async function loader({ request }: Route.LoaderArgs) {
   const cookie = request.headers.get("Cookie") || "";
   const token = await getAccessToken(cookie);
-  const response = await get<{ data: { data: Product[]; total: number; page: number; limit: number } }>(
+  const productsPromise = get<{ data: { data: Product[]; total: number; page: number; limit: number } }>(
     "/product?page=1&limit=50", token, cookie,
-  );
-  return { products: response.data.data };
+  ).then((r) => r.data.data);
+  return { products: productsPromise };
 }
 
 export async function action({ request }: Route.ActionArgs) {
@@ -67,7 +68,7 @@ export async function action({ request }: Route.ActionArgs) {
       await apiRequest(`/product/${productId}/image`, { method: "POST", body: uploadFd, isMultipart: true, token, cookie });
     }
 
-    return { ok: true };
+    return { ok: true, intent };
   }
 
   if (intent === "update-product") {
@@ -95,12 +96,12 @@ export async function action({ request }: Route.ActionArgs) {
       await apiRequest(`/product/${id}/image`, { method: "POST", body: uploadFd, isMultipart: true, token, cookie });
     }
 
-    return { ok: true };
+    return { ok: true, intent };
   }
 
   if (intent === "delete-product") {
     await del(`/product/${formData.get("id")}`, token, cookie);
-    return { ok: true };
+    return { ok: true, intent };
   }
 
   return { ok: false, error: "Unknown intent" };
@@ -118,7 +119,6 @@ const emptyForm = { name: "", sku: "", description: "", category: "", unitPrice:
 
 export default function ProductsSection({ loaderData, actionData }: Route.ComponentProps) {
   const role = useRole();
-  const products = loaderData?.products ?? [];
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editId, setEditId] = useState<string | null>(null);
   const [form, setForm] = useState(emptyForm);
@@ -135,6 +135,27 @@ export default function ProductsSection({ loaderData, actionData }: Route.Compon
         ? actionData
         : null;
   const deleteFetcher = useFetcher();
+  const [successMsg, setSuccessMsg] = useState<string | null>(null);
+  const prevFetcherState = useRef(fetcher.state);
+  const prevDeleteState = useRef(deleteFetcher.state);
+
+  useEffect(() => {
+    if (prevFetcherState.current === "loading" && fetcher.state === "idle" && fetcher.data?.ok) {
+      const messages: Record<string, string> = {
+        "create-product": "Product created successfully.",
+        "update-product": "Product updated successfully.",
+      };
+      setSuccessMsg(messages[(fetcher.data as any).intent] || "Operation completed.");
+    }
+    prevFetcherState.current = fetcher.state;
+  }, [fetcher.state, fetcher.data]);
+
+  useEffect(() => {
+    if (prevDeleteState.current === "loading" && deleteFetcher.state === "idle" && deleteFetcher.data?.ok) {
+      setSuccessMsg("Product deleted successfully.");
+    }
+    prevDeleteState.current = deleteFetcher.state;
+  }, [deleteFetcher.state, deleteFetcher.data]);
   const canMutate = role === "Admin" || role === "Employee";
 
   function openCreate() {
@@ -192,7 +213,15 @@ export default function ProductsSection({ loaderData, actionData }: Route.Compon
           error={(actionError as any).errorRaw}
         />
       )}
-      <TableContainer component={Paper}>
+      <Snackbar open={!!successMsg} autoHideDuration={4000} onClose={() => setSuccessMsg(null)} anchorOrigin={{ vertical: "bottom", horizontal: "center" }}>
+        <Alert onClose={() => setSuccessMsg(null)} severity="success" variant="filled" sx={{ width: "100%" }}>
+          {successMsg}
+        </Alert>
+      </Snackbar>
+      <Suspense fallback={<SkeletonTable columns={canMutate ? 7 : 6} />}>
+        <Await resolve={(loaderData as any).products}>
+          {(products: Product[]) => (
+            <TableContainer component={Paper}>
         <Table size="small">
           <TableHead>
             <TableRow>
@@ -208,7 +237,10 @@ export default function ProductsSection({ loaderData, actionData }: Route.Compon
               </TableCell></TableRow>
             )}
             {products.map((p) => (
-              <TableRow key={p.id} hover sx={{cursor: "pointer"}} onClick={() => navigate(`/dashboard/products/${p.id}`)}>
+              <TableRow key={p.id} hover sx={{cursor: "pointer"}} onClick={(e) => {
+                               if ((e.target as HTMLElement).closest("button,a,input,textarea,select")) return;
+                               navigate(`/dashboard/products/${p.id}`);
+                             }}>
                 <TableCell>
                   {p.item?.imageUri ? (
                     <Box component="img" src={getImageSrc(p)} alt={p.item?.name}
@@ -237,6 +269,9 @@ export default function ProductsSection({ loaderData, actionData }: Route.Compon
           </TableBody>
         </Table>
       </TableContainer>
+          )}
+        </Await>
+      </Suspense>
 
       <Dialog open={dialogOpen} onClose={() => setDialogOpen(false)} maxWidth="sm" fullWidth>
         <form onSubmit={handleSubmit}>

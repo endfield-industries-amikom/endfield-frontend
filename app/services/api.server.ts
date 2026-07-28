@@ -61,42 +61,42 @@ export async function apiRequest<T = unknown>(
   }
 }
 
-export function get<T = unknown>(
+export async function get<T = unknown>(
   path: string,
   token?: string,
   cookie?: string,
 ): Promise<T> {
-  return apiRequest<T>(path, { token, cookie });
+  return await apiRequest<T>(path, { token, cookie });
 }
 
-export function post<T = unknown>(
-  path: string,
-  body: unknown,
-  token?: string,
-  cookie?: string,
-): Promise<T> {
-  return apiRequest<T>(path, { method: "POST", body, token, cookie });
-}
-
-export function put<T = unknown>(
+export async function post<T = unknown>(
   path: string,
   body: unknown,
   token?: string,
   cookie?: string,
 ): Promise<T> {
-  return apiRequest<T>(path, { method: "PUT", body, token, cookie });
+  return await apiRequest<T>(path, { method: "POST", body, token, cookie });
 }
 
-export function patch<T = unknown>(
+export async function put<T = unknown>(
   path: string,
   body: unknown,
   token?: string,
   cookie?: string,
 ): Promise<T> {
-  return apiRequest<T>(path, { method: "PATCH", body, token, cookie });
+  return await apiRequest<T>(path, { method: "PUT", body, token, cookie });
 }
 
-export function del<T = unknown>(
+export async function patch<T = unknown>(
+  path: string,
+  body: unknown,
+  token?: string,
+  cookie?: string,
+): Promise<T> {
+  return await apiRequest<T>(path, { method: "PATCH", body, token, cookie });
+}
+
+export async function del<T = unknown>(
   path: string,
   token?: string,
   cookie?: string,
@@ -104,12 +104,12 @@ export function del<T = unknown>(
   return apiRequest<T>(path, { method: "DELETE", token, cookie });
 }
 
-export function deleteEntity<T = unknown>(
+export async function deleteEntity<T = unknown>(
   path: string,
   token?: string,
   cookie?: string,
 ): Promise<T> {
-  return apiRequest<T>(path, { method: "DELETE", token, cookie });
+  return await apiRequest<T>(path, { method: "DELETE", token, cookie });
 }
 // ---------------------------------------------------------------------------
 // Full‑response variant — returns headers so SSR actions can forward

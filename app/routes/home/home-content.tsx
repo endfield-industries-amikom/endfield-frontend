@@ -8,11 +8,13 @@ import {
 } from "@mui/material";
 import GroupsIcon from "@mui/icons-material/Groups";
 import HandshakeIcon from "@mui/icons-material/Handshake";
-import { NavLink } from "react-router";
+import { NavLink, Await } from "react-router";
+import { Suspense } from "react";
 import { Swiper, SwiperSlide } from "swiper/react";
 import { Navigation, Autoplay } from "swiper/modules";
 import ProductsSectionHeader from "~/components/products/ProductsSectionHeader";
 import ProductsGrid from "~/components/products/ProductsGrid";
+import SkeletonProductsGrid from "~/components/products/SkeletonProductsGrid";
 import { get } from "~/services/api.server";
 import type { Route } from "./+types/home-content";
 import type { IProduct } from "~/interfaces/IProduct";
@@ -24,25 +26,28 @@ import { cdnUrl } from "~/utils/cdn";
 /*  Loader – fetch top 10 products from API                            */
 /* ------------------------------------------------------------------ */
 
-export async function loader({ request }: Route.LoaderArgs) {
-  try {
-    const response = await get<{ data: { id: string; name: string; sku: string; unitPrice: number; imageUri?: string; description?: string; category?: string }[] }>(
-          "/product/top-selling",
-        );
-        const products: IProduct[] = (response.data || []).map((p) => ({
-          id: p.id,
-          name: p.name,
-          sku: p.sku,
-          description: p.description,
-          category: p.category,
-          unitPrice: Number(p.unitPrice || 0),
-          imageUri: normalizeImageUrl(p.imageUri),
-          isBest: false,
-        }));
-    return { products, heroLink: normalizeImageUrl(cdnUrl("images/HeroSection.webp")) };
-  } catch {
-    return { products: [] as IProduct[] };
-  }
+export async function loader() {
+  const productsPromise = get<{ data: { id: string; name: string; sku: string; unitPrice: number; imageUri?: string; description?: string; category?: string }[] }>(
+    "/product/top-selling",
+  )
+    .then((response) =>
+      (response.data || []).map((p) => ({
+        id: p.id,
+        name: p.name,
+        sku: p.sku,
+        description: p.description,
+        category: p.category,
+        unitPrice: Number(p.unitPrice || 0),
+        imageUri: normalizeImageUrl(p.imageUri),
+        isBest: false,
+      } as IProduct)),
+    )
+    .catch(() => [] as IProduct[]);
+
+  return {
+    products: productsPromise,
+    heroLink: normalizeImageUrl(cdnUrl("images/HeroSection.webp")),
+  };
 }
 
 const images = [
@@ -54,14 +59,13 @@ const images = [
 ];
 
 export default function HomeContent({ loaderData }: Route.ComponentProps) {
-  const products = loaderData?.products ?? [];
-  const HeroLink = loaderData?.heroLink ?? images[0];
+  const heroLink = (loaderData as { heroLink: string }).heroLink ?? images[0];
 
   return (
     <Box className="scroll-smooth overflow-x-hidden">
       <div
         className="relative bg-cover bg-center flex items-center justify-center no-repeat lg:h-[100vh] xs:h-[50vh] md:h-[50vh]"
-        style={{ backgroundImage: `url(${HeroLink})` }}
+        style={{ backgroundImage: `url(${heroLink})` }}
       >
         <Box
           sx={{
@@ -409,7 +413,7 @@ export default function HomeContent({ loaderData }: Route.ComponentProps) {
           </Box>
 
           <Box sx={{ mt: { xs: 3, md: 4 } }}>
-            <Button 
+            <Button
             variant="outlined"
              component={NavLink}
                 to="/blogs">
@@ -428,18 +432,36 @@ export default function HomeContent({ loaderData }: Route.ComponentProps) {
             title="Our Product"
             subtitle="Discover our range of innovative products."
           />
-          {products.length > 0 ? (
-            <ProductsGrid products={products} />
-          ) : (
-            <Box sx={{ textAlign: "center", py: 8 }}>
-              <Typography variant="h6" color="text.secondary">
-                No Product Yet
-              </Typography>
-              <Typography variant="body2" color="text.disabled" sx={{ mt: 1 }}>
-                Our product catalog is being prepared. Check back soon!
-              </Typography>
-            </Box>
-          )}
+          <Suspense fallback={<SkeletonProductsGrid />}>
+            <Await
+              resolve={loaderData.products}
+              errorElement={
+                <Box sx={{ textAlign: "center", py: 8 }}>
+                  <Typography variant="h6" color="text.secondary">
+                    No Product Yet
+                  </Typography>
+                  <Typography variant="body2" color="text.disabled" sx={{ mt: 1 }}>
+                    Our product catalog is being prepared. Check back soon!
+                  </Typography>
+                </Box>
+              }
+            >
+              {(products: IProduct[]) =>
+                products.length > 0 ? (
+                  <ProductsGrid products={products} />
+                ) : (
+                  <Box sx={{ textAlign: "center", py: 8 }}>
+                    <Typography variant="h6" color="text.secondary">
+                      No Product Yet
+                    </Typography>
+                    <Typography variant="body2" color="text.disabled" sx={{ mt: 1 }}>
+                      Our product catalog is being prepared. Check back soon!
+                    </Typography>
+                  </Box>
+                )
+              }
+            </Await>
+          </Suspense>
         </Stack>
         <Box sx={{ display: "flex", justifyContent: "center", mt: 4 }}>
           <NavLink to="/products">
