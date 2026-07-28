@@ -18,12 +18,8 @@ import { apiRequestFull } from "~/services/api.server";
 /*  Server‑side loader – redirect already‑logged‑in users             */
 /* ------------------------------------------------------------------ */
 
-export async function loader({ request }: Route.LoaderArgs) {
-  const cookie = request.headers.get("Cookie") || "";
-  if (cookie.includes("refresh_token=")) {
-    return redirect("/dashboard");
-  }
-  return null;
+export async function loader() {
+  return { ok: true };
 }
 
 /* ------------------------------------------------------------------ */
