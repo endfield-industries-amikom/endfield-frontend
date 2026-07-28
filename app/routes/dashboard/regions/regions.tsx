@@ -1,12 +1,12 @@
 import { get, patch, post, del } from "~/services/api.server";
 import { getAccessToken } from "~/services/auth-helper.server";
-import { Suspense, useState } from "react";
+import { Suspense, useEffect, useRef, useState } from "react";
 import { Await, useFetcher, useNavigate, useRouteLoaderData } from "react-router";
 import type { Route } from "./+types/regions";
 import type { Region } from "~/types";
 import {
-  Box, Button, Dialog, DialogTitle, DialogContent, DialogActions,
-  TextField, Table, TableBody, TableCell, TableContainer, TableHead,
+  Alert, Box, Button, Dialog, DialogTitle, DialogContent, DialogActions,
+  Snackbar, TextField, Table, TableBody, TableCell, TableContainer, TableHead,
   TableRow, Paper, Typography, IconButton,
 } from "@mui/material";
 import ErrorPopup from "~/components/error";
@@ -42,11 +42,11 @@ export async function action({ request }: Route.ActionArgs) {
       const body = { name: formData.get("name"), code: formData.get("code"), description: formData.get("description") || undefined };
       if (intent === "create-region") await post("/region", body, token, cookie);
       else await patch(`/region/${formData.get("id")}`, body, token, cookie);
-      return { ok: true };
+      return { ok: true, intent };
     }
     if (intent === "delete-region") {
       await del(`/region/${formData.get("id")}`, token, cookie);
-      return { ok: true };
+      return { ok: true, intent };
     }
     return { ok: false, error: "Unknown intent" };
   } catch (err) {
@@ -67,6 +67,20 @@ export default function RegionsSection({ loaderData, actionData }: Route.Compone
   const [editId, setEditId] = useState<string | null>(null);
   const [form, setForm] = useState(emptyForm);
   const fetcher = useFetcher();
+  const [successMsg, setSuccessMsg] = useState<string | null>(null);
+  const prevFetcherState = useRef(fetcher.state);
+
+  useEffect(() => {
+    if (prevFetcherState.current === "loading" && fetcher.state === "idle" && fetcher.data?.ok) {
+      const messages: Record<string, string> = {
+        "create-region": "Region created successfully.",
+        "update-region": "Region updated successfully.",
+        "delete-region": "Region deleted successfully.",
+      };
+      setSuccessMsg(messages[(fetcher.data as any).intent] || "Operation completed.");
+    }
+    prevFetcherState.current = fetcher.state;
+  }, [fetcher.state, fetcher.data]);
   const fetcherData = fetcher.data as { ok?: boolean; error?: string; errorRaw?: Error } | undefined;
   const navigate = useNavigate();
   const actionError =
@@ -100,6 +114,12 @@ export default function RegionsSection({ loaderData, actionData }: Route.Compone
           error={(actionError as any).errorRaw}
         />
       )}
+      <Snackbar open={!!successMsg} autoHideDuration={4000} onClose={() => setSuccessMsg(null)}
+        anchorOrigin={{ vertical: "bottom", horizontal: "right" }}>
+        <Alert severity="success" variant="filled" onClose={() => setSuccessMsg(null)} sx={{ width: "100%" }}>
+          {successMsg}
+        </Alert>
+      </Snackbar>
       <Suspense fallback={<SkeletonTable columns={canMutate ? 4 : 3} />}>
         <Await resolve={(loaderData as any).regions}>
           {(regions: Region[]) => (

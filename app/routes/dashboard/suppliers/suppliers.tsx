@@ -1,13 +1,13 @@
 import { get, patch, post, del } from "~/services/api.server";
 import { getAccessToken } from "~/services/auth-helper.server";
-import { Suspense, useState } from "react";
+import { Suspense, useEffect, useRef, useState } from "react";
 import { Await, Link, useFetcher, useNavigate, useRouteLoaderData } from "react-router";
 import type { Route } from "./+types/suppliers";
 import type { Supplier } from "~/types";
 import {
   Box, Button, Dialog, DialogTitle, DialogContent, DialogActions,
   TextField, Table, TableBody, TableCell, TableContainer, TableHead,
-  TableRow, Paper, Typography, IconButton,
+  TableRow, Paper, Typography, IconButton, Snackbar, Alert,
 } from "@mui/material";
 import ErrorPopup from "~/components/error";
 import SkeletonTable from "~/components/SkeletonTable";
@@ -48,11 +48,11 @@ export async function action({ request }: Route.ActionArgs) {
     };
     if (intent === "create-supplier") await post("/supplier", body, token, cookie);
     else await patch(`/supplier/${formData.get("id")}`, body, token, cookie);
-    return { ok: true };
+    return { ok: true, intent };
   }
   if (intent === "delete-supplier") {
     await del(`/supplier/${formData.get("id")}`, token, cookie);
-    return { ok: true };
+    return { ok: true, intent };
   }
   return { ok: false, error: "Unknown intent" };
   } catch (err) {
@@ -73,6 +73,20 @@ export default function SuppliersSection({ loaderData, actionData }: Route.Compo
   const [editId, setEditId] = useState<string | null>(null);
   const [form, setForm] = useState(emptyForm);
   const fetcher = useFetcher();
+  const [successMsg, setSuccessMsg] = useState<string | null>(null);
+  const prevFetcherState = useRef(fetcher.state);
+
+  useEffect(() => {
+    if (prevFetcherState.current === "loading" && fetcher.state === "idle" && fetcher.data?.ok) {
+      const messages: Record<string, string> = {
+        "create-supplier": "Supplier created successfully.",
+        "update-supplier": "Supplier updated successfully.",
+        "delete-supplier": "Supplier deleted successfully.",
+      };
+      setSuccessMsg(messages[(fetcher.data as any).intent] || "Operation completed.");
+    }
+    prevFetcherState.current = fetcher.state;
+  }, [fetcher.state, fetcher.data]);
   const fetcherData = fetcher.data as { ok?: boolean; error?: string; errorRaw?: Error } | undefined;
   const navigate = useNavigate();
   const actionError =
@@ -110,6 +124,16 @@ export default function SuppliersSection({ loaderData, actionData }: Route.Compo
           error={(actionError as any).errorRaw}
         />
       )}
+      <Snackbar
+        open={!!successMsg}
+        autoHideDuration={3000}
+        onClose={() => setSuccessMsg(null)}
+        anchorOrigin={{ vertical: "bottom", horizontal: "center" }}
+      >
+        <Alert onClose={() => setSuccessMsg(null)} severity="success" variant="filled" sx={{ width: "100%" }}>
+          {successMsg}
+        </Alert>
+      </Snackbar>
       <Suspense fallback={<SkeletonTable columns={canMutate ? 5 : 4} />}>
         <Await resolve={(loaderData as any).suppliers}>
           {(suppliers: Supplier[]) => (

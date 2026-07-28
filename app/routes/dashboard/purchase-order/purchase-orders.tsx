@@ -1,11 +1,11 @@
-import { Suspense, useRef, useState } from "react";
+import { Suspense, useEffect, useRef, useState } from "react";
 import { Await, useFetcher, useNavigate, useRouteLoaderData } from "react-router";
 import type { Route } from "./+types/purchase-orders";
 import SkeletonCards from "~/components/SkeletonCards";
 import { get, patch, post } from "~/services/api.server";
 import { getAccessToken } from "~/services/auth-helper.server";
 import type { PurchaseOrder } from "~/types";
-import { Box, Button, Dialog, DialogTitle, DialogContent, DialogActions, TextField, Typography, IconButton, MenuItem, Chip, Card, CardContent, CardActions, Grid, Divider, Autocomplete } from "@mui/material";
+import { Box, Button, Dialog, DialogTitle, DialogContent, DialogActions, TextField, Typography, IconButton, MenuItem, Chip, Card, CardContent, CardActions, Grid, Divider, Autocomplete, Snackbar, Alert } from "@mui/material";
 import ErrorPopup from "~/components/error";
 import AddIcon from "@mui/icons-material/Add";
 import EditIcon from "@mui/icons-material/Edit";
@@ -55,12 +55,12 @@ export async function action({ request }: Route.ActionArgs) {
       const body = { supplierId: formData.get("supplierId"), warehouseId: formData.get("warehouseId"), notes: formData.get("notes") || undefined, items };
       if (intent === "create-purchase-order") await post("/purchase-order", body, token, cookie);
       else await patch(`/purchase-order/${formData.get("id")}`, body, token, cookie);
-      return { ok: true };
+      return { ok: true, intent };
     }
     if (intent === "approve-po") {
       try {
         await post(`/purchase-order/${formData.get("id")}/approve`, {}, token, cookie);
-        return { ok: true };
+        return { ok: true, intent };
       } catch (err) {
         return { ok: false, error: err instanceof Error ? err.message : "Approval failed" };
       }
@@ -98,6 +98,28 @@ export default function PurchaseOrdersSection({ loaderData, actionData }: Route.
         ? actionData
         : null;
   const approveFetcher = useFetcher();
+  const [successMsg, setSuccessMsg] = useState<string | null>(null);
+  const prevFetcherState = useRef(fetcher.state);
+  const prevApproveState = useRef(approveFetcher.state);
+
+  useEffect(() => {
+    if (prevFetcherState.current === "loading" && fetcher.state === "idle" && fetcher.data?.ok) {
+      const messages: Record<string, string> = {
+        "create-purchase-order": "Purchase order created successfully.",
+        "update-purchase-order": "Purchase order updated successfully.",
+      };
+      setSuccessMsg(messages[(fetcher.data as any).intent] || "Operation completed.");
+    }
+    prevFetcherState.current = fetcher.state;
+  }, [fetcher.state, fetcher.data]);
+
+  useEffect(() => {
+    if (prevApproveState.current === "loading" && approveFetcher.state === "idle" && approveFetcher.data?.ok) {
+      setSuccessMsg("Purchase order approved successfully.");
+    }
+    prevApproveState.current = approveFetcher.state;
+  }, [approveFetcher.state, approveFetcher.data]);
+
   const canMutate = role === "Admin" || role === "Employee";
   const isAdmin = role === "Admin";
 
@@ -143,6 +165,9 @@ export default function PurchaseOrdersSection({ loaderData, actionData }: Route.
           error={(actionError as any).errorRaw}
         />
       )}
+      <Snackbar open={!!successMsg} autoHideDuration={4000} onClose={() => setSuccessMsg(null)} anchorOrigin={{ vertical: "bottom", horizontal: "center" }}>
+        <Alert onClose={() => setSuccessMsg(null)} severity="success" variant="filled" sx={{ width: "100%" }}>{successMsg}</Alert>
+      </Snackbar>
       <Suspense fallback={<SkeletonCards />}>
         <Await resolve={(loaderData as any).data}>
           {({ purchaseOrders, supplierOptions, warehouseOptions, productOptions }: { purchaseOrders: PurchaseOrder[]; supplierOptions: SelectOption[]; warehouseOptions: SelectOption[]; productOptions: ItemOption[] }) => {

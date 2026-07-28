@@ -1,11 +1,11 @@
-import { useState, useRef, Suspense } from "react";
+import { Suspense, useEffect, useRef, useState } from "react";
 import { Await, useNavigate, useFetcher, useRouteLoaderData } from "react-router";
 import type { Route } from "./+types/products";
 import type { Product } from "~/types";
 import {
   Box, Button, Dialog, DialogTitle, DialogContent, DialogActions,
   TextField, Table, TableBody, TableCell, TableContainer, TableHead,
-  TableRow, Paper, Typography, IconButton, Checkbox, FormControlLabel,
+  TableRow, Paper, Typography, IconButton, Checkbox, FormControlLabel, Snackbar, Alert,
 } from "@mui/material";
 import ErrorPopup from "~/components/error";
 import AddIcon from "@mui/icons-material/Add";
@@ -68,7 +68,7 @@ export async function action({ request }: Route.ActionArgs) {
       await apiRequest(`/product/${productId}/image`, { method: "POST", body: uploadFd, isMultipart: true, token, cookie });
     }
 
-    return { ok: true };
+    return { ok: true, intent };
   }
 
   if (intent === "update-product") {
@@ -96,12 +96,12 @@ export async function action({ request }: Route.ActionArgs) {
       await apiRequest(`/product/${id}/image`, { method: "POST", body: uploadFd, isMultipart: true, token, cookie });
     }
 
-    return { ok: true };
+    return { ok: true, intent };
   }
 
   if (intent === "delete-product") {
     await del(`/product/${formData.get("id")}`, token, cookie);
-    return { ok: true };
+    return { ok: true, intent };
   }
 
   return { ok: false, error: "Unknown intent" };
@@ -135,6 +135,27 @@ export default function ProductsSection({ loaderData, actionData }: Route.Compon
         ? actionData
         : null;
   const deleteFetcher = useFetcher();
+  const [successMsg, setSuccessMsg] = useState<string | null>(null);
+  const prevFetcherState = useRef(fetcher.state);
+  const prevDeleteState = useRef(deleteFetcher.state);
+
+  useEffect(() => {
+    if (prevFetcherState.current === "loading" && fetcher.state === "idle" && fetcher.data?.ok) {
+      const messages: Record<string, string> = {
+        "create-product": "Product created successfully.",
+        "update-product": "Product updated successfully.",
+      };
+      setSuccessMsg(messages[(fetcher.data as any).intent] || "Operation completed.");
+    }
+    prevFetcherState.current = fetcher.state;
+  }, [fetcher.state, fetcher.data]);
+
+  useEffect(() => {
+    if (prevDeleteState.current === "loading" && deleteFetcher.state === "idle" && deleteFetcher.data?.ok) {
+      setSuccessMsg("Product deleted successfully.");
+    }
+    prevDeleteState.current = deleteFetcher.state;
+  }, [deleteFetcher.state, deleteFetcher.data]);
   const canMutate = role === "Admin" || role === "Employee";
 
   function openCreate() {
@@ -192,6 +213,11 @@ export default function ProductsSection({ loaderData, actionData }: Route.Compon
           error={(actionError as any).errorRaw}
         />
       )}
+      <Snackbar open={!!successMsg} autoHideDuration={4000} onClose={() => setSuccessMsg(null)} anchorOrigin={{ vertical: "bottom", horizontal: "center" }}>
+        <Alert onClose={() => setSuccessMsg(null)} severity="success" variant="filled" sx={{ width: "100%" }}>
+          {successMsg}
+        </Alert>
+      </Snackbar>
       <Suspense fallback={<SkeletonTable columns={canMutate ? 7 : 6} />}>
         <Await resolve={(loaderData as any).products}>
           {(products: Product[]) => (

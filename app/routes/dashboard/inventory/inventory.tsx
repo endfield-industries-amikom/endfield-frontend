@@ -1,13 +1,13 @@
 import { get, patch, post } from "~/services/api.server";
 import { getAccessToken } from "~/services/auth-helper.server";
-import { Suspense, useState } from "react";
+import { Suspense, useEffect, useRef, useState } from "react";
 import { Await, useNavigate, useFetcher, useRouteLoaderData } from "react-router";
 import type { Route } from "./+types/inventory";
 import type { Inventory } from "~/types";
 import {
   Box, Button, Dialog, DialogTitle, DialogContent, DialogActions,
   TextField, Table, TableBody, TableCell, TableContainer, TableHead,
-  TableRow, Paper, Typography, IconButton, MenuItem, Chip,
+  TableRow, Paper, Typography, IconButton, MenuItem, Chip, Snackbar, Alert,
 } from "@mui/material";
 import ErrorPopup from "~/components/error";
 import SkeletonTable from "~/components/SkeletonTable";
@@ -46,11 +46,11 @@ export async function action({ request }: Route.ActionArgs) {
       const body = { warehouseId: formData.get("warehouseId"), itemId: formData.get("itemId"), quantityOnHand: Number(formData.get("quantityOnHand")), reservedQuantity: Number(formData.get("reservedQuantity")), reorderLevel: Number(formData.get("reorderLevel")) };
       if (intent === "create-inventory") await post("/inventory", body, token, cookie);
       else await patch(`/inventory/${formData.get("id")}`, body, token, cookie);
-      return { ok: true };
+      return { ok: true, intent };
     }
     if (intent === "restock-inventory") {
       await post(`/inventory/${formData.get("id")}/restock`, { quantity: Number(formData.get("quantity")) }, token, cookie);
-      return { ok: true };
+      return { ok: true, intent };
     }
     return { ok: false, error: "Unknown intent" };
   } catch (err) {
@@ -78,6 +78,27 @@ export default function InventorySection({ loaderData, actionData }: Route.Compo
         ? actionData
         : null;
   const restockFetcher = useFetcher();
+  const [successMsg, setSuccessMsg] = useState<string | null>(null);
+  const prevFetcherState = useRef(fetcher.state);
+  const prevRestockState = useRef(restockFetcher.state);
+
+  useEffect(() => {
+    if (prevFetcherState.current === "loading" && fetcher.state === "idle" && fetcher.data?.ok) {
+      const messages: Record<string, string> = {
+        "create-inventory": "Inventory created successfully.",
+        "update-inventory": "Inventory updated successfully.",
+      };
+      setSuccessMsg(messages[(fetcher.data as any).intent] || "Operation completed.");
+    }
+    prevFetcherState.current = fetcher.state;
+  }, [fetcher.state, fetcher.data]);
+
+  useEffect(() => {
+    if (prevRestockState.current === "loading" && restockFetcher.state === "idle" && restockFetcher.data?.ok) {
+      setSuccessMsg("Inventory restocked successfully.");
+    }
+    prevRestockState.current = restockFetcher.state;
+  }, [restockFetcher.state, restockFetcher.data]);
   const canMutate = role === "Admin" || role === "Employee";
 
   function openCreate() { setEditId(null); setForm({ itemId: "", warehouseId: "", quantityOnHand: "", reservedQuantity: "", reorderLevel: "" }); setDialogOpen(true); }
@@ -107,6 +128,11 @@ export default function InventorySection({ loaderData, actionData }: Route.Compo
           error={(actionError as any).errorRaw}
         />
       )}
+      <Snackbar open={!!successMsg} autoHideDuration={4000} onClose={() => setSuccessMsg(null)} anchorOrigin={{ vertical: "bottom", horizontal: "center" }}>
+        <Alert onClose={() => setSuccessMsg(null)} severity="success" variant="filled" sx={{ width: "100%" }}>
+          {successMsg}
+        </Alert>
+      </Snackbar>
       <Suspense fallback={<SkeletonTable columns={canMutate ? 6 : 5} />}>
         <Await resolve={(loaderData as any).data}>
           {({ inventory, productOptions, warehouseOptions }: { inventory: Inventory[]; productOptions: any[]; warehouseOptions: any[] }) => (<>

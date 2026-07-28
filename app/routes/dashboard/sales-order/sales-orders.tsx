@@ -1,9 +1,9 @@
-import { useRef, useState, Suspense } from "react";
+import { Suspense, useEffect, useRef, useState } from "react";
 import { useNavigate, Await, useFetcher, useRouteLoaderData } from "react-router";
 import type { Route } from "./+types/sales-orders";
 import { get, patch, post } from "~/services/api.server";
 import { getAccessToken } from "~/services/auth-helper.server";
-import { Box, Button, Dialog, DialogTitle, DialogContent, DialogActions, TextField, Typography, MenuItem, Chip, Card, CardContent, CardActions, Grid, Divider, Autocomplete, IconButton } from "@mui/material";
+import { Box, Button, Dialog, DialogTitle, DialogContent, DialogActions, TextField, Typography, MenuItem, Chip, Card, CardContent, CardActions, Grid, Divider, Autocomplete, IconButton, Snackbar, Alert } from "@mui/material";
 import ErrorPopup from "~/components/error";
 import AddIcon from "@mui/icons-material/Add";
 import EditIcon from "@mui/icons-material/Edit";
@@ -72,12 +72,12 @@ export async function action({ request }: Route.ActionArgs) {
       if (regionId) body.regionId = regionId;
       if (intent === "create-sales-order") await post("/sales-order", body, token, cookie);
       else await patch(`/sales-order/${formData.get("id")}`, body, token, cookie);
-      return { ok: true };
+      return { ok: true, intent };
     }
     if (intent === "ship-order") {
       try {
         await post(`/sales-order/${formData.get("id")}/ship`, {}, token, cookie);
-        return { ok: true };
+        return { ok: true, intent };
       } catch (err) {
         return { ok: false, error: err instanceof Error ? err.message : "Shipment failed — check inventory" };
       }
@@ -85,7 +85,7 @@ export async function action({ request }: Route.ActionArgs) {
     if (intent === "confirm-order") {
       try {
         await post(`/sales-order/${formData.get("id")}/confirm`, {}, token, cookie);
-        return { ok: true };
+        return { ok: true, intent };
       } catch (err) {
         return { ok: false, error: err instanceof Error ? err.message : "Confirmation failed" };
       }
@@ -112,6 +112,36 @@ export default function SalesOrdersSection({ loaderData, actionData }: Route.Com
   const fetcher = useFetcher();
   const shipFetcher = useFetcher();
   const confirmFetcher = useFetcher();
+  const [successMsg, setSuccessMsg] = useState<string | null>(null);
+  const prevFetcherState = useRef(fetcher.state);
+  const prevShipState = useRef(shipFetcher.state);
+  const prevConfirmState = useRef(confirmFetcher.state);
+
+  useEffect(() => {
+    if (prevFetcherState.current === "loading" && fetcher.state === "idle" && fetcher.data?.ok) {
+      const messages: Record<string, string> = {
+        "create-sales-order": "Sales order created successfully.",
+        "update-sales-order": "Sales order updated successfully.",
+      };
+      setSuccessMsg(messages[(fetcher.data as any).intent] || "Operation completed.");
+    }
+    prevFetcherState.current = fetcher.state;
+  }, [fetcher.state, fetcher.data]);
+
+  useEffect(() => {
+    if (prevShipState.current === "loading" && shipFetcher.state === "idle" && shipFetcher.data?.ok) {
+      setSuccessMsg("Order shipped successfully.");
+    }
+    prevShipState.current = shipFetcher.state;
+  }, [shipFetcher.state, shipFetcher.data]);
+
+  useEffect(() => {
+    if (prevConfirmState.current === "loading" && confirmFetcher.state === "idle" && confirmFetcher.data?.ok) {
+      setSuccessMsg("Order confirmed successfully.");
+    }
+    prevConfirmState.current = confirmFetcher.state;
+  }, [confirmFetcher.state, confirmFetcher.data]);
+
   const navigate = useNavigate();
   const productOptionsRef = useRef<ItemOption[]>([]);
   const fetcherData = fetcher.data as { ok?: boolean; error?: string; errorRaw?: Error } | undefined;
@@ -163,6 +193,9 @@ export default function SalesOrdersSection({ loaderData, actionData }: Route.Com
       )}
       {shipFetcher.data?.error && <Typography color="error" sx={{ mb: 2 }}>{(shipFetcher.data as { error?: string }).error}</Typography>}
       {confirmFetcher.data?.error && <Typography color="error" sx={{ mb: 2 }}>{(confirmFetcher.data as { error?: string }).error}</Typography>}
+      <Snackbar open={!!successMsg} autoHideDuration={4000} onClose={() => setSuccessMsg(null)} anchorOrigin={{ vertical: "bottom", horizontal: "center" }}>
+        <Alert onClose={() => setSuccessMsg(null)} severity="success" variant="filled" sx={{ width: "100%" }}>{successMsg}</Alert>
+      </Snackbar>
       <Suspense fallback={<SkeletonCards />}>
         <Await resolve={(loaderData as any).data}>
           {({ salesOrders, customerOptions, regionOptions, productOptions, userRole }: { salesOrders: SalesOrder[]; customerOptions: SelectOption[]; regionOptions: SelectOption[]; productOptions: ItemOption[]; userRole: string }) => {

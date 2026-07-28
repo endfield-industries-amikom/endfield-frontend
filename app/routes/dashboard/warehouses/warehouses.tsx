@@ -1,13 +1,13 @@
 import { get, patch, post, del } from "~/services/api.server";
 import { getAccessToken } from "~/services/auth-helper.server";
-import { Suspense, useState } from "react";
+import { Suspense, useEffect, useRef, useState } from "react";
 import { Await, Link, useFetcher, useNavigate, useRouteLoaderData } from "react-router";
 import type { Route } from "./+types/warehouses";
 import type { Warehouse } from "~/types";
 import {
   Box, Button, Dialog, DialogTitle, DialogContent, DialogActions,
   TextField, Table, TableBody, TableCell, TableContainer, TableHead,
-  TableRow, Paper, Typography, IconButton, MenuItem,
+  TableRow, Paper, Typography, IconButton, MenuItem, Snackbar, Alert,
 } from "@mui/material";
 import ErrorPopup from "~/components/error";
 import SkeletonTable from "~/components/SkeletonTable";
@@ -84,13 +84,13 @@ export async function action({ request }: Route.ActionArgs) {
         const id = formData.get("id") as string;
         await patch(`/warehouses/${id}`, body, token, cookie);
       }
-      return { ok: true };
+      return { ok: true, intent };
     }
 
     if (intent === "delete-warehouse") {
       const id = formData.get("id") as string;
       await del(`/warehouses/${id}`, token, cookie);
-      return { ok: true };
+      return { ok: true, intent };
     }
 
     return { ok: false, error: "Unknown intent" };
@@ -130,6 +130,27 @@ export default function WarehousesSection({
         : null;
   const navigate = useNavigate();
   const deleteFetcher = useFetcher();
+  const [successMsg, setSuccessMsg] = useState<string | null>(null);
+  const prevFetcherState = useRef(fetcher.state);
+  const prevDeleteState = useRef(deleteFetcher.state);
+
+  useEffect(() => {
+    if (prevFetcherState.current === "loading" && fetcher.state === "idle" && fetcher.data?.ok) {
+      const messages: Record<string, string> = {
+        "create-warehouse": "Warehouse created successfully.",
+        "update-warehouse": "Warehouse updated successfully.",
+      };
+      setSuccessMsg(messages[(fetcher.data as any).intent] || "Operation completed.");
+    }
+    prevFetcherState.current = fetcher.state;
+  }, [fetcher.state, fetcher.data]);
+
+  useEffect(() => {
+    if (prevDeleteState.current === "loading" && deleteFetcher.state === "idle" && deleteFetcher.data?.ok) {
+      setSuccessMsg("Warehouse deleted successfully.");
+    }
+    prevDeleteState.current = deleteFetcher.state;
+  }, [deleteFetcher.state, deleteFetcher.data]);
 
   const canMutate = role === "Admin";
 
@@ -177,6 +198,16 @@ export default function WarehousesSection({
           error={(actionError as any).errorRaw}
         />
       )}
+      <Snackbar
+        open={!!successMsg}
+        autoHideDuration={3000}
+        onClose={() => setSuccessMsg(null)}
+        anchorOrigin={{ vertical: "bottom", horizontal: "center" }}
+      >
+        <Alert onClose={() => setSuccessMsg(null)} severity="success" variant="filled" sx={{ width: "100%" }}>
+          {successMsg}
+        </Alert>
+      </Snackbar>
 
       <Suspense fallback={<SkeletonTable columns={canMutate ? 5 : 4} />}>
         <Await resolve={(loaderData as any).data}>

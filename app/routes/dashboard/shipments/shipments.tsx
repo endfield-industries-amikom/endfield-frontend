@@ -1,11 +1,11 @@
-import { Suspense, useState } from "react";
+import { Suspense, useEffect, useRef, useState } from "react";
 import { Await, useFetcher, useNavigate, useRouteLoaderData } from "react-router";
 import SkeletonTable from "~/components/SkeletonTable";
 import type { Route } from "./+types/shipments";
 import { get, patch, post } from "~/services/api.server";
 import { getAccessToken } from "~/services/auth-helper.server";
 import type { Shipment } from "~/types";
-import { Box, Button, Dialog, DialogTitle, DialogContent, DialogActions, TextField, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper, Typography, IconButton, MenuItem, Chip } from "@mui/material";
+import { Box, Button, Dialog, DialogTitle, DialogContent, DialogActions, TextField, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper, Typography, IconButton, MenuItem, Chip, Snackbar, Alert } from "@mui/material";
 import ErrorPopup from "~/components/error";
 import AddIcon from "@mui/icons-material/Add";
 import EditIcon from "@mui/icons-material/Edit";
@@ -72,7 +72,7 @@ export async function action({ request }: Route.ActionArgs) {
       };
       if (intent === "create-shipment") await post("/shipment", body, token, cookie);
       else await patch(`/shipment/${formData.get("id")}`, body, token, cookie);
-      return { ok: true };
+      return { ok: true, intent };
     }
     return { ok: false, error: "Unknown intent" };
   } catch (err) {
@@ -205,6 +205,20 @@ export default function ShipmentsSection({ loaderData, actionData }: Route.Compo
   const [orderType, setOrderType] = useState<"PURCHASE" | "SALES">("PURCHASE");
   const [form, setForm] = useState({ orderId: "", carrier: "", trackingNumber: "", status: "PENDING" });
   const fetcher = useFetcher();
+  const [successMsg, setSuccessMsg] = useState<string | null>(null);
+  const prevFetcherState = useRef(fetcher.state);
+
+  useEffect(() => {
+    if (prevFetcherState.current === "loading" && fetcher.state === "idle" && fetcher.data?.ok) {
+      const messages: Record<string, string> = {
+        "create-shipment": "Shipment created successfully.",
+        "update-shipment": "Shipment updated successfully.",
+      };
+      setSuccessMsg(messages[(fetcher.data as any).intent] || "Operation completed.");
+    }
+    prevFetcherState.current = fetcher.state;
+  }, [fetcher.state, fetcher.data]);
+
   const fetcherData = fetcher.data as { ok?: boolean; error?: string; errorRaw?: Error } | undefined;
   const actionError =
     fetcherData?.ok === false
@@ -234,6 +248,12 @@ export default function ShipmentsSection({ loaderData, actionData }: Route.Compo
           error={(actionError as any).errorRaw}
         />
       )}
+      <Snackbar open={!!successMsg} autoHideDuration={4000} onClose={() => setSuccessMsg(null)}
+        anchorOrigin={{ vertical: "bottom", horizontal: "right" }}>
+        <Alert severity="success" variant="filled" onClose={() => setSuccessMsg(null)} sx={{ width: "100%" }}>
+          {successMsg}
+        </Alert>
+      </Snackbar>
 
       <Suspense fallback={<SkeletonTable columns={4} />}>
         <Await resolve={(loaderData as any).data}>

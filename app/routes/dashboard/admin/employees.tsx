@@ -1,12 +1,12 @@
 import { del, get, post } from "~/services/api.server";
 import { getAccessToken } from "~/services/auth-helper.server";
-import { Suspense, useState } from "react";
+import { Suspense, useEffect, useRef, useState } from "react";
 import { Await, useFetcher, useRouteLoaderData } from "react-router";
 import type { Route } from "./+types/employees";
 import {
   Box, Button, Dialog, DialogTitle, DialogContent, DialogActions,
   TextField, Table, TableBody, TableCell, TableContainer, TableHead,
-  TableRow, Paper, Typography, IconButton, MenuItem, Chip, Alert,
+  TableRow, Paper, Typography, IconButton, MenuItem, Chip, Alert, Snackbar,
 } from "@mui/material";
 import AddIcon from "@mui/icons-material/Add";
 import DeleteIcon from "@mui/icons-material/Delete";
@@ -48,11 +48,11 @@ export async function action({ request }: Route.ActionArgs) {
   try {
     if (intent === "create-user") {
       await post("/admin/users", { username: formData.get("username"), email: formData.get("email"), password: formData.get("password"), roleName: formData.get("roleName") }, token, cookie);
-      return { ok: true };
+      return { ok: true, intent };
     }
     if (intent === "delete-user") {
       await del(`/admin/users/${formData.get("id")}`, token, cookie);
-      return { ok: true };
+      return { ok: true, intent };
     }
     return { ok: false, error: "Unknown intent" };
   } catch (err:any) {
@@ -72,6 +72,19 @@ export default function EmployeesSection({ loaderData, actionData }: Route.Compo
   const [form, setForm] = useState({ username: "", email: "", password: "", roleName: "Employee" });
   const [testCrash, setTestCrash] = useState(false);
   const fetcher = useFetcher();
+  const [successMsg, setSuccessMsg] = useState<string | null>(null);
+  const prevFetcherState = useRef(fetcher.state);
+
+  useEffect(() => {
+    if (prevFetcherState.current === "loading" && fetcher.state === "idle" && fetcher.data?.ok) {
+      const messages: Record<string, string> = {
+        "create-user": "Employee created successfully.",
+        "delete-user": "Employee deleted successfully.",
+      };
+      setSuccessMsg(messages[(fetcher.data as any).intent] || "Operation completed.");
+    }
+    prevFetcherState.current = fetcher.state;
+  }, [fetcher.state, fetcher.data]);
   const isAdmin = role === "Admin";
 
   // Fetcher-based actions (create/delete) return data here, not in actionData
@@ -115,6 +128,13 @@ export default function EmployeesSection({ loaderData, actionData }: Route.Compo
           error={(actionError as any).errorRaw}
         />
       )}
+
+      <Snackbar open={!!successMsg} autoHideDuration={4000} onClose={() => setSuccessMsg(null)}
+        anchorOrigin={{ vertical: "bottom", horizontal: "right" }}>
+        <Alert severity="success" variant="filled" onClose={() => setSuccessMsg(null)} sx={{ width: "100%" }}>
+          {successMsg}
+        </Alert>
+      </Snackbar>
 
       <Suspense fallback={<SkeletonTable columns={isAdmin ? 5 : 4} />}>
         <Await resolve={(loaderData as any).data}>

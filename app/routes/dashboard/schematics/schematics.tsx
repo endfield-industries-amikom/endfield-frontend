@@ -1,10 +1,10 @@
 import { get, patch, post } from "~/services/api.server";
 import { getAccessToken } from "~/services/auth-helper.server";
-import { Suspense, useState } from "react";
+import { Suspense, useEffect, useRef, useState } from "react";
 import { Await, useNavigate, Link, useFetcher, useRouteLoaderData } from "react-router";
 import type { Route } from "./+types/schematics";
 import type { ProductionSchematic, Item } from "~/types";
-import { Box, Button, Dialog, DialogTitle, DialogContent, DialogActions, TextField, Typography, IconButton, Chip, Card, CardContent, CardActions, MenuItem, Select, InputLabel, FormControl, Grid, Autocomplete, Checkbox, FormControlLabel } from "@mui/material";
+import { Box, Button, Dialog, DialogTitle, DialogContent, DialogActions, TextField, Typography, IconButton, Chip, Card, CardContent, CardActions, MenuItem, Select, InputLabel, FormControl, Grid, Autocomplete, Checkbox, FormControlLabel, Snackbar, Alert } from "@mui/material";
 import ErrorPopup from "~/components/error";
 import SkeletonCards from "~/components/SkeletonCards";
 import AddIcon from "@mui/icons-material/Add";
@@ -77,7 +77,7 @@ export async function action({ request }: Route.ActionArgs) {
 
       if (intent === "create-schematic") await post("/production-schematic", body, token, cookie);
       else await patch(`/production-schematic/${formData.get("id")}`, body, token, cookie);
-      return { ok: true };
+      return { ok: true, intent };
     }
     if (intent === "produce-schematic") {
       const id = formData.get("id") as string;
@@ -85,7 +85,7 @@ export async function action({ request }: Route.ActionArgs) {
       const schematicId = formData.get("schematicId") as string;
       try {
         await post(`/production-schematic/${schematicId}/produce`, { warehouseId, schematicId }, token, cookie);
-        return { ok: true };
+        return { ok: true, intent };
       } catch (err) {
         return { ok: false, error: err instanceof Error ? err.message : "Production failed — check warehouse inventory" };
       }
@@ -118,6 +118,28 @@ export default function SchematicsSection({ loaderData, actionData }: Route.Comp
         ? actionData
         : null;
   const produceFetcher = useFetcher();
+  const [successMsg, setSuccessMsg] = useState<string | null>(null);
+  const prevFetcherState = useRef(fetcher.state);
+  const prevProduceState = useRef(produceFetcher.state);
+
+  useEffect(() => {
+    if (prevFetcherState.current === "loading" && fetcher.state === "idle" && fetcher.data?.ok) {
+      const messages: Record<string, string> = {
+        "create-schematic": "Schematic created successfully.",
+        "update-schematic": "Schematic updated successfully.",
+      };
+      setSuccessMsg(messages[(fetcher.data as any).intent] || "Operation completed.");
+    }
+    prevFetcherState.current = fetcher.state;
+  }, [fetcher.state, fetcher.data]);
+
+  useEffect(() => {
+    if (prevProduceState.current === "loading" && produceFetcher.state === "idle" && produceFetcher.data?.ok) {
+      setSuccessMsg("Production started successfully.");
+    }
+    prevProduceState.current = produceFetcher.state;
+  }, [produceFetcher.state, produceFetcher.data]);
+
   const canMutate = role === "Admin" || role === "Employee";
 
   function handleProduce(schematicId: string, warehouseId: string) {
@@ -174,6 +196,12 @@ export default function SchematicsSection({ loaderData, actionData }: Route.Comp
           error={(actionError as any).errorRaw}
         />
       )}
+      <Snackbar open={!!successMsg} autoHideDuration={4000} onClose={() => setSuccessMsg(null)}
+        anchorOrigin={{ vertical: "bottom", horizontal: "right" }}>
+        <Alert severity="success" variant="filled" onClose={() => setSuccessMsg(null)} sx={{ width: "100%" }}>
+          {successMsg}
+        </Alert>
+      </Snackbar>
       {produceFetcher.data?.ok && (
         <Typography color="success.main" sx={{ mb: 2 }}>Production started successfully.</Typography>
       )}
