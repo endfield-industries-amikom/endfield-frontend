@@ -101,7 +101,7 @@ export async function del<T = unknown>(
   token?: string,
   cookie?: string,
 ): Promise<T> {
-  return await apiRequest<T>(path, { method: "DELETE", token, cookie });
+  return apiRequest<T>(path, { method: "DELETE", token, cookie });
 }
 
 export async function deleteEntity<T = unknown>(
