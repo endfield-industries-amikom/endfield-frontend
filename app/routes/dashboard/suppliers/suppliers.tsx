@@ -1,7 +1,7 @@
 import { get, patch, post, del } from "~/services/api.server";
 import { getAccessToken } from "~/services/auth-helper.server";
-import { useState } from "react";
-import { Link, useFetcher, useNavigate, useRouteLoaderData } from "react-router";
+import { Suspense, useState } from "react";
+import { Await, Link, useFetcher, useNavigate, useRouteLoaderData } from "react-router";
 import type { Route } from "./+types/suppliers";
 import type { Supplier } from "~/types";
 import {
@@ -10,6 +10,7 @@ import {
   TableRow, Paper, Typography, IconButton,
 } from "@mui/material";
 import ErrorPopup from "~/components/error";
+import SkeletonTable from "~/components/SkeletonTable";
 import AddIcon from "@mui/icons-material/Add";
 import EditIcon from "@mui/icons-material/Edit";
 import DeleteIcon from "@mui/icons-material/Delete";
@@ -24,10 +25,10 @@ function useRole() {
 export async function loader({ request }: Route.LoaderArgs) {
   const cookie = request.headers.get("Cookie") || "";
   const token = await getAccessToken(cookie);
-  const response = await get<{ data: { data: Supplier[]; total: number; page: number; limit: number } }>(
+  const suppliersPromise = get<{ data: { data: Supplier[]; total: number; page: number; limit: number } }>(
     "/supplier?page=1&limit=50", token, cookie,
-  );
-  return { suppliers: response.data.data };
+  ).then((r) => r.data.data);
+  return { suppliers: suppliersPromise };
 }
 
 export async function action({ request }: Route.ActionArgs) {
@@ -68,7 +69,6 @@ const emptyForm = { name: "", code: "", contactPerson: "", email: "", phone: "",
 
 export default function SuppliersSection({ loaderData, actionData }: Route.ComponentProps) {
   const role = useRole();
-  const suppliers = loaderData?.suppliers ?? [];
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editId, setEditId] = useState<string | null>(null);
   const [form, setForm] = useState(emptyForm);
@@ -110,41 +110,47 @@ export default function SuppliersSection({ loaderData, actionData }: Route.Compo
           error={(actionError as any).errorRaw}
         />
       )}
-      <TableContainer component={Paper}>
-        <Table size="small">
-          <TableHead>
-            <TableRow>
-              <TableCell>Name</TableCell><TableCell>Code</TableCell><TableCell>Contact</TableCell>
-              <TableCell>Email</TableCell>{canMutate && <TableCell align="right">Actions</TableCell>}
-            </TableRow>
-          </TableHead>
-          <TableBody>
-            {suppliers.length === 0 && (
-              <TableRow><TableCell colSpan={canMutate ? 5 : 4} align="center">
-                <Typography color="text.secondary" sx={{ py: 2 }}>No suppliers found.</Typography>
-              </TableCell></TableRow>
-            )}
-            {suppliers.map((s) => (
-              <TableRow key={s.id} hover sx={{ cursor: "pointer" }} onClick={() => navigate(`/dashboard/suppliers/${s.id}`)}>
-                <TableCell>{s.name}</TableCell>
-                <TableCell sx={{ fontFamily: "monospace", fontSize: "0.8rem" }}>{s.code}</TableCell>
-                <TableCell>{s.contactPerson || "—"}</TableCell>
-                <TableCell>{s.email || "—"}</TableCell>
-                {canMutate && (
-                  <TableCell align="right">
-                    <IconButton size="small" onClick={() => openEdit(s)}><EditIcon fontSize="small" /></IconButton>
-                    <fetcher.Form method="post" style={{ display: "inline" }}>
-                      <input type="hidden" name="intent" value="delete-supplier" />
-                      <input type="hidden" name="id" value={s.id} />
-                      <IconButton size="small" type="submit" color="error"><DeleteIcon fontSize="small" /></IconButton>
-                    </fetcher.Form>
-                  </TableCell>
-                )}
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
-      </TableContainer>
+      <Suspense fallback={<SkeletonTable columns={canMutate ? 5 : 4} />}>
+        <Await resolve={(loaderData as any).suppliers}>
+          {(suppliers: Supplier[]) => (
+            <TableContainer component={Paper}>
+              <Table size="small">
+                <TableHead>
+                  <TableRow>
+                    <TableCell>Name</TableCell><TableCell>Code</TableCell><TableCell>Contact</TableCell>
+                    <TableCell>Email</TableCell>{canMutate && <TableCell align="right">Actions</TableCell>}
+                  </TableRow>
+                </TableHead>
+                <TableBody>
+                  {suppliers.length === 0 && (
+                    <TableRow><TableCell colSpan={canMutate ? 5 : 4} align="center">
+                      <Typography color="text.secondary" sx={{ py: 2 }}>No suppliers found.</Typography>
+                    </TableCell></TableRow>
+                  )}
+                  {suppliers.map((s) => (
+                    <TableRow key={s.id} hover sx={{ cursor: "pointer" }} onClick={() => navigate(`/dashboard/suppliers/${s.id}`)}>
+                      <TableCell>{s.name}</TableCell>
+                      <TableCell sx={{ fontFamily: "monospace", fontSize: "0.8rem" }}>{s.code}</TableCell>
+                      <TableCell>{s.contactPerson || "—"}</TableCell>
+                      <TableCell>{s.email || "—"}</TableCell>
+                      {canMutate && (
+                        <TableCell align="right">
+                          <IconButton size="small" onClick={() => openEdit(s)}><EditIcon fontSize="small" /></IconButton>
+                          <fetcher.Form method="post" style={{ display: "inline" }}>
+                            <input type="hidden" name="intent" value="delete-supplier" />
+                            <input type="hidden" name="id" value={s.id} />
+                            <IconButton size="small" type="submit" color="error"><DeleteIcon fontSize="small" /></IconButton>
+                          </fetcher.Form>
+                        </TableCell>
+                      )}
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </TableContainer>
+          )}
+        </Await>
+      </Suspense>
       <Dialog open={dialogOpen} onClose={() => setDialogOpen(false)} maxWidth="sm" fullWidth>
         <form onSubmit={handleSubmit}>
           <DialogTitle>{editId ? "Edit Supplier" : "New Supplier"}</DialogTitle>

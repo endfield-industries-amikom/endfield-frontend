@@ -1,5 +1,5 @@
-import { useState, useRef } from "react";
-import { useNavigate, useFetcher, useRouteLoaderData } from "react-router";
+import { useState, useRef, Suspense } from "react";
+import { Await, useNavigate, useFetcher, useRouteLoaderData } from "react-router";
 import type { Route } from "./+types/products";
 import type { Product } from "~/types";
 import {
@@ -15,6 +15,7 @@ import CloudUploadIcon from "@mui/icons-material/CloudUpload";
 import { get, post, patch, del, apiRequest } from "~/services/api.server";
 import { getAccessToken } from "~/services/auth-helper.server";
 import { normalizeImageUrl } from "~/utils/image";
+import SkeletonTable from "~/components/SkeletonTable";
 
 function useRole() {
   const parent = useRouteLoaderData<{ accessToken: string }>("routes/dashboard/auth-guard");
@@ -26,10 +27,10 @@ function useRole() {
 export async function loader({ request }: Route.LoaderArgs) {
   const cookie = request.headers.get("Cookie") || "";
   const token = await getAccessToken(cookie);
-  const response = await get<{ data: { data: Product[]; total: number; page: number; limit: number } }>(
+  const productsPromise = get<{ data: { data: Product[]; total: number; page: number; limit: number } }>(
     "/product?page=1&limit=50", token, cookie,
-  );
-  return { products: response.data.data };
+  ).then((r) => r.data.data);
+  return { products: productsPromise };
 }
 
 export async function action({ request }: Route.ActionArgs) {
@@ -118,7 +119,6 @@ const emptyForm = { name: "", sku: "", description: "", category: "", unitPrice:
 
 export default function ProductsSection({ loaderData, actionData }: Route.ComponentProps) {
   const role = useRole();
-  const products = loaderData?.products ?? [];
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editId, setEditId] = useState<string | null>(null);
   const [form, setForm] = useState(emptyForm);
@@ -192,7 +192,10 @@ export default function ProductsSection({ loaderData, actionData }: Route.Compon
           error={(actionError as any).errorRaw}
         />
       )}
-      <TableContainer component={Paper}>
+      <Suspense fallback={<SkeletonTable columns={canMutate ? 7 : 6} />}>
+        <Await resolve={(loaderData as any).products}>
+          {(products: Product[]) => (
+            <TableContainer component={Paper}>
         <Table size="small">
           <TableHead>
             <TableRow>
@@ -208,7 +211,10 @@ export default function ProductsSection({ loaderData, actionData }: Route.Compon
               </TableCell></TableRow>
             )}
             {products.map((p) => (
-              <TableRow key={p.id} hover sx={{cursor: "pointer"}} onClick={() => navigate(`/dashboard/products/${p.id}`)}>
+              <TableRow key={p.id} hover sx={{cursor: "pointer"}} onClick={(e) => {
+                               if ((e.target as HTMLElement).closest("button,a,input,textarea,select")) return;
+                               navigate(`/dashboard/products/${p.id}`);
+                             }}>
                 <TableCell>
                   {p.item?.imageUri ? (
                     <Box component="img" src={getImageSrc(p)} alt={p.item?.name}
@@ -237,6 +243,9 @@ export default function ProductsSection({ loaderData, actionData }: Route.Compon
           </TableBody>
         </Table>
       </TableContainer>
+          )}
+        </Await>
+      </Suspense>
 
       <Dialog open={dialogOpen} onClose={() => setDialogOpen(false)} maxWidth="sm" fullWidth>
         <form onSubmit={handleSubmit}>

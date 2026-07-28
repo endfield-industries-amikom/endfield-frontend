@@ -1,7 +1,9 @@
 import { get, patch, post, del } from "~/services/api.server";
 import { getAccessToken } from "~/services/auth-helper.server";
 import { useState } from "react";
-import { useNavigate, useFetcher, useRouteLoaderData } from "react-router";
+import { Suspense } from "react";
+import SkeletonTable from "~/components/SkeletonTable";
+import { useNavigate, useFetcher, useRouteLoaderData, Await } from "react-router";
 import type { Route } from "./+types/materials";
 import type { Material } from "~/types";
 import {
@@ -24,10 +26,10 @@ function useRole() {
 export async function loader({ request }: Route.LoaderArgs) {
   const cookie = request.headers.get("Cookie") || "";
   const token = await getAccessToken(cookie);
-  const response = await get<{ data: { data: Material[]; total: number; page: number; limit: number } }>(
+  const materialsPromise = get<{ data: { data: Material[]; total: number; page: number; limit: number } }>(
     "/material?page=1&limit=50", token, cookie,
-  );
-  return { materials: response.data.data };
+  ).then((r) => r.data.data);
+  return { materials: materialsPromise };
 }
 
 export async function action({ request }: Route.ActionArgs) {
@@ -71,7 +73,6 @@ const emptyForm = { name: "", sku: "", description: "", category: "", capacityUs
 
 export default function MaterialsSection({ loaderData, actionData }: Route.ComponentProps) {
   const role = useRole();
-  const materials = loaderData?.materials ?? [];
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editId, setEditId] = useState<string | null>(null);
   const [form, setForm] = useState(emptyForm);
@@ -109,43 +110,52 @@ export default function MaterialsSection({ loaderData, actionData }: Route.Compo
           error={(actionError as any).errorRaw}
         />
       )}
-      <TableContainer component={Paper}>
-        <Table size="small">
-          <TableHead>
-            <TableRow>
-              <TableCell>Name</TableCell><TableCell>SKU</TableCell><TableCell>Category</TableCell>
-              <TableCell>Unit</TableCell><TableCell>Price</TableCell>
-              {canMutate && <TableCell align="right">Actions</TableCell>}
-            </TableRow>
-          </TableHead>
-          <TableBody>
-            {materials.length === 0 && (
-              <TableRow><TableCell colSpan={canMutate ? 6 : 5} align="center">
-                <Typography color="text.secondary" sx={{ py: 2 }}>No materials found.</Typography>
-              </TableCell></TableRow>
-            )}
-            {materials.map((m) => (
-              <TableRow key={m.id} hover sx={{cursor: "pointer"}} onClick={() => navigate(`/dashboard/materials/${m.id}`)}>
-                <TableCell>{m.item?.name}</TableCell>
-                <TableCell sx={{ fontFamily: "monospace", fontSize: "0.8rem" }}>{m.item?.sku}</TableCell>
-                <TableCell>{m.item?.category || "—"}</TableCell>
-                <TableCell>{m.item?.capacityUsage ?? "—"}</TableCell>
-                <TableCell>{(Number(m.item?.unitPrice) || 0).toLocaleString("en-US", { style: "currency", currency: "USD" })}</TableCell>
-                {canMutate && (
-                  <TableCell align="right">
-                    <IconButton size="small" onClick={() => openEdit(m)}><EditIcon fontSize="small" /></IconButton>
-                    <fetcher.Form method="post" style={{ display: "inline" }}>
-                      <input type="hidden" name="intent" value="delete-material" />
-                      <input type="hidden" name="id" value={m.id} />
-                      <IconButton size="small" type="submit" color="error"><DeleteIcon fontSize="small" /></IconButton>
-                    </fetcher.Form>
-                  </TableCell>
-                )}
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
-      </TableContainer>
+      <Suspense fallback={<SkeletonTable columns={canMutate ? 6 : 5} />}>
+        <Await resolve={(loaderData as any).materials}>
+          {(materials: Material[]) => (
+            <TableContainer component={Paper}>
+              <Table size="small">
+                <TableHead>
+                  <TableRow>
+                    <TableCell>Name</TableCell><TableCell>SKU</TableCell><TableCell>Category</TableCell>
+                    <TableCell>Unit</TableCell><TableCell>Price</TableCell>
+                    {canMutate && <TableCell align="right">Actions</TableCell>}
+                  </TableRow>
+                </TableHead>
+                <TableBody>
+                  {materials.length === 0 && (
+                    <TableRow><TableCell colSpan={canMutate ? 6 : 5} align="center">
+                      <Typography color="text.secondary" sx={{ py: 2 }}>No materials found.</Typography>
+                    </TableCell></TableRow>
+                  )}
+                  {materials.map((m) => (
+                    <TableRow key={m.id} hover sx={{cursor: "pointer"}} onClick={(e) => {
+                                     if ((e.target as HTMLElement).closest("button,a,input,textarea,select")) return;
+                                     navigate(`/dashboard/materials/${m.id}`);
+                                   }}>
+                      <TableCell>{m.item?.name}</TableCell>
+                      <TableCell sx={{ fontFamily: "monospace", fontSize: "0.8rem" }}>{m.item?.sku}</TableCell>
+                      <TableCell>{m.item?.category || "\u2014"}</TableCell>
+                      <TableCell>{m.item?.capacityUsage ?? "\u2014"}</TableCell>
+                      <TableCell>{(Number(m.item?.unitPrice) || 0).toLocaleString("en-US", { style: "currency", currency: "USD" })}</TableCell>
+                      {canMutate && (
+                        <TableCell align="right">
+                          <IconButton size="small" onClick={() => openEdit(m)}><EditIcon fontSize="small" /></IconButton>
+                          <fetcher.Form method="post" style={{ display: "inline" }}>
+                            <input type="hidden" name="intent" value="delete-material" />
+                            <input type="hidden" name="id" value={m.id} />
+                            <IconButton size="small" type="submit" color="error"><DeleteIcon fontSize="small" /></IconButton>
+                          </fetcher.Form>
+                        </TableCell>
+                      )}
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </TableContainer>
+          )}
+        </Await>
+      </Suspense>
       <Dialog open={dialogOpen} onClose={() => setDialogOpen(false)} maxWidth="sm" fullWidth>
         <form onSubmit={handleSubmit}>
           <DialogTitle>{editId ? "Edit Material" : "New Material"}</DialogTitle>

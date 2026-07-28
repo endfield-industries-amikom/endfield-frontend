@@ -1,7 +1,7 @@
 import { get, patch, post, del } from "~/services/api.server";
 import { getAccessToken } from "~/services/auth-helper.server";
-import { useState } from "react";
-import { useFetcher, useNavigate, useRouteLoaderData } from "react-router";
+import { Suspense, useState } from "react";
+import { Await, useFetcher, useNavigate, useRouteLoaderData } from "react-router";
 import type { Route } from "./+types/regions";
 import type { Region } from "~/types";
 import {
@@ -10,6 +10,7 @@ import {
   TableRow, Paper, Typography, IconButton,
 } from "@mui/material";
 import ErrorPopup from "~/components/error";
+import SkeletonTable from "~/components/SkeletonTable";
 import AddIcon from "@mui/icons-material/Add";
 import EditIcon from "@mui/icons-material/Edit";
 import DeleteIcon from "@mui/icons-material/Delete";
@@ -24,10 +25,10 @@ function useRole() {
 export async function loader({ request }: Route.LoaderArgs) {
   const cookie = request.headers.get("Cookie") || "";
   const token = await getAccessToken(cookie);
-  const response = await get<{ data: { data: Region[]; total: number; page: number; limit: number } }>(
+  const regionsPromise = get<{ data: { data: Region[]; total: number; page: number; limit: number } }>(
     "/region?page=1&limit=50", token, cookie,
-  );
-  return { regions: response.data.data };
+  ).then((r) => r.data.data);
+  return { regions: regionsPromise };
 }
 
 export async function action({ request }: Route.ActionArgs) {
@@ -62,7 +63,6 @@ const emptyForm = { name: "", code: "", description: "" };
 
 export default function RegionsSection({ loaderData, actionData }: Route.ComponentProps) {
   const role = useRole();
-  const regions = loaderData?.regions ?? [];
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editId, setEditId] = useState<string | null>(null);
   const [form, setForm] = useState(emptyForm);
@@ -100,40 +100,49 @@ export default function RegionsSection({ loaderData, actionData }: Route.Compone
           error={(actionError as any).errorRaw}
         />
       )}
-      <TableContainer component={Paper}>
-        <Table size="small">
-          <TableHead>
-            <TableRow>
-              <TableCell>Name</TableCell><TableCell>Code</TableCell><TableCell>Description</TableCell>
-              {canMutate && <TableCell align="right">Actions</TableCell>}
-            </TableRow>
-          </TableHead>
-          <TableBody>
-            {regions.length === 0 && (
-              <TableRow><TableCell colSpan={canMutate ? 4 : 3} align="center">
-                <Typography color="text.secondary" sx={{ py: 2 }}>No regions found.</Typography>
-              </TableCell></TableRow>
-            )}
-            {regions.map((r) => (
-              <TableRow key={r.id} hover sx={{ cursor: "pointer" }} onClick={() => navigate(`/dashboard/regions/${r.id}`)}>
-                <TableCell>{r.name}</TableCell>
-                <TableCell sx={{ fontFamily: "monospace", fontSize: "0.8rem" }}>{r.code}</TableCell>
-                <TableCell>{r.description || "—"}</TableCell>
-                {canMutate && (
-                  <TableCell align="right">
-                    <IconButton size="small" onClick={() => openEdit(r)}><EditIcon fontSize="small" /></IconButton>
-                    <fetcher.Form method="post" style={{ display: "inline" }}>
-                      <input type="hidden" name="intent" value="delete-region" />
-                      <input type="hidden" name="id" value={r.id} />
-                      <IconButton size="small" type="submit" color="error"><DeleteIcon fontSize="small" /></IconButton>
-                    </fetcher.Form>
-                  </TableCell>
-                )}
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
-      </TableContainer>
+      <Suspense fallback={<SkeletonTable columns={canMutate ? 4 : 3} />}>
+        <Await resolve={(loaderData as any).regions}>
+          {(regions: Region[]) => (
+            <TableContainer component={Paper}>
+              <Table size="small">
+                <TableHead>
+                  <TableRow>
+                    <TableCell>Name</TableCell><TableCell>Code</TableCell><TableCell>Description</TableCell>
+                    {canMutate && <TableCell align="right">Actions</TableCell>}
+                  </TableRow>
+                </TableHead>
+                <TableBody>
+                  {regions.length === 0 && (
+                    <TableRow><TableCell colSpan={canMutate ? 4 : 3} align="center">
+                      <Typography color="text.secondary" sx={{ py: 2 }}>No regions found.</Typography>
+                    </TableCell></TableRow>
+                  )}
+                  {regions.map((r) => (
+                    <TableRow key={r.id} hover sx={{ cursor: "pointer" }} onClick={(e) => {
+                                     if ((e.target as HTMLElement).closest("button,a,input,textarea,select")) return;
+                                     navigate(`/dashboard/regions/${r.id}`);
+                                   }}>
+                      <TableCell>{r.name}</TableCell>
+                      <TableCell sx={{ fontFamily: "monospace", fontSize: "0.8rem" }}>{r.code}</TableCell>
+                      <TableCell>{r.description || "—"}</TableCell>
+                      {canMutate && (
+                        <TableCell align="right">
+                          <IconButton size="small" onClick={() => openEdit(r)}><EditIcon fontSize="small" /></IconButton>
+                          <fetcher.Form method="post" style={{ display: "inline" }}>
+                            <input type="hidden" name="intent" value="delete-region" />
+                            <input type="hidden" name="id" value={r.id} />
+                            <IconButton size="small" type="submit" color="error"><DeleteIcon fontSize="small" /></IconButton>
+                          </fetcher.Form>
+                        </TableCell>
+                      )}
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </TableContainer>
+          )}
+        </Await>
+      </Suspense>
       <Dialog open={dialogOpen} onClose={() => setDialogOpen(false)} maxWidth="sm" fullWidth>
         <form onSubmit={handleSubmit}>
           <DialogTitle>{editId ? "Edit Region" : "New Region"}</DialogTitle>

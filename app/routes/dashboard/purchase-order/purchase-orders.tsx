@@ -1,6 +1,7 @@
-import { useState } from "react";
-import { Link, useFetcher, useNavigate, useRouteLoaderData } from "react-router";
+import { Suspense, useRef, useState } from "react";
+import { Await, Link, useFetcher, useNavigate, useRouteLoaderData } from "react-router";
 import type { Route } from "./+types/purchase-orders";
+import SkeletonCards from "~/components/SkeletonCards";
 import { get, patch, post } from "~/services/api.server";
 import { getAccessToken } from "~/services/auth-helper.server";
 import type { PurchaseOrder } from "~/types";
@@ -26,13 +27,18 @@ function useRole() {
 export async function loader({ request }: Route.LoaderArgs) {
   const cookie = request.headers.get("Cookie") || "";
   const token = await getAccessToken(cookie);
-  const [poRes, suppliersRes, warehousesRes, productsRes] = await Promise.all([
+  const dataPromise = Promise.all([
     get<{ data: { data: PurchaseOrder[] } }>("/purchase-order?page=1&limit=50", token, cookie),
     get<{ data: { data: SelectOption[] } }>("/supplier?page=1&limit=200", token, cookie),
     get<{ data: { data: SelectOption[] } }>("/warehouses?page=1&limit=200", token, cookie),
     get<{ data: { data: ItemOption[] } }>("/item?page=1&limit=200&isPurchaseable=true", token, cookie),
-  ]);
-  return { purchaseOrders: poRes.data.data, supplierOptions: suppliersRes.data.data, warehouseOptions: warehousesRes.data.data, productOptions: productsRes.data.data };
+  ]).then(([poRes, suppliersRes, warehousesRes, productsRes]) => ({
+    purchaseOrders: poRes.data.data,
+    supplierOptions: suppliersRes.data.data,
+    warehouseOptions: warehousesRes.data.data,
+    productOptions: productsRes.data.data,
+  }));
+  return { data: dataPromise };
 }
 
 export async function action({ request }: Route.ActionArgs) {
@@ -77,16 +83,13 @@ function statusColor(s: string | undefined) {
 
 export default function PurchaseOrdersSection({ loaderData, actionData }: Route.ComponentProps) {
   const role = useRole();
-  const purchaseOrders: PurchaseOrder[] = loaderData?.purchaseOrders ?? [];
-  const supplierOptions: SelectOption[] = loaderData?.supplierOptions ?? [];
-  const warehouseOptions: SelectOption[] = loaderData?.warehouseOptions ?? [];
-  const productOptions: ItemOption[] = loaderData?.productOptions ?? [];
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editId, setEditId] = useState<string | null>(null);
   const [form, setForm] = useState({ supplierId: "", warehouseId: "", notes: "" });
   const [lineItems, setLineItems] = useState<LineItem[]>([{ ...emptyLine }]);
   const fetcher = useFetcher();
   const navigate = useNavigate();
+  const productOptionsRef = useRef<ItemOption[]>([]);
   const fetcherData = fetcher.data as { ok?: boolean; error?: string; errorRaw?: Error } | undefined;
   const actionError =
     fetcherData?.ok === false
@@ -109,7 +112,7 @@ export default function PurchaseOrdersSection({ loaderData, actionData }: Route.
   function updateLine(idx: number, field: keyof LineItem, value: string | number) {
     const updated = lineItems.map((l, i) => i === idx ? { ...l, [field]: value } : l);
     if (field === "itemId" && typeof value === "string") {
-      const prod = productOptions.find((p) => p.id === value);
+      const prod = productOptionsRef.current.find((p) => p.id === value);
       if (prod) updated[idx].unitPrice = prod.unitPrice;
     }
     setLineItems(updated);
@@ -137,78 +140,88 @@ export default function PurchaseOrdersSection({ loaderData, actionData }: Route.
           error={(actionError as any).errorRaw}
         />
       )}
-      {purchaseOrders.length === 0 ? (
-        <Card sx={{ p: 4, textAlign: "center" }}><Typography color="text.secondary">No purchase orders found.</Typography></Card>
-      ) : (
-        <Grid container spacing={2}>
-          {purchaseOrders.map((order) => (
-                      <Grid key={order.orderId} component={Link} size={{ xs: 12, sm: 6}} to={`/dashboard/purchase-orders/${order.orderId}`}>
-                        <Card variant="outlined">
-                          <Box sx={{ p: 2, bgcolor: "grey.50", borderBottom: "1px dashed", borderColor: "divider", display: "flex", justifyContent: "space-between" }}>
-                            <Box>
-                              <Typography variant="subtitle2" sx={{ fontWeight: 700, textDecoration: "none", color: "inherit", fontFamily: "monospace" }}>
-                                PO-{order.orderId.substring(0, 8)}
-                              </Typography>
-                              <Typography variant="caption" color="text.secondary">{new Date(order.order.orderDate).toLocaleDateString()}</Typography>
-                            </Box>
-                            <Chip label={order.order.status} size="small" color={statusColor(order.order.status)} />
-                          </Box>
-                          <CardContent sx={{ py: 1.5 }}>
-                            <Box sx={{ display: "flex", justifyContent: "space-between", fontSize: "0.85rem" }}><Typography variant="body2" color="text.secondary">Supplier:</Typography><Typography variant="body2">{order.supplier?.name || order.supplierId}</Typography></Box>
-                            <Box sx={{ display: "flex", justifyContent: "space-between", fontSize: "0.85rem" }}><Typography variant="body2" color="text.secondary">Warehouse:</Typography><Typography variant="body2">{order.warehouse?.name || order.warehouseId}</Typography></Box>
-                            <Divider sx={{ my: 1 }} />
-                            <Box sx={{ display: "flex", justifyContent: "space-between" }}><Typography sx={{ fontWeight: 600 }}>Total:</Typography><Typography sx={{ fontWeight: 600 }}>${Number(order.order.totalAmount).toLocaleString()}</Typography></Box>
-                          </CardContent>
-                {canMutate && order.order.status === "PENDING" && (
-                  <CardActions sx={{ borderTop: "1px solid", borderColor: "divider", px: 2, py: 1, bgcolor: "grey.50" }}>
-                    <Button size="small" startIcon={<EditIcon fontSize="small" />} onClick={() => openEdit(order)} sx={{ color: "text.secondary" }}>Edit</Button>
-                    {isAdmin && order.order.status === "PENDING" && (
-                      <approveFetcher.Form method="post">
-                        <input type="hidden" name="intent" value="approve-po" />
-                        <input type="hidden" name="id" value={order.orderId} />
-                        <Button size="small" type="submit" startIcon={<CheckIcon fontSize="small" />} color="success">Approve</Button>
-                      </approveFetcher.Form>
-                    )}
-                  </CardActions>
-                )}
-              </Card>
-            </Grid>
-          ))}
-        </Grid>
-      )}
-      <Dialog open={dialogOpen} onClose={() => setDialogOpen(false)} maxWidth="md" fullWidth>
-        <form onSubmit={handleSubmit}>
-          <DialogTitle>{editId ? "Edit Purchase Order" : "New Purchase Order"}</DialogTitle>
-          <DialogContent sx={{ display: "flex", flexDirection: "column", gap: 2, pt: "8px !important" }}>
-            <TextField name="supplierId" label="Supplier" select value={form.supplierId} onChange={(e) => setForm({ ...form, supplierId: e.target.value })} required fullWidth>
-              <MenuItem value="">Select supplier...</MenuItem>
-              {supplierOptions.map((s) => <MenuItem key={s.id} value={s.id}>{s.name} ({s.code})</MenuItem>)}
-            </TextField>
-            <TextField name="warehouseId" label="Warehouse" select value={form.warehouseId} onChange={(e) => setForm({ ...form, warehouseId: e.target.value })} required fullWidth>
-              <MenuItem value="">Select warehouse...</MenuItem>
-              {warehouseOptions.map((w) => <MenuItem key={w.id} value={w.id}>{w.name} ({w.code})</MenuItem>)}
-            </TextField>
-            <TextField name="notes" label="Notes" value={form.notes} onChange={(e) => setForm({ ...form, notes: e.target.value })} fullWidth multiline rows={2} />
-            <Divider />
-            <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-              <Typography variant="subtitle2" sx={{ fontWeight: 600 }}>Line Items</Typography>
-              <Button size="small" variant="contained" startIcon={<AddIcon />} onClick={addLine}>Add Item</Button>
-            </Box>
-            {lineItems.map((item, idx) => (
-              <Box key={idx} sx={{ display: "flex", gap: 1, alignItems: "center" }}>
-                <Autocomplete size="small" options={productOptions} getOptionLabel={(opt) => `${opt.name} (${opt.sku})`} value={productOptions.find((p) => p.id === item.itemId) || null} onChange={(_, val) => updateLine(idx, "itemId", val?.id || "")} sx={{ flex: 2 }} renderInput={(params) => <TextField {...params} label="Item" />} />
-                <TextField size="small" label="Qty" type="number" value={item.quantity} onChange={(e) => updateLine(idx, "quantity", Number(e.target.value))} sx={{ width: 80 }} slotProps={{ htmlInput: { min: 1 } }} />
-                <TextField size="small" label="Price" type="number" value={item.unitPrice} onChange={(e) => updateLine(idx, "unitPrice", Number(e.target.value))} sx={{ width: 120 }} slotProps={{ htmlInput: { step: "0.01" } }} />
-                <IconButton size="small" color="error" onClick={() => removeLine(idx)}><DeleteIcon fontSize="small" /></IconButton>
-              </Box>
-            ))}
-            {lineItems.filter((l) => l.itemId).length > 0 && (
-              <Typography variant="body2" color="text.secondary">Total: ${lineItems.filter((l) => l.itemId).reduce((sum, l) => sum + l.quantity * l.unitPrice, 0).toLocaleString()}</Typography>
+      <Suspense fallback={<SkeletonCards />}>
+        <Await resolve={(loaderData as any).data}>
+          {({ purchaseOrders, supplierOptions, warehouseOptions, productOptions }: { purchaseOrders: PurchaseOrder[]; supplierOptions: SelectOption[]; warehouseOptions: SelectOption[]; productOptions: ItemOption[] }) => {
+            productOptionsRef.current = productOptions;
+            return (<>
+            {purchaseOrders.length === 0 ? (
+              <Card sx={{ p: 4, textAlign: "center" }}><Typography color="text.secondary">No purchase orders found.</Typography></Card>
+            ) : (
+              <Grid container spacing={2}>
+                {purchaseOrders.map((order) => (
+                            <Grid key={order.orderId} component={Link} size={{ xs: 12, sm: 6}} to={`/dashboard/purchase-orders/${order.orderId}`}>
+                              <Card variant="outlined">
+                                <Box sx={{ p: 2, bgcolor: "grey.50", borderBottom: "1px dashed", borderColor: "divider", display: "flex", justifyContent: "space-between" }}>
+                                  <Box>
+                                    <Typography variant="subtitle2" sx={{ fontWeight: 700, textDecoration: "none", color: "inherit", fontFamily: "monospace" }}>
+                                      PO-{order.orderId.substring(0, 8)}
+                                    </Typography>
+                                    <Typography variant="caption" color="text.secondary">{new Date(order.order.orderDate).toLocaleDateString()}</Typography>
+                                  </Box>
+                                  <Chip label={order.order.status} size="small" color={statusColor(order.order.status)} />
+                                </Box>
+                                <CardContent sx={{ py: 1.5 }}>
+                                  <Box sx={{ display: "flex", justifyContent: "space-between", fontSize: "0.85rem" }}><Typography variant="body2" color="text.secondary">Supplier:</Typography><Typography variant="body2">{order.supplier?.name || order.supplierId}</Typography></Box>
+                                  <Box sx={{ display: "flex", justifyContent: "space-between", fontSize: "0.85rem" }}><Typography variant="body2" color="text.secondary">Warehouse:</Typography><Typography variant="body2">{order.warehouse?.name || order.warehouseId}</Typography></Box>
+                                  <Divider sx={{ my: 1 }} />
+                                  <Box sx={{ display: "flex", justifyContent: "space-between" }}><Typography sx={{ fontWeight: 600 }}>Total:</Typography><Typography sx={{ fontWeight: 600 }}>${Number(order.order.totalAmount).toLocaleString()}</Typography></Box>
+                                </CardContent>
+                      {canMutate && order.order.status === "PENDING" && (
+                        <CardActions sx={{ borderTop: "1px solid", borderColor: "divider", px: 2, py: 1, bgcolor: "grey.50" }}>
+                          <Button size="small" startIcon={<EditIcon fontSize="small" />} onClick={() => openEdit(order)} sx={{ color: "text.secondary" }}>Edit</Button>
+                          {isAdmin && order.order.status === "PENDING" && (
+                            <approveFetcher.Form method="post">
+                              <input type="hidden" name="intent" value="approve-po" />
+                              <input type="hidden" name="id" value={order.orderId} />
+                              <Button size="small" type="submit" startIcon={<CheckIcon fontSize="small" />} color="success">Approve</Button>
+                            </approveFetcher.Form>
+                          )}
+                        </CardActions>
+                      )}
+                    </Card>
+                  </Grid>
+                ))}
+              </Grid>
             )}
-          </DialogContent>
-          <DialogActions><Button variant="outlined" onClick={() => setDialogOpen(false)}>Cancel</Button><Button type="submit" variant="contained">{editId ? "Update" : "Create"}</Button></DialogActions>
-        </form>
-      </Dialog>
+
+            <Dialog open={dialogOpen} onClose={() => setDialogOpen(false)} maxWidth="md" fullWidth>
+              <form onSubmit={handleSubmit}>
+                <DialogTitle>{editId ? "Edit Purchase Order" : "New Purchase Order"}</DialogTitle>
+                <DialogContent sx={{ display: "flex", flexDirection: "column", gap: 2, pt: "8px !important" }}>
+                  <TextField name="supplierId" label="Supplier" select value={form.supplierId} onChange={(e) => setForm({ ...form, supplierId: e.target.value })} required fullWidth>
+                    <MenuItem value="">Select supplier...</MenuItem>
+                    {supplierOptions.map((s) => <MenuItem key={s.id} value={s.id}>{s.name} ({s.code})</MenuItem>)}
+                  </TextField>
+                  <TextField name="warehouseId" label="Warehouse" select value={form.warehouseId} onChange={(e) => setForm({ ...form, warehouseId: e.target.value })} required fullWidth>
+                    <MenuItem value="">Select warehouse...</MenuItem>
+                    {warehouseOptions.map((w) => <MenuItem key={w.id} value={w.id}>{w.name} ({w.code})</MenuItem>)}
+                  </TextField>
+                  <TextField name="notes" label="Notes" value={form.notes} onChange={(e) => setForm({ ...form, notes: e.target.value })} fullWidth multiline rows={2} />
+                  <Divider />
+                  <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                    <Typography variant="subtitle2" sx={{ fontWeight: 600 }}>Line Items</Typography>
+                    <Button size="small" variant="contained" startIcon={<AddIcon />} onClick={addLine}>Add Item</Button>
+                  </Box>
+                  {lineItems.map((item, idx) => (
+                    <Box key={idx} sx={{ display: "flex", gap: 1, alignItems: "center" }}>
+                      <Autocomplete size="small" options={productOptions} getOptionLabel={(opt) => `${opt.name} (${opt.sku})`} value={productOptions.find((p) => p.id === item.itemId) || null} onChange={(_, val) => updateLine(idx, "itemId", val?.id || "")} sx={{ flex: 2 }} renderInput={(params) => <TextField {...params} label="Item" />} />
+                      <TextField size="small" label="Qty" type="number" value={item.quantity} onChange={(e) => updateLine(idx, "quantity", Number(e.target.value))} sx={{ width: 80 }} slotProps={{ htmlInput: { min: 1 } }} />
+                      <TextField size="small" label="Price" type="number" value={item.unitPrice} onChange={(e) => updateLine(idx, "unitPrice", Number(e.target.value))} sx={{ width: 120 }} slotProps={{ htmlInput: { step: "0.01" } }} />
+                      <IconButton size="small" color="error" onClick={() => removeLine(idx)}><DeleteIcon fontSize="small" /></IconButton>
+                    </Box>
+                  ))}
+                  {lineItems.filter((l) => l.itemId).length > 0 && (
+                    <Typography variant="body2" color="text.secondary">Total: ${lineItems.filter((l) => l.itemId).reduce((sum, l) => sum + l.quantity * l.unitPrice, 0).toLocaleString()}</Typography>
+                  )}
+                </DialogContent>
+                <DialogActions><Button variant="outlined" onClick={() => setDialogOpen(false)}>Cancel</Button><Button type="submit" variant="contained">{editId ? "Update" : "Create"}</Button></DialogActions>
+              </form>
+            </Dialog>
+          </>);
+        }}
+        </Await>
+      </Suspense>
     </Box>
   );
 }
