@@ -18,6 +18,7 @@ import type { Route } from "./+types/home-content";
 import type { IProduct } from "~/interfaces/IProduct";
 import { normalizeImageUrl } from "~/utils/image";
 import { cdnUrl } from "~/utils/cdn";
+import { blogs } from "~/data/Blogs";
 
 
 /* ------------------------------------------------------------------ */
@@ -387,8 +388,8 @@ export default function HomeContent({ loaderData }: Route.ComponentProps) {
                 1024: { slidesPerView: 3 },
               }}
             >
-              {images.map((img, index) => (
-                <SwiperSlide key={index}>
+              {blogs.map((blog) => (
+                <SwiperSlide key={blog.id}>
                   {({ isActive }) => (
                     <div
                       className={`
@@ -397,8 +398,8 @@ export default function HomeContent({ loaderData }: Route.ComponentProps) {
                 `}
                     >
                       <img
-                        src={img}
-                        alt=""
+                        src={blog.imageUri}
+                        alt={blog.title}
                         className="h-[30vh] md:h-[35vh] w-full object-cover"
                       />
                     </div>
