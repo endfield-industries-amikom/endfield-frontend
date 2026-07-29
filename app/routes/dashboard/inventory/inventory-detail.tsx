@@ -26,7 +26,7 @@ export default function InventoryDetail({ loaderData }: Route.ComponentProps) {
       <Button component={Link} to="/dashboard/inventory" startIcon={<ArrowBackIcon />} sx={{ mb: 3, color: "text.secondary" }}>Back to Inventory</Button>
       <Typography variant="h5" sx={{ fontWeight: 700, mb: 3 }}>Inventory Detail</Typography>
       <Paper sx={{ p: 4 }}>
-        <Grid container spacing={2}><Grid size={6}><Typography variant="caption" color="text.secondary">Record ID</Typography><Typography sx={{ fontFamily: "monospace", fontSize: "0.85rem" }}>{inv.id}</Typography></Grid><Grid size={6}><Typography variant="caption" color="text.secondary">Status</Typography><Chip label={low ? "Low Stock" : "OK"} size="small" color={low ? "error" : "success"} /></Grid></Grid>
+        <Grid container spacing={2}><Grid size={6}><Typography variant="caption" color="text.secondary">Record ID</Typography><Typography sx={{ fontFamily: "monospace", fontSize: "0.85rem" }}>{inv.id}</Typography></Grid><Grid size={6}><Typography variant="caption" color="text.secondary">Status</Typography><Chip sx={{marginLeft: 2}} label={low ? "Low Stock" : "OK"} size="small" color={low ? "error" : "success"} /></Grid></Grid>
         <Divider sx={{ my: 2 }} />
         <Grid container spacing={2}>
           <Grid size={6}>

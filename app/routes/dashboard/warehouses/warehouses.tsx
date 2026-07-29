@@ -1,15 +1,16 @@
 import { get, patch, post, del } from "~/services/api.server";
 import { getAccessToken } from "~/services/auth-helper.server";
-import { useState } from "react";
-import { Link, useFetcher, useNavigate, useRouteLoaderData } from "react-router";
+import { Suspense, useEffect, useRef, useState } from "react";
+import { Await, Link, useFetcher, useNavigate, useRouteLoaderData } from "react-router";
 import type { Route } from "./+types/warehouses";
 import type { Warehouse } from "~/types";
 import {
   Box, Button, Dialog, DialogTitle, DialogContent, DialogActions,
   TextField, Table, TableBody, TableCell, TableContainer, TableHead,
-  TableRow, Paper, Typography, IconButton, MenuItem,
+  TableRow, Paper, Typography, IconButton, MenuItem, Snackbar, Alert,
 } from "@mui/material";
 import ErrorPopup from "~/components/error";
+import SkeletonTable from "~/components/SkeletonTable";
 import AddIcon from "@mui/icons-material/Add";
 import EditIcon from "@mui/icons-material/Edit";
 import DeleteIcon from "@mui/icons-material/Delete";
@@ -37,7 +38,7 @@ function useRole() {
 export async function loader({ request }: Route.LoaderArgs) {
   const cookie = request.headers.get("Cookie") || "";
   const token = await getAccessToken(cookie);
-  const [warehousesRes, regionsRes] = await Promise.all([
+  const dataPromise = Promise.all([
     get<{ data: { data: Warehouse[]; total: number; page: number; limit: number } }>(
       "/warehouses?page=1&limit=50",
       token,
@@ -48,11 +49,11 @@ export async function loader({ request }: Route.LoaderArgs) {
       token,
       cookie,
     ),
-  ]);
-  return {
+  ]).then(([warehousesRes, regionsRes]) => ({
     warehouses: warehousesRes.data.data,
     regionOptions: regionsRes.data.data,
-  };
+  }));
+  return { data: dataPromise };
 }
 
 /* ------------------------------------------------------------------ */
@@ -83,13 +84,13 @@ export async function action({ request }: Route.ActionArgs) {
         const id = formData.get("id") as string;
         await patch(`/warehouses/${id}`, body, token, cookie);
       }
-      return { ok: true };
+      return { ok: true, intent };
     }
 
     if (intent === "delete-warehouse") {
       const id = formData.get("id") as string;
       await del(`/warehouses/${id}`, token, cookie);
-      return { ok: true };
+      return { ok: true, intent };
     }
 
     return { ok: false, error: "Unknown intent" };
@@ -116,8 +117,6 @@ export default function WarehousesSection({
   actionData,
 }: Route.ComponentProps) {
   const role = useRole();
-  const warehouses = loaderData?.warehouses ?? [];
-  const regionOptions: RegionOption[] = loaderData?.regionOptions ?? [];
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editId, setEditId] = useState<string | null>(null);
   const [form, setForm] = useState(emptyForm);
@@ -131,6 +130,27 @@ export default function WarehousesSection({
         : null;
   const navigate = useNavigate();
   const deleteFetcher = useFetcher();
+  const [successMsg, setSuccessMsg] = useState<string | null>(null);
+  const prevFetcherState = useRef(fetcher.state);
+  const prevDeleteState = useRef(deleteFetcher.state);
+
+  useEffect(() => {
+    if (prevFetcherState.current === "loading" && fetcher.state === "idle" && fetcher.data?.ok) {
+      const messages: Record<string, string> = {
+        "create-warehouse": "Warehouse created successfully.",
+        "update-warehouse": "Warehouse updated successfully.",
+      };
+      setSuccessMsg(messages[(fetcher.data as any).intent] || "Operation completed.");
+    }
+    prevFetcherState.current = fetcher.state;
+  }, [fetcher.state, fetcher.data]);
+
+  useEffect(() => {
+    if (prevDeleteState.current === "loading" && deleteFetcher.state === "idle" && deleteFetcher.data?.ok) {
+      setSuccessMsg("Warehouse deleted successfully.");
+    }
+    prevDeleteState.current = deleteFetcher.state;
+  }, [deleteFetcher.state, deleteFetcher.data]);
 
   const canMutate = role === "Admin";
 
@@ -178,81 +198,97 @@ export default function WarehousesSection({
           error={(actionError as any).errorRaw}
         />
       )}
+      <Snackbar
+        open={!!successMsg}
+        autoHideDuration={3000}
+        onClose={() => setSuccessMsg(null)}
+        anchorOrigin={{ vertical: "bottom", horizontal: "center" }}
+      >
+        <Alert onClose={() => setSuccessMsg(null)} severity="success" variant="filled" sx={{ width: "100%" }}>
+          {successMsg}
+        </Alert>
+      </Snackbar>
 
-      <TableContainer component={Paper}>
-        <Table size="small">
-          <TableHead>
-            <TableRow>
-              <TableCell>Name</TableCell>
-              <TableCell>Code</TableCell>
-              <TableCell>Address</TableCell>
-              <TableCell>Capacity</TableCell>
-              {canMutate && <TableCell align="right">Actions</TableCell>}
-            </TableRow>
-          </TableHead>
-          <TableBody>
-            {warehouses.length === 0 && (
-              <TableRow>
-                <TableCell colSpan={canMutate ? 5 : 4} align="center">
-                  <Typography color="text.secondary" sx={{ py: 2 }}>No warehouses found.</Typography>
-                </TableCell>
-              </TableRow>
-            )}
-            {warehouses.map((w:Warehouse) => (
-              <TableRow key={w.id} hover onClick={() => navigate(`/dashboard/warehouses/${w.id}`)} sx={{cursor: "pointer"}}>
-                <TableCell sx={{ color: "inherit", textDecoration: "none", fontWeight: 500 }}>
-                  {w.name}
-                </TableCell>
-                <TableCell sx={{ fontFamily: "monospace", fontSize: "0.8rem" }}>{w.code}</TableCell>
-                <TableCell>{w.address || "—"}</TableCell>
-                <TableCell>
-                  {w.maxCapacity != null
-                    ? `${w.currentLoad ?? "—"} / ${w.maxCapacity}`
-                    : "—"}
-                </TableCell>
-                {canMutate && (
-                  <TableCell align="right">
-                    <IconButton size="small" onClick={(e) => { e.stopPropagation(); openEdit(w); }}><EditIcon fontSize="small" /></IconButton>
-                    <deleteFetcher.Form method="post" style={{ display: "inline" }} onClick={(e) => e.stopPropagation()}>
-                      <input type="hidden" name="intent" value="delete-warehouse" />
-                      <input type="hidden" name="id" value={w.id} />
-                      <IconButton size="small" type="submit" color="error"><DeleteIcon fontSize="small" /></IconButton>
-                    </deleteFetcher.Form>
-                  </TableCell>
-                )}
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
-      </TableContainer>
+      <Suspense fallback={<SkeletonTable columns={canMutate ? 5 : 4} />}>
+        <Await resolve={(loaderData as any).data}>
+          {({ warehouses, regionOptions }: { warehouses: Warehouse[]; regionOptions: RegionOption[] }) => (<>
+            <TableContainer component={Paper}>
+              <Table size="small">
+                <TableHead>
+                  <TableRow>
+                    <TableCell>Name</TableCell>
+                    <TableCell>Code</TableCell>
+                    <TableCell>Address</TableCell>
+                    <TableCell>Capacity</TableCell>
+                    {canMutate && <TableCell align="right">Actions</TableCell>}
+                  </TableRow>
+                </TableHead>
+                <TableBody>
+                  {warehouses.length === 0 && (
+                    <TableRow>
+                      <TableCell colSpan={canMutate ? 5 : 4} align="center">
+                        <Typography color="text.secondary" sx={{ py: 2 }}>No warehouses found.</Typography>
+                      </TableCell>
+                    </TableRow>
+                  )}
+                  {warehouses.map((w:Warehouse) => (
+                    <TableRow key={w.id} hover onClick={() => navigate(`/dashboard/warehouses/${w.id}`)} sx={{cursor: "pointer"}}>
+                      <TableCell sx={{ color: "inherit", textDecoration: "none", fontWeight: 500 }}>
+                        {w.name}
+                      </TableCell>
+                      <TableCell sx={{ fontFamily: "monospace", fontSize: "0.8rem" }}>{w.code}</TableCell>
+                      <TableCell>{w.address || "—"}</TableCell>
+                      <TableCell>
+                        {w.maxCapacity != null
+                          ? `${w.currentLoad ?? "—"} / ${w.maxCapacity}`
+                          : "—"}
+                      </TableCell>
+                      {canMutate && (
+                        <TableCell align="right">
+                          <IconButton size="small" onClick={(e) => { e.stopPropagation(); openEdit(w); }}><EditIcon fontSize="small" /></IconButton>
+                          <deleteFetcher.Form method="post" style={{ display: "inline" }} onClick={(e) => e.stopPropagation()}>
+                            <input type="hidden" name="intent" value="delete-warehouse" />
+                            <input type="hidden" name="id" value={w.id} />
+                            <IconButton size="small" type="submit" color="error"><DeleteIcon fontSize="small" /></IconButton>
+                          </deleteFetcher.Form>
+                        </TableCell>
+                      )}
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </TableContainer>
 
-      <Dialog open={dialogOpen} onClose={() => setDialogOpen(false)} maxWidth="sm" fullWidth>
-        <form onSubmit={handleSubmit}>
-          <DialogTitle>{editId ? "Edit Warehouse" : "New Warehouse"}</DialogTitle>
-          <DialogContent sx={{ display: "flex", flexDirection: "column", gap: 2, pt: "8px !important" }}>
-            <TextField name="name" label="Warehouse Name" value={form.name}
-              onChange={(e) => setForm({ ...form, name: e.target.value })} required fullWidth />
-            <TextField name="code" label="Code" value={form.code}
-              onChange={(e) => setForm({ ...form, code: e.target.value })} required fullWidth />
-            <TextField name="regionId" label="Region" select value={form.regionId}
-              onChange={(e) => setForm({ ...form, regionId: e.target.value })} fullWidth>
-              <MenuItem value="">Select region...</MenuItem>
-              {regionOptions.map((r) => (
-                <MenuItem key={r.id} value={r.id}>{r.name}</MenuItem>
-              ))}
-            </TextField>
-            <TextField name="address" label="Address" value={form.address}
-              onChange={(e) => setForm({ ...form, address: e.target.value })} fullWidth />
-            <TextField name="maxCapacity" label="Max Capacity" type="number" value={form.maxCapacity}
-              onChange={(e) => setForm({ ...form, maxCapacity: e.target.value })}
-              fullWidth helperText="Maximum storage capacity (units)" slotProps={{ htmlInput: { min: 0 } }} />
-          </DialogContent>
-          <DialogActions>
-            <Button variant="outlined" onClick={() => setDialogOpen(false)}>Cancel</Button>
-            <Button type="submit" variant="contained">{editId ? "Update" : "Create"}</Button>
-          </DialogActions>
-        </form>
-      </Dialog>
+            <Dialog open={dialogOpen} onClose={() => setDialogOpen(false)} maxWidth="sm" fullWidth>
+              <form onSubmit={handleSubmit}>
+                <DialogTitle>{editId ? "Edit Warehouse" : "New Warehouse"}</DialogTitle>
+                <DialogContent sx={{ display: "flex", flexDirection: "column", gap: 2, pt: "8px !important" }}>
+                  <TextField name="name" label="Warehouse Name" value={form.name}
+                    onChange={(e) => setForm({ ...form, name: e.target.value })} required fullWidth />
+                  <TextField name="code" label="Code" value={form.code}
+                    onChange={(e) => setForm({ ...form, code: e.target.value })} required fullWidth />
+                  <TextField name="regionId" label="Region" select value={form.regionId}
+                    onChange={(e) => setForm({ ...form, regionId: e.target.value })} fullWidth>
+                    <MenuItem value="">Select region...</MenuItem>
+                    {regionOptions.map((r) => (
+                      <MenuItem key={r.id} value={r.id}>{r.name}</MenuItem>
+                    ))}
+                  </TextField>
+                  <TextField name="address" label="Address" value={form.address}
+                    onChange={(e) => setForm({ ...form, address: e.target.value })} fullWidth />
+                  <TextField name="maxCapacity" label="Max Capacity" type="number" value={form.maxCapacity}
+                    onChange={(e) => setForm({ ...form, maxCapacity: e.target.value })}
+                    fullWidth helperText="Maximum storage capacity (units)" slotProps={{ htmlInput: { min: 0 } }} />
+                </DialogContent>
+                <DialogActions>
+                  <Button variant="outlined" onClick={() => setDialogOpen(false)}>Cancel</Button>
+                  <Button type="submit" variant="contained">{editId ? "Update" : "Create"}</Button>
+                </DialogActions>
+              </form>
+            </Dialog>
+          </>)}
+        </Await>
+      </Suspense>
     </Box>
   );
 }

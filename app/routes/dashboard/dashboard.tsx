@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Outlet, NavLink, useFetcher, useRouteLoaderData } from "react-router";
 import { Box, Drawer, AppBar, Toolbar, Typography, List, ListItemButton, ListItemText, ListItemIcon, Button, Chip, IconButton, Divider } from "@mui/material";
 import MenuIcon from "@mui/icons-material/Menu";
@@ -22,6 +22,18 @@ export default function DashboardLayout() {
   const [mobileOpen, setMobileOpen] = useState(false);
   const logoutFetcher = useFetcher();
   const isLoggingOut = logoutFetcher.state !== "idle";
+  const wasLoggingOut = useRef(false);
+
+  // useFetcher doesn't follow redirects — force full navigation
+  // once the logout action completes so Set-Cookie headers take effect.
+  useEffect(() => {
+    if (isLoggingOut) {
+      wasLoggingOut.current = true;
+    } else if (wasLoggingOut.current) {
+      wasLoggingOut.current = false;
+      window.location.href = "/dashboard/auth/login";
+    }
+  }, [isLoggingOut]);
 
   const parentData = useRouteLoaderData<{ accessToken: string }>("routes/dashboard/auth-guard");
   const accessToken = parentData?.accessToken || "";
@@ -47,7 +59,7 @@ export default function DashboardLayout() {
       <Toolbar>
         <Box>
           <Typography variant="h6" sx={{ fontWeight: 700 }} color="primary.main">Endfield ERP</Typography>
-          <Typography variant="caption" color="text.secondary">Logistics Intelligence Platform</Typography>
+          <Typography variant="caption" color="text.secondary">Logistics Platform</Typography>
         </Box>
       </Toolbar>
       <Divider />
@@ -55,7 +67,7 @@ export default function DashboardLayout() {
         {menu.map((item) => {
           const Icon = item.icon;
           return (
-            <ListItemButton key={item.id} component={NavLink} to={item.path} onClick={() => setMobileOpen(false)}
+            <ListItemButton key={item.id} component={NavLink} to={item.path} end={item.id === "home"} onClick={() => setMobileOpen(false)}
               sx={{ borderRadius: 2, mb: 0.5, "&.active": { bgcolor: "primary.main", color: "primary.contrastText", fontWeight: 600, "&:hover": { bgcolor: "primary.main" } } }}>
               <ListItemIcon sx={{ minWidth: 36 }}><Icon fontSize="small" /></ListItemIcon>
               <ListItemText primary={item.label} />

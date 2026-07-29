@@ -8,3 +8,4 @@
       excludedPath: ["/.netlify/*"],
       preferStatic: true,
     };
+    

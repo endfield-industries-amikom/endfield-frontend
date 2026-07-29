@@ -1,0 +1,51 @@
+name: Deploy Frontend-Prod to GHCR
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository_owner }}/endfield-frontend
+
+jobs:
+  build-and-push:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Log in to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Extract metadata
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+          tags: |
+            type=sha,prefix=
+            type=raw,value=latest
+
+      - name: Build and push
+        uses: docker/build-push-action@v6
+        with:
+          file: Dockerfile
+          push: true
+          secrets: |
+            "DEPLOY_TARGET=${{ secrets.DEPLOY_TARGET }}"
+            "API_GATEWAY_URL=${{ secrets.API_GATEWAY_URL }}"
+            "CDN_USED=${{ secrets.CDN_USED }}"
+            "CDN_BASE_URL=${{ secrets.CDN_BASE_URL }}"
+            "VITE_CDN_URL=${{ secrets.VITE_CDN_URL }}"
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}

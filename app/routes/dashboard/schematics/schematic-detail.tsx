@@ -38,7 +38,7 @@ export default function SchematicDetail({ loaderData }: Route.ComponentProps) {
       <Button component={Link} to="/dashboard/schematics" startIcon={<ArrowBackIcon />} sx={{ mb: 3, color: "text.secondary" }}>Back to Schematics</Button>
       <Typography variant="h5" sx={{ fontWeight: 700, mb: 3 }}>Schematic Detail</Typography>
       <Paper sx={{ p: 4 }}>
-        <Grid container spacing={2}><Grid size={6}><Typography variant="caption" color="text.secondary">Schematic ID</Typography><Typography sx={{ fontFamily: "monospace", fontSize: "0.85rem" }}>{s.id}</Typography></Grid><Grid size={6}><Typography variant="caption" color="text.secondary">Status</Typography><Chip label={s.active ? "Active" : "Inactive"} size="small" color={s.active ? "success" : "default"} /></Grid></Grid>
+        <Grid container spacing={2}><Grid size={6}><Typography variant="caption" color="text.secondary">Schematic ID</Typography><Typography sx={{ fontFamily: "monospace", fontSize: "0.85rem" }}>{s.id}</Typography></Grid><Grid size={6}><Typography variant="caption" color="text.secondary">Status</Typography><Chip label={s.active ? "Active" : "Inactive"} sx={{marginLeft: 2}} size="small" color={s.active ? "success" : "default"} /></Grid></Grid>
         <Divider sx={{ my: 2 }} />
         <Typography variant="h4" sx={{ fontWeight: 700 }}>{s.name}</Typography>
         <Typography variant="body2" color="text.secondary" sx={{ textTransform: "uppercase", mt: 0.5 }}>{s.type}</Typography>
