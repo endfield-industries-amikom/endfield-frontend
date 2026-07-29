@@ -41,11 +41,11 @@ jobs:
         with:
           file: Dockerfile
           push: true
-          env:
-            - DEPLOY_TARGET= ${{ secrets.DEPLOY_TARGET }}
-            - API_GATEWAY_URL= ${{ secrets.API_GATEWAY_URL }}
-            - CDN_USED= ${{ secrets.CDN_USED }}
-            - CDN_BASE_URL= ${{ secrets.CDN_BASE_URL }}
-            - VITE_CDN_URL= ${{ secrets.VITE_CDN_URL }}
+          secrets: |
+            "DEPLOY_TARGET=${{ secrets.DEPLOY_TARGET }}"
+            "API_GATEWAY_URL=${{ secrets.API_GATEWAY_URL }}"
+            "CDN_USED=${{ secrets.CDN_USED }}"
+            "CDN_BASE_URL=${{ secrets.CDN_BASE_URL }}"
+            "VITE_CDN_URL=${{ secrets.VITE_CDN_URL }}"
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}

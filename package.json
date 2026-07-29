@@ -5,6 +5,7 @@
   "type": "module",
   "scripts": {
     "build": "react-router build --mode production",
+    "build-local-prod": "react-router build --mode production",
     "build-local": "react-router build --mode development",
     "dev": "react-router dev --host",
     "start": "react-router-serve ./build/server/index.js",
