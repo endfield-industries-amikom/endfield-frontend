@@ -12,7 +12,17 @@ FROM node:23-alpine AS build-env
 COPY . /app/
 COPY --from=development-dependencies-env /app/node_modules /app/node_modules
 WORKDIR /app
-RUN npm run build-local
+# Generate .env from BuildKit secrets — secrets are NOT persisted in the image
+RUN --mount=type=secret,id=DEPLOY_TARGET \
+    --mount=type=secret,id=API_GATEWAY_URL \
+    --mount=type=secret,id=CDN_USED \
+    --mount=type=secret,id=CDN_BASE_URL \
+    --mount=type=secret,id=VITE_CDN_URL \
+    sh -c '> .env; \
+      for secret in DEPLOY_TARGET API_GATEWAY_URL CDN_USED CDN_BASE_URL VITE_CDN_URL; do \
+        printf "%s=%s\n" "$secret" "$(cat /run/secrets/$secret)" >> .env; \
+      done && \
+      npm run build-local'
 
 FROM node:23-alpine
 COPY ./package.json package-lock.json /app/
