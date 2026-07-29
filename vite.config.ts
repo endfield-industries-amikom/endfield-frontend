@@ -4,7 +4,7 @@ import { defineConfig } from "vite";
 import netlifyReactRouter from "@netlify/vite-plugin-react-router";
 
 export default defineConfig(({ mode }) => {
-  const isLocal = process.env.DEPLOY_TARGET === "local";
+  const isLocal = process.env.DEPLOY_TARGET === "local" || true;
   console.log("Building for", mode, "on Local:", isLocal)
   console.log(process.env.DEPLOY_TARGET)
 
