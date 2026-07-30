@@ -1,4 +1,6 @@
+import { Box } from "@mui/material";
 import type { IProduct } from "~/interfaces/IProduct";
+import { normalizeImageUrl } from "~/utils/image";
 
 interface Props {
   product: IProduct;
@@ -6,12 +8,27 @@ interface Props {
 
 export default function ProductGallery({ product }: Props) {
   return (
-    <div className="rounded-xl border border-gray-200 bg-white p-5 shadow-sm">
-      <img
-        src={product.imageUri || "https://placehold.co/600x600?text=No+Image"}
+    <Box
+      sx={{
+        borderRadius: 3,
+        border: "1px solid",
+        borderColor: "divider",
+        bgcolor: "background.paper",
+        p: 2.5,
+        boxShadow: 1,
+      }}
+    >
+      <Box
+        component="img"
+        src={normalizeImageUrl(product.imageUri) || "https://placehold.co/600x600?text=No+Image"}
         alt={product.name}
-        className="h-80 w-full rounded-lg object-cover md:h-[500px]"
+        sx={{
+          width: "100%",
+          height: { xs: 320, md: 500 },
+          borderRadius: 2,
+          objectFit: "cover",
+        }}
       />
-    </div>
+    </Box>
   );
 }

@@ -1,5 +1,9 @@
+import { Box, Button, Chip, Divider, IconButton, Paper, Typography } from "@mui/material";
 import { useState } from "react";
+import { useNavigate } from "react-router";
 import type { IProduct } from "~/interfaces/IProduct";
+import AddIcon from "@mui/icons-material/Add";
+import RemoveIcon from "@mui/icons-material/Remove";
 
 interface Props {
   product: IProduct;
@@ -7,303 +11,174 @@ interface Props {
 
 export default function ProductInfo({ product }: Props) {
   const [quantity, setQuantity] = useState(1);
-
   const subtotal = quantity * product.unitPrice;
+  const navigate = useNavigate();
 
   const formatPrice = (price: number) =>
-    price.toLocaleString("en-US", {
-      style: "currency",
-      currency: "USD",
-    });
+    price?.toLocaleString("en-US", { style: "currency", currency: "USD" });
 
   return (
-    <div className="flex flex-col">
-
-      {/* Category Badge */}
+    <Box sx={{ display: "flex", flexDirection: "column" }}>
+      {/* Category */}
       {product.category && (
-        <div className="mb-5">
-          <span
-            className="
-              inline-flex
-              rounded-full
-              bg-green-100
-              px-4
-              py-1.5
-              text-sm
-              font-semibold
-              text-green-700
-            "
-          >
-            {product.category}
-          </span>
-        </div>
+        <Box sx={{ mb: 2.5 }}>
+          <Chip
+            label={product.category}
+            size="small"
+            sx={{
+              bgcolor: "primary.light",
+              color: "default",
+              fontWeight: 600,
+              borderRadius: 999,
+              px: 1,
+            }}
+          />
+        </Box>
       )}
 
-
-      {/* Product Name */}
-      <h1
-        className="
-          text-4xl
-          font-extrabold
-          leading-tight
-          text-gray-900
-          lg:text-5xl
-        "
+      {/* Name */}
+      <Typography
+        variant="h3"
+        sx={{
+          fontWeight: 800,
+          lineHeight: 1.2,
+          color: "text.primary",
+        }}
       >
         {product.name}
-      </h1>
-
+      </Typography>
 
       {/* SKU */}
-      <div className="mt-5 flex items-center gap-3 text-sm text-gray-500">
-
-        <span>
-          SKU
-        </span>
-
-        <span className="font-semibold text-gray-700">
+      <Box sx={{ mt: 2.5, display: "flex", alignItems: "center", gap: 1.5 }}>
+        <Typography variant="body2" color="text.secondary">SKU</Typography>
+        <Typography variant="body2" sx={{ fontWeight: 600 }} color="text.primary">
           {product.sku}
-        </span>
-
-      </div>
-
+        </Typography>
+      </Box>
 
       {/* Price */}
-      <div className="mt-8">
-
-        <p className="text-sm font-medium text-gray-500">
-          Price
-        </p>
-
-        <h2
-          className="
-            mt-2
-            text-5xl
-            font-black
-            text-green-600
-          "
+      <Box sx={{ mt: 4 }}>
+        <Typography variant="body2" color="text.secondary">Price</Typography>
+        <Typography
+          variant="h3"
+          sx={{ mt: 1, fontWeight: 900, color: "secondary.main" }}
         >
           {formatPrice(product.unitPrice)}
-        </h2>
+        </Typography>
+      </Box>
 
-      </div>
-
-
-      {/* Divider */}
-      <div className="my-8 h-px bg-gray-200" />
-
+      <Divider sx={{ my: 4 }} />
 
       {/* Quantity */}
-      <div>
-
-        <p className="mb-4 text-sm font-bold uppercase tracking-wide text-gray-700">
-          Quantity
-        </p>
-
-
-        <div
-          className="
-            flex
-            w-fit
-            items-center
-            overflow-hidden
-            rounded-xl
-            border
-            border-gray-200
-            bg-white
-            shadow-sm
-          "
+      <Box>
+        <Typography
+          variant="body2"
+          sx={{ mb: 2, fontWeight: 700, textTransform: "uppercase", letterSpacing: 0.5 }}
         >
-
-          <button
-            onClick={() =>
-              quantity > 1 && setQuantity(quantity - 1)
-            }
-            className="
-              flex
-              h-12
-              w-12
-              items-center
-              justify-center
-              text-2xl
-              font-bold
-              text-gray-700
-              transition
-              hover:bg-gray-100
-            "
+          Quantity
+        </Typography>
+        <Box
+          sx={{
+            display: "flex",
+            width: "fit-content",
+            borderRadius: 3,
+            border: "1px solid",
+            borderColor: "divider",
+            bgcolor: "background.paper",
+            overflow: "hidden",
+            boxShadow: 1,
+          }}
+        >
+          <IconButton
+            onClick={() => quantity > 1 && setQuantity(quantity - 1)}
+            sx={{ borderRadius: 0, width: 48, height: 48 }}
           >
-            −
-          </button>
-
-
-          <span
-            className="
-              flex
-              h-12
-              w-14
-              items-center
-              justify-center
-              border-x
-              text-lg
-              font-bold
-            "
+            <RemoveIcon />
+          </IconButton>
+          <Box
+            sx={{
+              width: 56,
+              height: 48,
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              borderLeft: "1px solid",
+              borderRight: "1px solid",
+              borderColor: "divider",
+              fontWeight: 700,
+              fontSize: "1.1rem",
+            }}
           >
             {quantity}
-          </span>
-
-
-          <button
+          </Box>
+          <IconButton
             onClick={() => setQuantity(quantity + 1)}
-            className="
-              flex
-              h-12
-              w-12
-              items-center
-              justify-center
-              text-2xl
-              font-bold
-              text-gray-700
-              transition
-              hover:bg-gray-100
-            "
+            sx={{ borderRadius: 0, width: 48, height: 48 }}
           >
-            +
-          </button>
-
-        </div>
-
-      </div>
-
+            <AddIcon />
+          </IconButton>
+        </Box>
+      </Box>
 
       {/* Subtotal */}
-      <div
-        className="
-          mt-8
-          rounded-2xl
-          bg-gradient-to-r
-          from-green-50
-          to-emerald-50
-          p-6
-          ring-1
-          ring-green-100
-        "
+      <Paper
+        variant="outlined"
+        sx={{
+          mt: 4,
+          p: 3,
+          borderRadius: 4,
+          bgcolor: "background.paper",
+          borderColor: "primary.main",
+          color: "primary.dark",
+        }}
       >
-
-        <div className="flex items-center justify-between">
-
-          <div>
-            <p className="text-sm text-gray-500">
-              Total Price
-            </p>
-
-            <p className="mt-1 text-3xl font-extrabold text-green-700">
+        <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+          <Box>
+            <Typography variant="body2" color="text.secondary">Total Price</Typography>
+            <Typography variant="h4" sx={{ mt: 0.5, fontWeight: 800, color: "text.primary" }}>
               {formatPrice(subtotal)}
-            </p>
-          </div>
+            </Typography>
+          </Box>
+          <Chip
+            label={`${quantity} Item`}
+            size="small"
+            sx={{ fontWeight: 600, bgcolor: "background.paper" }}
+          />
+        </Box>
+      </Paper>
 
+      {/* Actions */}
 
-          <div
-            className="
-              rounded-xl
-              bg-white
-              px-4
-              py-2
-              text-sm
-              font-semibold
-              text-green-600
-              shadow-sm
-            "
-          >
-            {quantity} Item
-          </div>
-
-        </div>
-
-      </div>
-
-
-      {/* Action Button */}
-      <div className="mt-8 grid gap-4 sm:grid-cols-2">
-
-        <button
-          className="
-            rounded-xl
-            border-2
-            border-green-600
-            py-4
-            font-bold
-            text-green-600
-            transition
-            duration-300
-            hover:bg-green-600
-            hover:text-white
-          "
-        >
-          Add to Cart
-        </button>
-
-
-        <button
-          className="
-            rounded-xl
-            bg-green-600
-            py-4
-            font-bold
-            text-white
-            shadow-lg
-            shadow-green-200
-            transition
-            duration-300
-            hover:-translate-y-1
-            hover:bg-green-700
-          "
-        >
-          Buy Now
-        </button>
-
-      </div>
-
-
-      {/* Additional Info */}
-      <div
-        className="
-          mt-8
-          rounded-xl
-          border
-          border-gray-100
-          bg-gray-50
-          p-5
-        "
+      <Button
+        variant="contained"
+        color="primary"
+        size="large"
+        sx={{ mt: 4, py: 1.5, fontWeight: 700, borderRadius: 3 }}
+        onClick={() => navigate("/dashboard")}
       >
+        Login to Buy
+      </Button>
 
-        <div className="flex justify-between text-sm">
-
-          <span className="text-gray-500">
-            Availability
-          </span>
-
-          <span className="font-semibold text-green-600">
-            In Stock
-          </span>
-
-        </div>
-
-
-        <div className="mt-3 flex justify-between text-sm">
-
-          <span className="text-gray-500">
-            Shipping
-          </span>
-
-          <span className="font-semibold text-gray-700">
-            Ready to ship
-          </span>
-
-        </div>
-
-      </div>
-
-
-    </div>
+      {/* Additional info */}
+      <Paper
+        variant="outlined"
+        sx={{
+          mt: 4,
+          p: 2.5,
+          borderRadius: 3,
+          bgcolor: "grey.50",
+          borderColor: "grey.200",
+        }}
+      >
+        <Box sx={{ display: "flex", justifyContent: "space-between", mb: 1.5 }}>
+          <Typography variant="body2" color="text.secondary">Availability</Typography>
+          <Typography variant="body2" sx={{ fontWeight: 600 }} color="success.main">In Stock</Typography>
+        </Box>
+        <Box sx={{ display: "flex", justifyContent: "space-between" }}>
+          <Typography variant="body2" color="text.secondary">Shipping</Typography>
+          <Typography variant="body2" sx={{ fontWeight: 600 }}>Ready to ship</Typography>
+        </Box>
+      </Paper>
+    </Box>
   );
 }
