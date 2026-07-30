@@ -1,4 +1,5 @@
 import { Box } from "@mui/material";
+import { Link } from "react-router";
 import type { IProduct } from "~/interfaces/IProduct";
 import ProductCard from "~/components/data/Product-Card";
 
@@ -21,7 +22,13 @@ export default function ProductsGrid({ products }: ProductsGridProps) {
       }}
     >
       {products.map((product) => (
-        <ProductCard key={product.id} layout="grid" {...product} />
+        <Link
+          key={product.id}
+          to={`/products/${product.id}`}
+          className="block no-underline"
+        >
+          <ProductCard layout="grid" {...product} />
+        </Link>
       ))}
     </Box>
   );
