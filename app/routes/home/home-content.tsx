@@ -17,10 +17,11 @@ import ProductsGrid from "~/components/products/ProductsGrid";
 import SkeletonProductsGrid from "~/components/products/SkeletonProductsGrid";
 import { get } from "~/services/api.server";
 import type { Route } from "./+types/home-content";
-import type { IProduct } from "~/interfaces/IProduct";
+import type { Item } from "~/types";
 import { normalizeImageUrl } from "~/utils/image";
 import { cdnUrl } from "~/utils/cdn";
 import { blogs } from "~/data/Blogs";
+import type { TopSellingItem } from "~/types/ITopSellingItem";
 
 
 /* ------------------------------------------------------------------ */
@@ -28,11 +29,11 @@ import { blogs } from "~/data/Blogs";
 /* ------------------------------------------------------------------ */
 
 export async function loader() {
-  const productsPromise = get<{ data: { id: string; name: string; sku: string; unitPrice: number; imageUri?: string; description?: string; category?: string }[] }>(
+  const productsPromise = get<{ data: TopSellingItem[] }>(
     "/product/top-selling",
   )
     .then((response) =>
-      (response.data || []).map((p) => ({
+      (response.data || []).map((p): TopSellingItem => ({
         id: p.id,
         name: p.name,
         sku: p.sku,
@@ -41,9 +42,10 @@ export async function loader() {
         unitPrice: Number(p.unitPrice || 0),
         imageUri: normalizeImageUrl(p.imageUri),
         isBest: false,
-      } as IProduct)),
+      }),
+      ),
     )
-    .catch(() => [] as IProduct[]);
+    .catch(() => [] as TopSellingItem[]);
 
   return {
     products: productsPromise,
@@ -447,7 +449,7 @@ export default function HomeContent({ loaderData }: Route.ComponentProps) {
                 </Box>
               }
             >
-              {(products: IProduct[]) =>
+              {(products) =>
                 products.length > 0 ? (
                   <ProductsGrid products={products} />
                 ) : (

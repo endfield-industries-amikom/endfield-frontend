@@ -5,7 +5,7 @@ import {
   Typography,
 } from "@mui/material";
 import { Link } from "react-router";
-import type { IBlog } from "~/interfaces/IBlog";
+import type { IBlog } from "~/types/IBlog";
 
 interface BlogCardProps {
   blog: IBlog;

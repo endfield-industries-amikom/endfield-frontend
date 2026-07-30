@@ -1,8 +1,8 @@
 import { Card, CardContent, Typography } from "@mui/material";
-import type { IProduct } from "~/interfaces/IProduct";
+import type { Item } from "~/types";
 
 interface Props {
-  product: IProduct;
+  product: Item;
 }
 
 export default function ProductDescription({ product }: Props) {

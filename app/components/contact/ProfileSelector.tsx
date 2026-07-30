@@ -5,7 +5,7 @@ import {
   Stack,
   Tooltip,
 } from "@mui/material";
-import type { IContactProfile } from "~/interfaces/IContactProfile";
+import type { IContactProfile } from "~/types/IContactProfile";
 
 interface ProfileSelectorProps {
   profiles: IContactProfile[];

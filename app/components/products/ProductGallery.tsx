@@ -1,9 +1,9 @@
 import { Box } from "@mui/material";
-import type { IProduct } from "~/interfaces/IProduct";
+import type { Item } from "~/types";
 import { normalizeImageUrl } from "~/utils/image";
 
 interface Props {
-  product: IProduct;
+  product: Item;
 }
 
 export default function ProductGallery({ product }: Props) {

@@ -1,21 +1,21 @@
 import { Box, Button, Chip, Divider, IconButton, Paper, Typography } from "@mui/material";
 import { useState } from "react";
 import { useNavigate } from "react-router";
-import type { IProduct } from "~/interfaces/IProduct";
 import AddIcon from "@mui/icons-material/Add";
 import RemoveIcon from "@mui/icons-material/Remove";
+import type { Item } from "~/types";
 
 interface Props {
-  product: IProduct;
+  product: Item;
 }
 
 export default function ProductInfo({ product }: Props) {
   const [quantity, setQuantity] = useState(1);
-  const subtotal = quantity * product.unitPrice;
+  const subtotal = quantity * Number(product.unitPrice);
   const navigate = useNavigate();
 
-  const formatPrice = (price: number) =>
-    price?.toLocaleString("en-US", { style: "currency", currency: "USD" });
+  const formatPrice = (price: string) =>
+    Number(price)?.toLocaleString("en-US", { style: "currency", currency: "USD" });
 
   return (
     <Box sx={{ display: "flex", flexDirection: "column" }}>
@@ -136,7 +136,7 @@ export default function ProductInfo({ product }: Props) {
           <Box>
             <Typography variant="body2" color="text.secondary">Total Price</Typography>
             <Typography variant="h4" sx={{ mt: 0.5, fontWeight: 800, color: "text.primary" }}>
-              {formatPrice(subtotal)}
+              {formatPrice(String(subtotal))}
             </Typography>
           </Box>
           <Chip

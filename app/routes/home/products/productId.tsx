@@ -6,18 +6,12 @@ import type { Route } from "./+types/productId";
 import ProductGallery from "~/components/products/ProductGallery";
 import ProductInfo from "~/components/products/ProductInfo";
 import ProductDetailSkeleton from "~/components/ProductDetailSkeleton";
-
-import type { IProduct } from "~/interfaces/IProduct";
 import { get } from "~/services/api.server";
+import type { Item, Product } from "~/types";
 
-interface ProductLoaderData {
-  id: string;
-  item: IProduct;
-  type: "product" | "material";
-}
 
 export async function loader({ params }: Route.LoaderArgs) {
-  const productPromise = get<{ data: ProductLoaderData }>(`/product/${params.id}`)
+  const productPromise = get<{ data: Product }>(`/product/${params.id}`)
     .then((r) => r.data.item)
     .catch(() => null);
   return { product: productPromise };
@@ -33,7 +27,7 @@ export default function ProductId({ loaderData }: Route.ComponentProps) {
   return (
     <Suspense fallback={<ProductDetailSkeleton />}>
       <Await resolve={productPromise}>
-        {(product: IProduct | null) => {
+        {(product: Item | null) => {
           if (!product) {
             return (
               <Box

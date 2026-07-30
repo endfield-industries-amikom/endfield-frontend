@@ -4,7 +4,7 @@ export interface Item {
   sku: string;
   description?: string;
   category?: string;
-  unitPrice: number;
+  unitPrice: string;
   capacityUsage: number;
   isSellable: boolean;
   isPurchaseable: boolean;
@@ -13,4 +13,5 @@ export interface Item {
   soldQty: number;
   createdAt: string;
   updatedAt: string;
+  isBest?: boolean;
 }

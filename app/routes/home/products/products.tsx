@@ -6,12 +6,13 @@ import ProductsGrid from "~/components/products/ProductsGrid";
 import ProductsHero from "~/components/products/ProductsHero";
 import ProductsSectionHeader from "~/components/products/ProductsSectionHeader";
 import SkeletonProductsGrid from "~/components/products/SkeletonProductsGrid";
+import type { TopSellingItem } from "~/types/ITopSellingItem";
 
-import type { IProduct } from "~/interfaces/IProduct";
 
 /* ===================== API ===================== */
 import { get } from "~/services/api.server";
 import { normalizeImageUrl } from "~/utils/image";
+import type { Item } from "~/types";
 
 /* ===================== DUMMY ===================== */
 // import { products } from "~/data/Products";
@@ -25,21 +26,11 @@ export const meta: Route.MetaFunction = () => {
 
 /* ===================== API ===================== */
 
-interface TopSellingItem {
-  id: string;
-  name: string;
-  sku: string;
-  unitPrice: number;
-  imageUri?: string;
-  description?: string;
-  category?: string;
-}
-
 export async function loader() {
   const productsPromise = get<{ data: TopSellingItem[] }>("/product/top-selling")
     .then((response) =>
       (response.data || []).map(
-        (p): IProduct => ({
+        (p): TopSellingItem => ({
           id: p.id,
           name: p.name,
           sku: p.sku,
@@ -51,7 +42,7 @@ export async function loader() {
         }),
       ),
     )
-    .catch(() => [] as IProduct[]);
+    .catch(() => [] as Item[]);
 
   return { products: productsPromise };
 }
@@ -71,7 +62,7 @@ export default function Products({ loaderData }: Route.ComponentProps) {
           />
           <Suspense fallback={<SkeletonProductsGrid />}>
             <Await
-              resolve={(loaderData as { products: Promise<IProduct[]> }).products}
+              resolve={products}
               errorElement={
                 <Box sx={{ textAlign: "center", py: 8 }}>
                   <Typography variant="h6" color="text.secondary">
@@ -80,7 +71,7 @@ export default function Products({ loaderData }: Route.ComponentProps) {
                 </Box>
               }
             >
-              {(products: IProduct[]) =>
+              {(products) =>
                 products.length > 0 ? (
                   <ProductsGrid products={products} />
                 ) : (

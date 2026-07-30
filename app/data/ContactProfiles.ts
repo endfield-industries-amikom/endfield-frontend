@@ -1,4 +1,4 @@
-import type { IContactProfile } from "~/interfaces/IContactProfile";
+import type { IContactProfile } from "~/types/IContactProfile";
 
 export const contactProfiles: IContactProfile[] = [
   {
