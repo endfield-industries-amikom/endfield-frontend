@@ -6,6 +6,7 @@ import {
 } from "@mui/material";
 import { Link } from "react-router";
 import type { IBlog } from "~/types/IBlog";
+import { normalizeImageUrl } from "~/utils/image";
 
 interface BlogCardProps {
   blog: IBlog;
@@ -35,7 +36,7 @@ export default function BlogCard({ blog }: BlogCardProps) {
         <CardMedia
           component="img"
           height="220"
-          image={blog.imageUri || "/HeroSection.webp"}
+          image={normalizeImageUrl(blog.imageUri) || "/HeroSection.webp"}
           alt={blog.title}
         />
 

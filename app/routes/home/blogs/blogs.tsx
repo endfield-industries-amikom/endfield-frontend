@@ -1,6 +1,9 @@
-import { useState } from "react";
+import { Suspense } from "react";
+import { Await } from "react-router";
 import BlogCard from "~/components/data/BlogCard";
-import { blogs } from "~/data/Blogs";
+import BlogGridSkeleton from "~/components/BlogGridSkeleton";
+import { get } from "~/services/api.server";
+import type { IBlog } from "~/types/IBlog";
 import {
   Box,
   Container,
@@ -10,12 +13,18 @@ import {
   InputAdornment,
 } from "@mui/material";
 import SearchIcon from "@mui/icons-material/Search";
+import type { Route } from "./+types/blogs";
 
-export default function Blogs() {
+export async function loader() {
+  const blogsPromise = get<{ data: { data: IBlog[] } }>("/blog").then((r) => r.data.data);
+  return { blogs: blogsPromise };
+}
 
-console.log(BlogCard);
-console.log(blogs);
+export const meta: Route.MetaFunction = () => {
+  return [{ title: "Blogs | Endfield" }];
+};
 
+export default function Blogs({ loaderData }: Route.ComponentProps) {
   return (
     <Box sx={{ bgcolor: "#f8f8f8", minHeight: "100vh", pb: 5 }}>
       <Container maxWidth="lg" sx={{ py: 4 }}>
@@ -115,22 +124,28 @@ console.log(blogs);
           />
         </Box>
 
-        {/* Card */}
-        <Box
-          sx={{
-            display: "grid",
-            gridTemplateColumns: {
-              xs: "1fr",
-              sm: "repeat(2,1fr)",
-              md: "repeat(3,1fr)",
-            },
-            gap: 3,
-          }}
-        >
-          {blogs.map((blog) => (
-            <BlogCard key={blog.id} blog={blog} />
-          ))}
-        </Box>
+        {/* Card Grid */}
+        <Suspense fallback={<BlogGridSkeleton />}>
+          <Await resolve={(loaderData as { blogs: Promise<IBlog[]> }).blogs}>
+            {(blogs: IBlog[]) => (
+              <Box
+                sx={{
+                  display: "grid",
+                  gridTemplateColumns: {
+                    xs: "1fr",
+                    sm: "repeat(2,1fr)",
+                    md: "repeat(3,1fr)",
+                  },
+                  gap: 3,
+                }}
+              >
+                {blogs.map((blog) => (
+                  <BlogCard key={blog.id} blog={blog} />
+                ))}
+              </Box>
+            )}
+          </Await>
+        </Suspense>
       </Container>
     </Box>
   );

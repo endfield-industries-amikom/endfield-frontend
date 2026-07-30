@@ -14,7 +14,7 @@ export default [
     route("products/:id", "routes/home/products/productId.tsx"),
     route("contact", "routes/home/contact.tsx"),
     route("blogs", "routes/home/blogs/blogs.tsx"),
-    route("blog/:id", "routes/home/blogs/$id.tsx"),
+    route("blog/:slug", "routes/home/blogs/slug.tsx"),
   ]),
   route("dashboard", "routes/dashboard/auth-guard.tsx", [
     route("auth/login", "routes/dashboard/auth/login.tsx"),
