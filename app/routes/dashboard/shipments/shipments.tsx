@@ -207,25 +207,28 @@ export default function ShipmentsSection({ loaderData, actionData }: Route.Compo
   const fetcher = useFetcher();
   const [successMsg, setSuccessMsg] = useState<string | null>(null);
   const prevFetcherState = useRef(fetcher.state);
+  const [actionError, setActionError] = useState<{ error?: string; errorRaw?: Error } | null>(null);
 
   useEffect(() => {
-    if (prevFetcherState.current === "loading" && fetcher.state === "idle" && fetcher.data?.ok) {
-      const messages: Record<string, string> = {
-        "create-shipment": "Shipment created successfully.",
-        "update-shipment": "Shipment updated successfully.",
-      };
-      setSuccessMsg(messages[(fetcher.data as any).intent] || "Operation completed.");
+    if (fetcher.state === "submitting") setActionError(null);
+  }, [fetcher.state]);
+
+  useEffect(() => {
+    if (prevFetcherState.current === "loading" && fetcher.state === "idle") {
+      const data = fetcher.data as { ok?: boolean; intent?: string; error?: string; errorRaw?: Error } | undefined;
+      if (data?.ok) {
+        const messages: Record<string, string> = {
+          "create-shipment": "Shipment created successfully.",
+          "update-shipment": "Shipment updated successfully.",
+        };
+        setSuccessMsg(messages[data.intent || ""] || "Operation completed.");
+        setActionError(null);
+      } else if (data?.ok === false) {
+        setActionError(data);
+      }
     }
     prevFetcherState.current = fetcher.state;
   }, [fetcher.state, fetcher.data]);
-
-  const fetcherData = fetcher.data as { ok?: boolean; error?: string; errorRaw?: Error } | undefined;
-  const actionError =
-    fetcherData?.ok === false
-      ? fetcherData
-      : actionData?.ok === false
-        ? actionData
-        : null;
 
   function openCreate() { setEditId(null); setOrderType("PURCHASE"); setForm({ orderId: "", carrier: "", trackingNumber: "", status: "PENDING" }); setDialogOpen(true); }
   function openEdit(s: Shipment) { setEditId(s.id); setOrderType(s.orderType as "PURCHASE" | "SALES"); setForm({ orderId: s.orderId || "", carrier: s.carrier || "", trackingNumber: s.trackingNumber || "", status: s.status || "PENDING" }); setDialogOpen(true); }

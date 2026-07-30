@@ -17,9 +17,10 @@ import ProductsGrid from "~/components/products/ProductsGrid";
 import SkeletonProductsGrid from "~/components/products/SkeletonProductsGrid";
 import { get } from "~/services/api.server";
 import type { Route } from "./+types/home-content";
-import type { IProduct } from "~/interfaces/IProduct";
+import type { IBlog } from "~/types/IBlog";
 import { normalizeImageUrl } from "~/utils/image";
 import { cdnUrl } from "~/utils/cdn";
+import type { TopSellingItem } from "~/types/ITopSellingItem";
 
 
 /* ------------------------------------------------------------------ */
@@ -27,11 +28,11 @@ import { cdnUrl } from "~/utils/cdn";
 /* ------------------------------------------------------------------ */
 
 export async function loader() {
-  const productsPromise = get<{ data: { id: string; name: string; sku: string; unitPrice: number; imageUri?: string; description?: string; category?: string }[] }>(
+  const productsPromise = get<{ data: TopSellingItem[] }>(
     "/product/top-selling",
   )
     .then((response) =>
-      (response.data || []).map((p) => ({
+      (response.data || []).map((p): TopSellingItem => ({
         id: p.id,
         name: p.name,
         sku: p.sku,
@@ -40,23 +41,21 @@ export async function loader() {
         unitPrice: Number(p.unitPrice || 0),
         imageUri: normalizeImageUrl(p.imageUri),
         isBest: false,
-      } as IProduct)),
+      }),
+      ),
     )
-    .catch(() => [] as IProduct[]);
+    .catch(() => [] as TopSellingItem[]);
+
+  const blogsPromise = get<{ data: { data: IBlog[] } }>("/blog")
+    .then((r) => r.data.data)
+    .catch(() => [] as IBlog[]);
 
   return {
     products: productsPromise,
+    blogs: blogsPromise,
     heroLink: normalizeImageUrl(cdnUrl("images/HeroSection.webp")),
   };
 }
-
-const images = [
-  "https://images.unsplash.com/photo-1581091226825-a6a2a5aee158?w=900&h=506&fit=crop",
-  "https://images.unsplash.com/photo-1587293852726-70cdb56c2866?w=900&h=506&fit=crop",
-  "https://images.unsplash.com/photo-1565793298595-6a879b1d9492?w=900&h=506&fit=crop",
-  "https://images.unsplash.com/photo-1621905252507-b35492cc74b4?w=900&h=506&fit=crop",
-  "https://images.unsplash.com/photo-1565008447742-97f6f38c985c?w=900&h=506&fit=crop",
-];
 
 export default function HomeContent({ loaderData }: Route.ComponentProps) {
   const heroLink = (loaderData as { heroLink: string }).heroLink ?? images[0];
@@ -371,6 +370,8 @@ export default function HomeContent({ loaderData }: Route.ComponentProps) {
             New Information
           </Typography>
           <Box sx={{ mt: { xs: 3, md: 4 } }}>
+            <Await resolve={(loaderData as { blogs: Promise<IBlog[]> }).blogs}>
+              {(blogs) => (
             <Swiper
               modules={[Navigation, Autoplay]}
               navigation
@@ -391,8 +392,8 @@ export default function HomeContent({ loaderData }: Route.ComponentProps) {
                 1024: { slidesPerView: 3 },
               }}
             >
-              {images.map((img, index) => (
-                <SwiperSlide key={index}>
+              {blogs.map((blog) => (
+                <SwiperSlide key={blog.id}>
                   {({ isActive }) => (
                     <div
                       className={`
@@ -401,8 +402,8 @@ export default function HomeContent({ loaderData }: Route.ComponentProps) {
                 `}
                     >
                       <img
-                        src={img}
-                        alt=""
+                        src={normalizeImageUrl(blog.imageUri)}
+                        alt={blog.title}
                         className="h-[30vh] md:h-[35vh] w-full object-cover"
                       />
                     </div>
@@ -410,6 +411,8 @@ export default function HomeContent({ loaderData }: Route.ComponentProps) {
                 </SwiperSlide>
               ))}
             </Swiper>
+              )}
+            </Await>
           </Box>
 
           <Box sx={{ mt: { xs: 3, md: 4 } }}>
@@ -446,7 +449,7 @@ export default function HomeContent({ loaderData }: Route.ComponentProps) {
                 </Box>
               }
             >
-              {(products: IProduct[]) =>
+              {(products) =>
                 products.length > 0 ? (
                   <ProductsGrid products={products} />
                 ) : (

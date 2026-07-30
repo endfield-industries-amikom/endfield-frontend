@@ -1,58 +1,90 @@
+import { Await } from "react-router";
+import { Suspense } from "react";
+import { Box, Container, Paper, Typography } from "@mui/material";
+import ProductDescription from "~/components/products/ProductDescription";
 import type { Route } from "./+types/productId";
+import ProductGallery from "~/components/products/ProductGallery";
+import ProductInfo from "~/components/products/ProductInfo";
+import ProductDetailSkeleton from "~/components/ProductDetailSkeleton";
 import { get } from "~/services/api.server";
-import type { Product } from "~/types";
-import { Box, Paper, Typography, Grid, Divider, Container } from "@mui/material";
-import { normalizeImageUrl } from "~/utils/image";
+import type { Item, Product } from "~/types";
+
 
 export async function loader({ params }: Route.LoaderArgs) {
-  try {
-    const response = await get<{ data: Product }>(`/product/${params.id}`);
-    return { product: response.data };
-  } catch {
-    return { product: null };
-  }
+  const productPromise = get<{ data: Product }>(`/product/${params.id}`)
+    .then((r) => r.data.item)
+    .catch(() => null);
+  return { product: productPromise };
 }
 
-export const meta: Route.MetaFunction = ({ data }) => {
-  const product = (data as any)?.product as Product | null;
-  const title = product?.item ? `${product.item.name} | Endfield` : "Product | Endfield";
-  return [{ title }, { name: "description", content: title }];
+export const meta: Route.MetaFunction = () => {
+  return [{ title: "Product | Endfield" }];
 };
 
-export default function Product({ loaderData }: Route.ComponentProps) {
-  const product = loaderData?.product;
-  if (!product) return <Container maxWidth="md" sx={{ py: 8 }}><Typography variant="h4">Product not found</Typography></Container>;
-
-  const item = product.item;
+export default function ProductId({ loaderData }: Route.ComponentProps) {
+  const productPromise = loaderData.product;
 
   return (
-    <Box sx={{ bgcolor: "#FAFAFA", minHeight: "100vh", py: 6 }}>
-      <Container maxWidth="md">
-        <Paper sx={{ p: 4 }}>
-          <Grid container spacing={4}>
-            <Grid size={{ xs: 12, md: 5 }}>
-              {item?.imageUri ? (
-                <Box component="img" src={normalizeImageUrl(item.imageUri)} alt={item.name}
-                  sx={{ width: "100%", borderRadius: 2, objectFit: "cover", maxHeight: 350 }} />
-              ) : (
-                <Box sx={{ width: "100%", height: 300, bgcolor: "grey.200", borderRadius: 2, display: "flex", alignItems: "center", justifyContent: "center" }}>
-                  <Typography color="text.secondary">No Image</Typography>
-                </Box>
-              )}
-            </Grid>
-            <Grid size={{ xs: 12, md: 7 }}>
-              <Typography variant="h3" sx={{ fontWeight: 700 }}>{item?.name}</Typography>
-              <Typography variant="body2" color="text.secondary" sx={{ mt: 1, fontFamily: "monospace" }}>SKU: {item?.sku}</Typography>
-              {item?.category && <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>Category: {item.category}</Typography>}
-              <Divider sx={{ my: 2 }} />
-              <Typography variant="h4" sx={{ fontWeight: 700 }} color="primary">
-                {(Number(item?.unitPrice) || 0).toLocaleString("en-US", { style: "currency", currency: "USD" })}
-              </Typography>
-              {item?.description && <><Divider sx={{ my: 2 }} /><Typography variant="body1" color="text.secondary">{item.description}</Typography></>}
-            </Grid>
-          </Grid>
-        </Paper>
-      </Container>
-    </Box>
+    <Suspense fallback={<ProductDetailSkeleton />}>
+      <Await resolve={productPromise}>
+        {(product: Item | null) => {
+          if (!product) {
+            return (
+              <Box
+                sx={{
+                  display: "flex",
+                  minHeight: "60vh",
+                  alignItems: "center",
+                  justifyContent: "center",
+                }}
+              >
+                <Paper
+                  sx={{
+                    px: 4,
+                    py: 3,
+                    borderRadius: 3,
+                    border: "1px solid",
+                    borderColor: "error.light",
+                    bgcolor: "error.light",
+                    boxShadow: 1,
+                  }}
+                >
+                  <Typography variant="h5" sx={{ fontWeight: 700 }} color="error.main">
+                    Product not found
+                  </Typography>
+                </Paper>
+              </Box>
+            );
+          }
+
+          return (
+            <Box sx={{ minHeight: "100vh", bgcolor: "background.default", py: 6 }}>
+              <Container maxWidth="lg">
+                <Paper sx={{ p: 4, borderRadius: 4, boxShadow: 2 }}>
+                  <Box
+                    sx={{
+                      display: "grid",
+                      gap: 5,
+                      gridTemplateColumns: { xs: "1fr", lg: "1fr 1fr" },
+                    }}
+                  >
+                    <Box sx={{ borderRadius: 3, bgcolor: "grey.100", p: 3 }}>
+                      <ProductGallery product={product} />
+                    </Box>
+                    <Box sx={{ display: "flex", flexDirection: "column", justifyContent: "center" }}>
+                      <ProductInfo product={product} />
+                    </Box>
+                  </Box>
+                </Paper>
+
+                <Paper sx={{ mt: 6, p: 4, borderRadius: 4, boxShadow: 2 }}>
+                  <ProductDescription product={product} />
+                </Paper>
+              </Container>
+            </Box>
+          );
+        }}
+      </Await>
+    </Suspense>
   );
 }

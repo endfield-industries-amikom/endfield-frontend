@@ -11,6 +11,7 @@ export type { OrderItem, CreateOrderItemInput } from "./IOrderItem";
 export type { OrderBase } from "./IOrder";
 export type { PurchaseOrder } from "./IPurchaseOrder";
 export type { SalesOrder } from "./ISalesOrder";
+export type { IBlog } from "./IBlog";
 export type { Shipment } from "./IShipment";
 export type { ProductionSchematic } from "./IProductionSchematic";
 export type { UserProfile } from "./IUserProfile";

@@ -70,32 +70,47 @@ export default function InventorySection({ loaderData, actionData }: Route.Compo
   const [form, setForm] = useState<Record<string, string>>({ itemId: "", warehouseId: "", quantityOnHand: "", reservedQuantity: "", reorderLevel: "" });
   const fetcher = useFetcher();
   const navigate = useNavigate();
-  const fetcherData = fetcher.data as { ok?: boolean; error?: string; errorRaw?: Error } | undefined;
-  const actionError =
-    fetcherData?.ok === false
-      ? fetcherData
-      : actionData?.ok === false
-        ? actionData
-        : null;
+  const [actionError, setActionError] = useState<{ error?: string; errorRaw?: Error } | null>(null);
   const restockFetcher = useFetcher();
+  const [restockError, setRestockError] = useState<{ error?: string; errorRaw?: Error } | null>(null);
   const [successMsg, setSuccessMsg] = useState<string | null>(null);
   const prevFetcherState = useRef(fetcher.state);
   const prevRestockState = useRef(restockFetcher.state);
 
   useEffect(() => {
-    if (prevFetcherState.current === "loading" && fetcher.state === "idle" && fetcher.data?.ok) {
-      const messages: Record<string, string> = {
-        "create-inventory": "Inventory created successfully.",
-        "update-inventory": "Inventory updated successfully.",
-      };
-      setSuccessMsg(messages[(fetcher.data as any).intent] || "Operation completed.");
+    if (fetcher.state === "submitting") setActionError(null);
+  }, [fetcher.state]);
+
+  useEffect(() => {
+    if (restockFetcher.state === "submitting") setRestockError(null);
+  }, [restockFetcher.state]);
+
+  useEffect(() => {
+    if (prevFetcherState.current === "loading" && fetcher.state === "idle") {
+      const data = fetcher.data as { ok?: boolean; intent?: string; error?: string; errorRaw?: Error } | undefined;
+      if (data?.ok) {
+        const messages: Record<string, string> = {
+          "create-inventory": "Inventory created successfully.",
+          "update-inventory": "Inventory updated successfully.",
+        };
+        setSuccessMsg(messages[data.intent as string] || "Operation completed.");
+        setActionError(null);
+      } else if (data?.ok === false) {
+        setActionError(data);
+      }
     }
     prevFetcherState.current = fetcher.state;
   }, [fetcher.state, fetcher.data]);
 
   useEffect(() => {
-    if (prevRestockState.current === "loading" && restockFetcher.state === "idle" && restockFetcher.data?.ok) {
-      setSuccessMsg("Inventory restocked successfully.");
+    if (prevRestockState.current === "loading" && restockFetcher.state === "idle") {
+      const data = restockFetcher.data as { ok?: boolean; error?: string; errorRaw?: Error } | undefined;
+      if (data?.ok) {
+        setSuccessMsg("Inventory restocked successfully.");
+        setRestockError(null);
+      } else if (data?.ok === false) {
+        setRestockError(data);
+      }
     }
     prevRestockState.current = restockFetcher.state;
   }, [restockFetcher.state, restockFetcher.data]);
@@ -126,6 +141,12 @@ export default function InventorySection({ loaderData, actionData }: Route.Compo
         <ErrorPopup
           message={actionError.error as string}
           error={(actionError as any).errorRaw}
+        />
+      )}
+      {restockError && (
+        <ErrorPopup
+          message={restockError.error as string}
+          error={(restockError as any).errorRaw}
         />
       )}
       <Snackbar open={!!successMsg} autoHideDuration={4000} onClose={() => setSuccessMsg(null)} anchorOrigin={{ vertical: "bottom", horizontal: "center" }}>

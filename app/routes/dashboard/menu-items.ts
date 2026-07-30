@@ -10,6 +10,7 @@ import ShoppingCartIcon from "@mui/icons-material/ShoppingCart";
 import ReceiptIcon from "@mui/icons-material/Receipt";
 import PrecisionManufacturingIcon from "@mui/icons-material/PrecisionManufacturing";
 import CategoryIcon from "@mui/icons-material/Category";
+import ArticleIcon from "@mui/icons-material/Article";
 
 export interface MenuItem {
   id: string;
@@ -35,12 +36,18 @@ export const employeeMenu: MenuItem[] = [
   { id: "warehouses", label: "Warehouses", path: "/dashboard/warehouses", icon: WarehouseIcon },
   { id: "sales-orders", label: "Sales Orders", path: "/dashboard/sales-orders", icon: ReceiptIcon },
   { id: "schematics", label: "Schematics", path: "/dashboard/schematics", icon: PrecisionManufacturingIcon },
+  { id: "blogs", label: "Blogs", path: "/dashboard/blogs", icon: ArticleIcon },
 ];
 
 export const adminMenu: MenuItem[] = [
   ...baseEndfieldMenu,
   { id: "employees", label: "Employees", path: "/dashboard/admin/employees", icon: PeopleIcon },
   ...employeeMenu.slice(1),
+];
+
+export const editorMenu: MenuItem[] = [
+  ...baseEndfieldMenu,
+  { id: "blogs", label: "Blogs", path: "/dashboard/blogs", icon: ArticleIcon },
 ];
 
 export const consumerMenu: MenuItem[] = [
@@ -54,6 +61,7 @@ export function getMenu(role: string): MenuItem[] {
   switch (role) {
     case "Admin": return adminMenu;
     case "Employee": return employeeMenu;
+    case "Editor": return editorMenu;
     case "Consumer": return consumerMenu;
     default: return baseEndfieldMenu;
   }

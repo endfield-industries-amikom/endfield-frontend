@@ -67,26 +67,30 @@ export default function CustomersSection({ loaderData, actionData }: Route.Compo
   const fetcher = useFetcher();
   const [successMsg, setSuccessMsg] = useState<string | null>(null);
   const prevFetcherState = useRef(fetcher.state);
+  const [actionError, setActionError] = useState<{ error?: string; errorRaw?: Error } | null>(null);
 
   useEffect(() => {
-    if (prevFetcherState.current === "loading" && fetcher.state === "idle" && fetcher.data?.ok) {
-      const messages: Record<string, string> = {
-        "create-customer": "Customer created successfully.",
-        "update-customer": "Customer updated successfully.",
-        "delete-customer": "Customer deleted successfully.",
-      };
-      setSuccessMsg(messages[(fetcher.data as any).intent] || "Operation completed.");
+    if (fetcher.state === "submitting") setActionError(null);
+  }, [fetcher.state]);
+
+  useEffect(() => {
+    if (prevFetcherState.current === "loading" && fetcher.state === "idle") {
+      const data = fetcher.data as { ok?: boolean; intent?: string; error?: string; errorRaw?: Error } | undefined;
+      if (data?.ok) {
+        const messages: Record<string, string> = {
+          "create-customer": "Customer created successfully.",
+          "update-customer": "Customer updated successfully.",
+          "delete-customer": "Customer deleted successfully.",
+        };
+        setSuccessMsg(messages[data.intent || ""] || "Operation completed.");
+        setActionError(null);
+      } else if (data?.ok === false) {
+        setActionError(data);
+      }
     }
     prevFetcherState.current = fetcher.state;
   }, [fetcher.state, fetcher.data]);
   const navigate = useNavigate();
-  const fetcherData = fetcher.data as { ok?: boolean; error?: string; errorRaw?: Error } | undefined;
-  const actionError =
-    fetcherData?.ok === false
-      ? fetcherData
-      : actionData?.ok === false
-        ? actionData
-        : null;
   const canMutate = false; // Customers auto-created on registration, read-only
 
   function openCreate() { setEditId(null); setForm(emptyForm); setDialogOpen(true); }

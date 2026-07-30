@@ -110,32 +110,45 @@ export default function SchematicsSection({ loaderData, actionData }: Route.Comp
   const [materialInputs, setMaterialInputs] = useState<MaterialInput[]>([{ productId: "", quantity: 1 }]);
   const fetcher = useFetcher();
   const navigate = useNavigate();
-  const fetcherData = fetcher.data as { ok?: boolean; error?: string; errorRaw?: Error } | undefined;
-  const actionError =
-    fetcherData?.ok === false
-      ? fetcherData
-      : actionData?.ok === false
-        ? actionData
-        : null;
   const produceFetcher = useFetcher();
   const [successMsg, setSuccessMsg] = useState<string | null>(null);
+  const [actionError, setActionError] = useState<{ error?: string; errorRaw?: Error } | null>(null);
+  const [produceError, setProduceError] = useState<{ error?: string; errorRaw?: Error } | null>(null);
   const prevFetcherState = useRef(fetcher.state);
   const prevProduceState = useRef(produceFetcher.state);
 
   useEffect(() => {
-    if (prevFetcherState.current === "loading" && fetcher.state === "idle" && fetcher.data?.ok) {
-      const messages: Record<string, string> = {
-        "create-schematic": "Schematic created successfully.",
-        "update-schematic": "Schematic updated successfully.",
-      };
-      setSuccessMsg(messages[(fetcher.data as any).intent] || "Operation completed.");
+    if (fetcher.state === "submitting") setActionError(null);
+  }, [fetcher.state]);
+
+  useEffect(() => {
+    if (produceFetcher.state === "submitting") setProduceError(null);
+  }, [produceFetcher.state]);
+
+  useEffect(() => {
+    if (prevFetcherState.current === "loading" && fetcher.state === "idle") {
+      if (fetcher.data?.ok) {
+        setActionError(null);
+        const messages: Record<string, string> = {
+          "create-schematic": "Schematic created successfully.",
+          "update-schematic": "Schematic updated successfully.",
+        };
+        setSuccessMsg(messages[(fetcher.data as any).intent] || "Operation completed.");
+      } else if (fetcher.data?.ok === false) {
+        setActionError(fetcher.data as { error?: string; errorRaw?: Error });
+      }
     }
     prevFetcherState.current = fetcher.state;
   }, [fetcher.state, fetcher.data]);
 
   useEffect(() => {
-    if (prevProduceState.current === "loading" && produceFetcher.state === "idle" && produceFetcher.data?.ok) {
-      setSuccessMsg("Production started successfully.");
+    if (prevProduceState.current === "loading" && produceFetcher.state === "idle") {
+      if (produceFetcher.data?.ok) {
+        setProduceError(null);
+        setSuccessMsg("Production started successfully.");
+      } else if (produceFetcher.data?.ok === false) {
+        setProduceError(produceFetcher.data as { error?: string; errorRaw?: Error });
+      }
     }
     prevProduceState.current = produceFetcher.state;
   }, [produceFetcher.state, produceFetcher.data]);
@@ -202,8 +215,11 @@ export default function SchematicsSection({ loaderData, actionData }: Route.Comp
           {successMsg}
         </Alert>
       </Snackbar>
-      {produceFetcher.data?.ok && (
-        <Typography color="success.main" sx={{ mb: 2 }}>Production started successfully.</Typography>
+      {produceError && (
+        <ErrorPopup
+          message={produceError.error as string}
+          error={(produceError as any).errorRaw}
+        />
       )}
       <Suspense fallback={<SkeletonCards />}>
         <Await resolve={(loaderData as any).data}>

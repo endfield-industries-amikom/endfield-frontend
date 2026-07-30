@@ -5,16 +5,9 @@ import MenuIcon from "@mui/icons-material/Menu";
 import LogoutIcon from "@mui/icons-material/Logout";
 import { getMenu } from "./menu-items";
 import ErrorFallback from "~/components/error-fallback";
+import { parseJwt } from "~/utils/parsejwt";
 
 const DRAWER_WIDTH = 260;
-
-function parseJwt(token: string): { sub: string; email: string; role: string } | null {
-  try {
-    const base64Url = token.split(".")[1];
-    const base64 = base64Url.replace(/-/g, "+").replace(/_/g, "/");
-    return JSON.parse(atob(base64));
-  } catch { return null; }
-}
 
 export default function DashboardLayout() {
   const [userEmail, setUserEmail] = useState("");
@@ -51,7 +44,7 @@ export default function DashboardLayout() {
   const menu = getMenu(userRole);
 
   const roleColor: Record<string, "default" | "primary" | "secondary" | "error" | "info" | "success" | "warning"> = {
-    Admin: "error", Employee: "primary", Consumer: "default",
+    Admin: "error", Employee: "primary", Editor: "warning", Consumer: "default",
   };
 
   const drawer = (

@@ -1,10 +1,10 @@
-export interface IProduct {
+export interface TopSellingItem {
   id: string;
   name: string;
   sku: string;
-  description?: string;
-  category?: string;
   unitPrice: number;
   imageUri?: string;
+  description?: string;
+  category?: string;
   isBest?: boolean;
 }

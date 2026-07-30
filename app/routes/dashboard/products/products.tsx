@@ -127,32 +127,47 @@ export default function ProductsSection({ loaderData, actionData }: Route.Compon
   const fileInputRef = useRef<HTMLInputElement>(null);
   const fetcher = useFetcher();
   const navigate = useNavigate();
-  const fetcherData = fetcher.data as { ok?: boolean; error?: string; errorRaw?: Error } | undefined;
-  const actionError =
-    fetcherData?.ok === false
-      ? fetcherData
-      : actionData?.ok === false
-        ? actionData
-        : null;
+  const [actionError, setActionError] = useState<{ error?: string; errorRaw?: Error } | null>(null);
   const deleteFetcher = useFetcher();
+  const [deleteError, setDeleteError] = useState<{ error?: string; errorRaw?: Error } | null>(null);
   const [successMsg, setSuccessMsg] = useState<string | null>(null);
   const prevFetcherState = useRef(fetcher.state);
   const prevDeleteState = useRef(deleteFetcher.state);
 
   useEffect(() => {
-    if (prevFetcherState.current === "loading" && fetcher.state === "idle" && fetcher.data?.ok) {
-      const messages: Record<string, string> = {
-        "create-product": "Product created successfully.",
-        "update-product": "Product updated successfully.",
-      };
-      setSuccessMsg(messages[(fetcher.data as any).intent] || "Operation completed.");
+    if (fetcher.state === "submitting") setActionError(null);
+  }, [fetcher.state]);
+
+  useEffect(() => {
+    if (deleteFetcher.state === "submitting") setDeleteError(null);
+  }, [deleteFetcher.state]);
+
+  useEffect(() => {
+    if (prevFetcherState.current === "loading" && fetcher.state === "idle") {
+      const data = fetcher.data as { ok?: boolean; intent?: string; error?: string; errorRaw?: Error } | undefined;
+      if (data?.ok) {
+        const messages: Record<string, string> = {
+          "create-product": "Product created successfully.",
+          "update-product": "Product updated successfully.",
+        };
+        setSuccessMsg(messages[data.intent as string] || "Operation completed.");
+        setActionError(null);
+      } else if (data?.ok === false) {
+        setActionError(data);
+      }
     }
     prevFetcherState.current = fetcher.state;
   }, [fetcher.state, fetcher.data]);
 
   useEffect(() => {
-    if (prevDeleteState.current === "loading" && deleteFetcher.state === "idle" && deleteFetcher.data?.ok) {
-      setSuccessMsg("Product deleted successfully.");
+    if (prevDeleteState.current === "loading" && deleteFetcher.state === "idle") {
+      const data = deleteFetcher.data as { ok?: boolean; error?: string; errorRaw?: Error } | undefined;
+      if (data?.ok) {
+        setSuccessMsg("Product deleted successfully.");
+        setDeleteError(null);
+      } else if (data?.ok === false) {
+        setDeleteError(data);
+      }
     }
     prevDeleteState.current = deleteFetcher.state;
   }, [deleteFetcher.state, deleteFetcher.data]);
@@ -211,6 +226,12 @@ export default function ProductsSection({ loaderData, actionData }: Route.Compon
         <ErrorPopup
           message={actionError.error as string}
           error={(actionError as any).errorRaw}
+        />
+      )}
+      {deleteError && (
+        <ErrorPopup
+          message={deleteError.error as string}
+          error={(deleteError as any).errorRaw}
         />
       )}
       <Snackbar open={!!successMsg} autoHideDuration={4000} onClose={() => setSuccessMsg(null)} anchorOrigin={{ vertical: "bottom", horizontal: "center" }}>
@@ -322,7 +343,7 @@ export default function ProductsSection({ loaderData, actionData }: Route.Compon
                 )}
               </Box>
               {imagePreview && (
-                <Box component="img" src={imagePreview} alt="Preview"
+                <Box component="img" src={imagePreview.startsWith("blob:") ? imagePreview : normalizeImageUrl(imagePreview)} alt="Preview"
                   sx={{ mt: 1, width: "100%", maxHeight: 160, objectFit: "contain", borderRadius: 1, bgcolor: "grey.100" }} />
               )}
             </Box>

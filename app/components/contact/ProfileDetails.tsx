@@ -7,7 +7,7 @@ import {
   Stack,
   Typography,
 } from "@mui/material";
-import type { IContactProfile } from "~/interfaces/IContactProfile";
+import type { IContactProfile } from "~/types/IContactProfile";
 
 interface ProfileDetailsProps {
   profile: IContactProfile;
