@@ -121,6 +121,18 @@ export default function SalesOrdersSection({ loaderData, actionData }: Route.Com
   const prevConfirmState = useRef(confirmFetcher.state);
 
   useEffect(() => {
+    if (fetcher.state === "submitting") setActionError(null);
+  }, [fetcher.state]);
+
+  useEffect(() => {
+    if (shipFetcher.state === "submitting") setShipError(null);
+  }, [shipFetcher.state]);
+
+  useEffect(() => {
+    if (confirmFetcher.state === "submitting") setConfirmError(null);
+  }, [confirmFetcher.state]);
+
+  useEffect(() => {
     if (prevFetcherState.current === "loading" && fetcher.state === "idle") {
       if (fetcher.data?.ok) {
         setActionError(null);

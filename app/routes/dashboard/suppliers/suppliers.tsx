@@ -78,6 +78,10 @@ export default function SuppliersSection({ loaderData, actionData }: Route.Compo
   const [actionError, setActionError] = useState<{ error?: string; errorRaw?: Error } | null>(null);
 
   useEffect(() => {
+    if (fetcher.state === "submitting") setActionError(null);
+  }, [fetcher.state]);
+
+  useEffect(() => {
     if (prevFetcherState.current === "loading" && fetcher.state === "idle") {
       const data = fetcher.data as { ok?: boolean; intent?: string; error?: string; errorRaw?: Error } | undefined;
       if (data?.ok) {

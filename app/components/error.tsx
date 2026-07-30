@@ -1,10 +1,15 @@
 import { Close, ErrorOutlineOutlined } from "@mui/icons-material";
 import { Box, Button, IconButton, Paper, Slide, Stack, Typography } from "@mui/material";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 export default function Error({ message, error }: { message: string; error: Error | undefined }) {
   const [dismissed, setDismissed] = useState(false);
   const isDev = import.meta.env.DEV;
+
+  // Reset dismissed when a new error message arrives
+  useEffect(() => {
+    setDismissed(false);
+  }, [message]);
 
   return (
     <Slide direction="up" in={!dismissed}>

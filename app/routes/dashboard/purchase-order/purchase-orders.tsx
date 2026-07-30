@@ -100,6 +100,14 @@ export default function PurchaseOrdersSection({ loaderData, actionData }: Route.
   const prevFetcherState = useRef(fetcher.state);
   const prevApproveState = useRef(approveFetcher.state);
 
+  // Clear errors when a new submission starts so ErrorPopup remounts fresh
+  useEffect(() => {
+    if (fetcher.state === "submitting") setActionError(null);
+  }, [fetcher.state]);
+  useEffect(() => {
+    if (approveFetcher.state === "submitting") setApproveError(null);
+  }, [approveFetcher.state]);
+
   useEffect(() => {
     if (prevFetcherState.current === "loading" && fetcher.state === "idle") {
       const data = fetcher.data as { ok?: boolean; intent?: string; error?: string; errorRaw?: Error } | undefined;

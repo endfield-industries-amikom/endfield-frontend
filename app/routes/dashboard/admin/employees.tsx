@@ -77,6 +77,10 @@ export default function EmployeesSection({ loaderData, actionData }: Route.Compo
   const prevFetcherState = useRef(fetcher.state);
 
   useEffect(() => {
+    if (fetcher.state === "submitting") setActionError(null);
+  }, [fetcher.state]);
+
+  useEffect(() => {
     if (prevFetcherState.current === "loading" && fetcher.state === "idle") {
       const data = fetcher.data as { ok?: boolean; intent?: string; error?: string; errorRaw?: Error } | undefined;
       if (data?.ok) {

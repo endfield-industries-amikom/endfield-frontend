@@ -118,6 +118,14 @@ export default function SchematicsSection({ loaderData, actionData }: Route.Comp
   const prevProduceState = useRef(produceFetcher.state);
 
   useEffect(() => {
+    if (fetcher.state === "submitting") setActionError(null);
+  }, [fetcher.state]);
+
+  useEffect(() => {
+    if (produceFetcher.state === "submitting") setProduceError(null);
+  }, [produceFetcher.state]);
+
+  useEffect(() => {
     if (prevFetcherState.current === "loading" && fetcher.state === "idle") {
       if (fetcher.data?.ok) {
         setActionError(null);

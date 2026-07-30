@@ -40,6 +40,8 @@ export default [
       route("shipments", "routes/dashboard/shipments/shipments.tsx"),
       route("schematics/:id", "routes/dashboard/schematics/schematic-detail.tsx"),
       route("schematics", "routes/dashboard/schematics/schematics.tsx"),
+      route("blogs/:id", "routes/dashboard/blogs/blog-detail.tsx"),
+      route("blogs", "routes/dashboard/blogs/blogs.tsx"),
       route("materials/:id", "routes/dashboard/materials/material-detail.tsx"),
       route("materials", "routes/dashboard/materials/materials.tsx"),
       route("admin/employees", "routes/dashboard/admin/employees.tsx"),

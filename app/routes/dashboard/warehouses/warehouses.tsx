@@ -130,6 +130,14 @@ export default function WarehousesSection({
   const prevDeleteState = useRef(deleteFetcher.state);
 
   useEffect(() => {
+    if (fetcher.state === "submitting") setActionError(null);
+  }, [fetcher.state]);
+
+  useEffect(() => {
+    if (deleteFetcher.state === "submitting") setDeleteError(null);
+  }, [deleteFetcher.state]);
+
+  useEffect(() => {
     if (prevFetcherState.current === "loading" && fetcher.state === "idle") {
       if (fetcher.data?.ok) {
         setActionError(null);

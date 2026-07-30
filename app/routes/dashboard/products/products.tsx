@@ -135,6 +135,14 @@ export default function ProductsSection({ loaderData, actionData }: Route.Compon
   const prevDeleteState = useRef(deleteFetcher.state);
 
   useEffect(() => {
+    if (fetcher.state === "submitting") setActionError(null);
+  }, [fetcher.state]);
+
+  useEffect(() => {
+    if (deleteFetcher.state === "submitting") setDeleteError(null);
+  }, [deleteFetcher.state]);
+
+  useEffect(() => {
     if (prevFetcherState.current === "loading" && fetcher.state === "idle") {
       const data = fetcher.data as { ok?: boolean; intent?: string; error?: string; errorRaw?: Error } | undefined;
       if (data?.ok) {
@@ -335,7 +343,7 @@ export default function ProductsSection({ loaderData, actionData }: Route.Compon
                 )}
               </Box>
               {imagePreview && (
-                <Box component="img" src={imagePreview} alt="Preview"
+                <Box component="img" src={imagePreview.startsWith("blob:") ? imagePreview : normalizeImageUrl(imagePreview)} alt="Preview"
                   sx={{ mt: 1, width: "100%", maxHeight: 160, objectFit: "contain", borderRadius: 1, bgcolor: "grey.100" }} />
               )}
             </Box>
