@@ -113,44 +113,55 @@ export default function SalesOrdersSection({ loaderData, actionData }: Route.Com
   const shipFetcher = useFetcher();
   const confirmFetcher = useFetcher();
   const [successMsg, setSuccessMsg] = useState<string | null>(null);
+  const [actionError, setActionError] = useState<{ error?: string; errorRaw?: Error } | null>(null);
+  const [shipError, setShipError] = useState<{ error?: string; errorRaw?: Error } | null>(null);
+  const [confirmError, setConfirmError] = useState<{ error?: string; errorRaw?: Error } | null>(null);
   const prevFetcherState = useRef(fetcher.state);
   const prevShipState = useRef(shipFetcher.state);
   const prevConfirmState = useRef(confirmFetcher.state);
 
   useEffect(() => {
-    if (prevFetcherState.current === "loading" && fetcher.state === "idle" && fetcher.data?.ok) {
-      const messages: Record<string, string> = {
-        "create-sales-order": "Sales order created successfully.",
-        "update-sales-order": "Sales order updated successfully.",
-      };
-      setSuccessMsg(messages[(fetcher.data as any).intent] || "Operation completed.");
+    if (prevFetcherState.current === "loading" && fetcher.state === "idle") {
+      if (fetcher.data?.ok) {
+        setActionError(null);
+        const messages: Record<string, string> = {
+          "create-sales-order": "Sales order created successfully.",
+          "update-sales-order": "Sales order updated successfully.",
+        };
+        setSuccessMsg(messages[(fetcher.data as any).intent] || "Operation completed.");
+      } else if (fetcher.data?.ok === false) {
+        setActionError(fetcher.data as { error?: string; errorRaw?: Error });
+      }
     }
     prevFetcherState.current = fetcher.state;
   }, [fetcher.state, fetcher.data]);
 
   useEffect(() => {
-    if (prevShipState.current === "loading" && shipFetcher.state === "idle" && shipFetcher.data?.ok) {
-      setSuccessMsg("Order shipped successfully.");
+    if (prevShipState.current === "loading" && shipFetcher.state === "idle") {
+      if (shipFetcher.data?.ok) {
+        setShipError(null);
+        setSuccessMsg("Order shipped successfully.");
+      } else if (shipFetcher.data?.ok === false) {
+        setShipError(shipFetcher.data as { error?: string; errorRaw?: Error });
+      }
     }
     prevShipState.current = shipFetcher.state;
   }, [shipFetcher.state, shipFetcher.data]);
 
   useEffect(() => {
-    if (prevConfirmState.current === "loading" && confirmFetcher.state === "idle" && confirmFetcher.data?.ok) {
-      setSuccessMsg("Order confirmed successfully.");
+    if (prevConfirmState.current === "loading" && confirmFetcher.state === "idle") {
+      if (confirmFetcher.data?.ok) {
+        setConfirmError(null);
+        setSuccessMsg("Order confirmed successfully.");
+      } else if (confirmFetcher.data?.ok === false) {
+        setConfirmError(confirmFetcher.data as { error?: string; errorRaw?: Error });
+      }
     }
     prevConfirmState.current = confirmFetcher.state;
   }, [confirmFetcher.state, confirmFetcher.data]);
 
   const navigate = useNavigate();
   const productOptionsRef = useRef<ItemOption[]>([]);
-  const fetcherData = fetcher.data as { ok?: boolean; error?: string; errorRaw?: Error } | undefined;
-  const actionError =
-    fetcherData?.ok === false
-      ? fetcherData
-      : actionData?.ok === false
-        ? actionData
-        : null;
   const isAdmin = role === "Admin"; const isEmployee = role === "Employee"; const isConsumer = role === "Consumer";
 
   function openCreate() { setEditId(null); setForm({ customerId: "", regionId: "", notes: "" }); setLineItems([{ ...emptyLine }]); setDialogOpen(true); }
@@ -191,8 +202,18 @@ export default function SalesOrdersSection({ loaderData, actionData }: Route.Com
           error={(actionError as any).errorRaw}
         />
       )}
-      {shipFetcher.data?.error && <Typography color="error" sx={{ mb: 2 }}>{(shipFetcher.data as { error?: string }).error}</Typography>}
-      {confirmFetcher.data?.error && <Typography color="error" sx={{ mb: 2 }}>{(confirmFetcher.data as { error?: string }).error}</Typography>}
+      {shipError && (
+        <ErrorPopup
+          message={shipError.error as string}
+          error={(shipError as any).errorRaw}
+        />
+      )}
+      {confirmError && (
+        <ErrorPopup
+          message={confirmError.error as string}
+          error={(confirmError as any).errorRaw}
+        />
+      )}
       <Snackbar open={!!successMsg} autoHideDuration={4000} onClose={() => setSuccessMsg(null)} anchorOrigin={{ vertical: "bottom", horizontal: "center" }}>
         <Alert onClose={() => setSuccessMsg(null)} severity="success" variant="filled" sx={{ width: "100%" }}>{successMsg}</Alert>
       </Snackbar>

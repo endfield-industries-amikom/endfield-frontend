@@ -73,28 +73,26 @@ export default function EmployeesSection({ loaderData, actionData }: Route.Compo
   const [testCrash, setTestCrash] = useState(false);
   const fetcher = useFetcher();
   const [successMsg, setSuccessMsg] = useState<string | null>(null);
+  const [actionError, setActionError] = useState<{ error?: string; errorRaw?: Error } | null>(null);
   const prevFetcherState = useRef(fetcher.state);
 
   useEffect(() => {
-    if (prevFetcherState.current === "loading" && fetcher.state === "idle" && fetcher.data?.ok) {
-      const messages: Record<string, string> = {
-        "create-user": "Employee created successfully.",
-        "delete-user": "Employee deleted successfully.",
-      };
-      setSuccessMsg(messages[(fetcher.data as any).intent] || "Operation completed.");
+    if (prevFetcherState.current === "loading" && fetcher.state === "idle") {
+      const data = fetcher.data as { ok?: boolean; intent?: string; error?: string; errorRaw?: Error } | undefined;
+      if (data?.ok) {
+        const messages: Record<string, string> = {
+          "create-user": "Employee created successfully.",
+          "delete-user": "Employee deleted successfully.",
+        };
+        setSuccessMsg(messages[data.intent as string] || "Operation completed.");
+        setActionError(null);
+      } else if (data?.ok === false) {
+        setActionError(data);
+      }
     }
     prevFetcherState.current = fetcher.state;
   }, [fetcher.state, fetcher.data]);
   const isAdmin = role === "Admin";
-
-  // Fetcher-based actions (create/delete) return data here, not in actionData
-  const fetcherData = fetcher.data as { ok?: boolean; error?: string; errorRaw?: Error } | undefined;
-  const actionError =
-    fetcherData?.ok === false
-      ? fetcherData
-      : actionData?.ok === false
-        ? actionData
-        : null;
 
   if (testCrash) {
     throw new Error("This is a test crash — the ErrorFallback component should render now.");

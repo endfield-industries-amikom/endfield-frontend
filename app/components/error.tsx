@@ -64,7 +64,7 @@ export default function Error({ message, error }: { message: string; error: Erro
               <Button
                 size="small"
                 variant="outlined"
-                onClick={() => window.location.reload()}
+                onClick={() => setDismissed(true)}
                 sx={{ mt: 1.5 }}
               >
                 Try Again

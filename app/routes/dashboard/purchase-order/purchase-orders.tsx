@@ -61,8 +61,9 @@ export async function action({ request }: Route.ActionArgs) {
       try {
         await post(`/purchase-order/${formData.get("id")}/approve`, {}, token, cookie);
         return { ok: true, intent };
-      } catch (err) {
-        return { ok: false, error: err instanceof Error ? err.message : "Approval failed" };
+      } catch (err: any) {
+        console.log(err.message);
+        return { ok: false, error: err?.message ?? "Approval failed" };
       }
     }
     return { ok: false, error: "Unknown intent" };
@@ -90,38 +91,44 @@ export default function PurchaseOrdersSection({ loaderData, actionData }: Route.
   const fetcher = useFetcher();
   const navigate = useNavigate();
   const productOptionsRef = useRef<ItemOption[]>([]);
-  const fetcherData = fetcher.data as { ok?: boolean; error?: string; errorRaw?: Error } | undefined;
-  const actionError =
-    fetcherData?.ok === false
-      ? fetcherData
-      : actionData?.ok === false
-        ? actionData
-        : null;
+  const canMutate = role === "Admin" || role === "Employee";
+  const isAdmin = role === "Admin";
   const approveFetcher = useFetcher();
   const [successMsg, setSuccessMsg] = useState<string | null>(null);
+  const [actionError, setActionError] = useState<{ error?: string; errorRaw?: Error } | null>(null);
+  const [approveError, setApproveError] = useState<{ error?: string; errorRaw?: Error } | null>(null);
   const prevFetcherState = useRef(fetcher.state);
   const prevApproveState = useRef(approveFetcher.state);
 
   useEffect(() => {
-    if (prevFetcherState.current === "loading" && fetcher.state === "idle" && fetcher.data?.ok) {
-      const messages: Record<string, string> = {
-        "create-purchase-order": "Purchase order created successfully.",
-        "update-purchase-order": "Purchase order updated successfully.",
-      };
-      setSuccessMsg(messages[(fetcher.data as any).intent] || "Operation completed.");
+    if (prevFetcherState.current === "loading" && fetcher.state === "idle") {
+      const data = fetcher.data as { ok?: boolean; intent?: string; error?: string; errorRaw?: Error } | undefined;
+      if (data?.ok) {
+        const messages: Record<string, string> = {
+          "create-purchase-order": "Purchase order created successfully.",
+          "update-purchase-order": "Purchase order updated successfully.",
+        };
+        setSuccessMsg(messages[data.intent || ""] || "Operation completed.");
+        setActionError(null);
+      } else if (data?.ok === false) {
+        setActionError(data);
+      }
     }
     prevFetcherState.current = fetcher.state;
   }, [fetcher.state, fetcher.data]);
 
   useEffect(() => {
-    if (prevApproveState.current === "loading" && approveFetcher.state === "idle" && approveFetcher.data?.ok) {
-      setSuccessMsg("Purchase order approved successfully.");
+    if (prevApproveState.current === "loading" && approveFetcher.state === "idle") {
+      const data = approveFetcher.data as { ok?: boolean; error?: string; errorRaw?: Error } | undefined;
+      if (data?.ok) {
+        setSuccessMsg("Purchase order approved successfully.");
+        setApproveError(null);
+      } else if (data?.ok === false) {
+        setApproveError(data);
+      }
     }
     prevApproveState.current = approveFetcher.state;
   }, [approveFetcher.state, approveFetcher.data]);
-
-  const canMutate = role === "Admin" || role === "Employee";
-  const isAdmin = role === "Admin";
 
   function openCreate() { setEditId(null); setForm({ supplierId: "", warehouseId: "", notes: "" }); setLineItems([{ ...emptyLine }]); setDialogOpen(true); }
   function openEdit(po: PurchaseOrder) { setEditId(po.orderId); setForm({ supplierId: po.supplierId || "", warehouseId: po.warehouseId || "", notes: po.order.notes || "" });
@@ -163,6 +170,12 @@ export default function PurchaseOrdersSection({ loaderData, actionData }: Route.
         <ErrorPopup
           message={actionError.error as string}
           error={(actionError as any).errorRaw}
+        />
+      )}
+      {approveError && (
+        <ErrorPopup
+          message={approveError.error as string}
+          error={(approveError as any).errorRaw}
         />
       )}
       <Snackbar open={!!successMsg} autoHideDuration={4000} onClose={() => setSuccessMsg(null)} anchorOrigin={{ vertical: "bottom", horizontal: "center" }}>

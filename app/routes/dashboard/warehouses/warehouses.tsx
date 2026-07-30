@@ -121,33 +121,38 @@ export default function WarehousesSection({
   const [editId, setEditId] = useState<string | null>(null);
   const [form, setForm] = useState(emptyForm);
   const fetcher = useFetcher();
-  const fetcherData = fetcher.data as { ok?: boolean; error?: string; errorRaw?: Error } | undefined;
-  const actionError =
-    fetcherData?.ok === false
-      ? fetcherData
-      : actionData?.ok === false
-        ? actionData
-        : null;
   const navigate = useNavigate();
   const deleteFetcher = useFetcher();
   const [successMsg, setSuccessMsg] = useState<string | null>(null);
+  const [actionError, setActionError] = useState<{ error?: string; errorRaw?: Error } | null>(null);
+  const [deleteError, setDeleteError] = useState<{ error?: string; errorRaw?: Error } | null>(null);
   const prevFetcherState = useRef(fetcher.state);
   const prevDeleteState = useRef(deleteFetcher.state);
 
   useEffect(() => {
-    if (prevFetcherState.current === "loading" && fetcher.state === "idle" && fetcher.data?.ok) {
-      const messages: Record<string, string> = {
-        "create-warehouse": "Warehouse created successfully.",
-        "update-warehouse": "Warehouse updated successfully.",
-      };
-      setSuccessMsg(messages[(fetcher.data as any).intent] || "Operation completed.");
+    if (prevFetcherState.current === "loading" && fetcher.state === "idle") {
+      if (fetcher.data?.ok) {
+        setActionError(null);
+        const messages: Record<string, string> = {
+          "create-warehouse": "Warehouse created successfully.",
+          "update-warehouse": "Warehouse updated successfully.",
+        };
+        setSuccessMsg(messages[(fetcher.data as any).intent] || "Operation completed.");
+      } else if (fetcher.data?.ok === false) {
+        setActionError(fetcher.data as { error?: string; errorRaw?: Error });
+      }
     }
     prevFetcherState.current = fetcher.state;
   }, [fetcher.state, fetcher.data]);
 
   useEffect(() => {
-    if (prevDeleteState.current === "loading" && deleteFetcher.state === "idle" && deleteFetcher.data?.ok) {
-      setSuccessMsg("Warehouse deleted successfully.");
+    if (prevDeleteState.current === "loading" && deleteFetcher.state === "idle") {
+      if (deleteFetcher.data?.ok) {
+        setDeleteError(null);
+        setSuccessMsg("Warehouse deleted successfully.");
+      } else if (deleteFetcher.data?.ok === false) {
+        setDeleteError(deleteFetcher.data as { error?: string; errorRaw?: Error });
+      }
     }
     prevDeleteState.current = deleteFetcher.state;
   }, [deleteFetcher.state, deleteFetcher.data]);
@@ -196,6 +201,12 @@ export default function WarehousesSection({
         <ErrorPopup
           message={actionError.error as string}
           error={(actionError as any).errorRaw}
+        />
+      )}
+      {deleteError && (
+        <ErrorPopup
+          message={deleteError.error as string}
+          error={(deleteError as any).errorRaw}
         />
       )}
       <Snackbar
