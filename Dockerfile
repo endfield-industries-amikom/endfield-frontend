@@ -20,9 +20,9 @@ RUN --mount=type=secret,id=DEPLOY_TARGET \
     --mount=type=secret,id=VITE_CDN_URL \
     sh -c '> .env; \
       for secret in DEPLOY_TARGET API_GATEWAY_URL CDN_USED CDN_BASE_URL VITE_CDN_URL; do \
-        printf "%s=%s\n" "$secret" "$(cat /run/secrets/$secret)" >> .env; \
+        printf "%s=%s\n" "$secret" "$(cat /run/secrets/$secret)" >> .env.production; \
       done && \
-      npm run build-local'
+      npm run build-local-prod'
 
 FROM node:23-alpine
 COPY ./package.json package-lock.json /app/
